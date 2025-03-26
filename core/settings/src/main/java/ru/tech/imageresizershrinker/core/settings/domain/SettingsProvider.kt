@@ -26,4 +26,10 @@ interface SettingsProvider {
 
     fun getSettingsStateFlow(): Flow<SettingsState>
 
+    fun getNeedToShowTelegramGroupDialog(): Flow<Boolean>
+
+    suspend fun getInitialOCRLanguageCodes(): List<String>
+
+    suspend fun getInitialOcrMode(): Int
+
 }

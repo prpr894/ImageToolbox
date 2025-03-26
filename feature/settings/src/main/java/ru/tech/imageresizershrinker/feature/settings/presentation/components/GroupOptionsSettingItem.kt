@@ -32,18 +32,20 @@ import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwit
 
 @Composable
 fun GroupOptionsSettingItem(
-    onClick: (Boolean) -> Unit,
+    onClick: () -> Unit,
     shape: Shape = ContainerShapeDefaults.bottomShape,
-    modifier: Modifier = Modifier.padding(start = 8.dp, end = 8.dp)
+    modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
     val settingsState = LocalSettingsState.current
     PreferenceRowSwitch(
         shape = shape,
         modifier = modifier,
         startIcon = Icons.Outlined.SettingsInputComposite,
-        title = stringResource(R.string.group_options_by_type),
-        subtitle = stringResource(R.string.group_options_by_type_sub),
+        title = stringResource(R.string.group_tools_by_type),
+        subtitle = stringResource(R.string.group_tools_by_type_sub),
         checked = settingsState.groupOptionsByTypes,
-        onClick = onClick
+        onClick = {
+            onClick()
+        }
     )
 }

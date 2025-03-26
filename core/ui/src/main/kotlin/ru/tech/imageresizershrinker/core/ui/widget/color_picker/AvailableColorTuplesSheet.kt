@@ -20,7 +20,6 @@ package ru.tech.imageresizershrinker.core.ui.widget.color_picker
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,8 +48,6 @@ import androidx.compose.material.icons.rounded.AddCircleOutline
 import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.InvertColors
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -79,37 +76,37 @@ import com.t8rin.dynamic.theme.ColorTupleItem
 import com.t8rin.dynamic.theme.PaletteStyle
 import com.t8rin.dynamic.theme.rememberColorScheme
 import kotlinx.coroutines.delay
+import ru.tech.imageresizershrinker.core.domain.utils.ListUtils.nearestFor
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.EditAlt
 import ru.tech.imageresizershrinker.core.resources.icons.Theme
+import ru.tech.imageresizershrinker.core.resources.shapes.MaterialStarShape
 import ru.tech.imageresizershrinker.core.settings.presentation.model.defaultColorTuple
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.shapes.MaterialStarShape
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
-import ru.tech.imageresizershrinker.core.ui.utils.helper.ListUtils.nearestFor
 import ru.tech.imageresizershrinker.core.ui.utils.helper.isPortraitOrientationAsState
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.controls.EnhancedSliderItem
-import ru.tech.imageresizershrinker.core.ui.widget.modifier.alertDialogBorder
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedAlertDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalSheetDragHandle
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedSliderItem
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.palette_selection.PaletteStyleSelection
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwitch
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleDragHandle
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AvailableColorTuplesSheet(
     visible: Boolean,
     onDismiss: () -> Unit,
     colorTupleList: List<ColorTuple>,
     currentColorTuple: ColorTuple,
-    openColorPicker: () -> Unit,
-    colorPicker: @Composable (onUpdateColorTuples: (List<ColorTuple>) -> Unit) -> Unit,
+    onOpenColorPicker: () -> Unit,
+    colorPicker: @Composable () -> Unit,
     onPickTheme: (ColorTuple) -> Unit,
-    updateThemeContrast: (Float) -> Unit,
+    onUpdateThemeContrast: (Float) -> Unit,
     onThemeStyleSelected: (PaletteStyle) -> Unit,
     onToggleInvertColors: () -> Unit,
     onToggleUseEmojiAsPrimaryColor: () -> Unit,
@@ -118,13 +115,13 @@ fun AvailableColorTuplesSheet(
     var showEditColorPicker by rememberSaveable { mutableStateOf(false) }
 
     val settingsState = LocalSettingsState.current
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         visible = visible,
         onDismiss = {
             if (!it) onDismiss()
         },
         dragHandle = {
-            SimpleDragHandle {
+            EnhancedModalSheetDragHandle {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -140,77 +137,75 @@ fun AvailableColorTuplesSheet(
         title = {
             var showConfirmDeleteDialog by remember { mutableStateOf(false) }
 
-            if (showConfirmDeleteDialog) {
-                AlertDialog(
-                    modifier = Modifier.alertDialogBorder(),
-                    onDismissRequest = { showConfirmDeleteDialog = false },
-                    confirmButton = {
-                        EnhancedButton(
-                            onClick = { showConfirmDeleteDialog = false }
-                        ) {
-                            Text(stringResource(R.string.cancel))
-                        }
-                    },
-                    dismissButton = {
-                        EnhancedButton(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            onClick = {
-                                showConfirmDeleteDialog = false
-                                if ((colorTupleList - currentColorTuple).isEmpty()) {
-                                    onPickTheme(defaultColorTuple)
-                                } else {
-                                    colorTupleList.nearestFor(currentColorTuple)
-                                        ?.let { onPickTheme(it) }
-                                }
-                                onUpdateColorTuples(colorTupleList - currentColorTuple)
-                            }
-                        ) {
-                            Text(stringResource(R.string.delete))
-                        }
-                    },
-                    title = {
-                        Text(stringResource(R.string.delete_color_scheme_title))
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = stringResource(R.string.delete)
-                        )
-                    },
-                    text = {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            ColorTupleItem(
-                                colorTuple = currentColorTuple,
-                                modifier = Modifier
-                                    .padding(2.dp)
-                                    .size(64.dp)
-                                    .container(
-                                        shape = MaterialStarShape,
-                                        color = rememberColorScheme(
-                                            isDarkTheme = settingsState.isNightMode,
-                                            amoledMode = settingsState.isDynamicColors,
-                                            colorTuple = currentColorTuple,
-                                            contrastLevel = settingsState.themeContrastLevel,
-                                            style = settingsState.themeStyle,
-                                            dynamicColor = settingsState.isDynamicColors,
-                                            isInvertColors = settingsState.isInvertThemeColors
-                                        ).surfaceVariant.copy(alpha = 0.8f),
-                                        borderColor = MaterialTheme.colorScheme.outlineVariant(0.2f),
-                                        resultPadding = 0.dp
-                                    )
-                                    .padding(3.dp)
-                                    .clip(CircleShape),
-                                backgroundColor = Color.Transparent
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(stringResource(R.string.delete_color_scheme_warn))
-                        }
+            EnhancedAlertDialog(
+                visible = showConfirmDeleteDialog,
+                onDismissRequest = { showConfirmDeleteDialog = false },
+                confirmButton = {
+                    EnhancedButton(
+                        onClick = { showConfirmDeleteDialog = false }
+                    ) {
+                        Text(stringResource(R.string.cancel))
                     }
-                )
-            }
+                },
+                dismissButton = {
+                    EnhancedButton(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        onClick = {
+                            showConfirmDeleteDialog = false
+                            if ((colorTupleList - currentColorTuple).isEmpty()) {
+                                onPickTheme(defaultColorTuple)
+                            } else {
+                                colorTupleList.nearestFor(currentColorTuple)
+                                    ?.let { onPickTheme(it) }
+                            }
+                            onUpdateColorTuples(colorTupleList - currentColorTuple)
+                        }
+                    ) {
+                        Text(stringResource(R.string.delete))
+                    }
+                },
+                title = {
+                    Text(stringResource(R.string.delete_color_scheme_title))
+                },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = stringResource(R.string.delete)
+                    )
+                },
+                text = {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        ColorTupleItem(
+                            colorTuple = currentColorTuple,
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .size(64.dp)
+                                .container(
+                                    shape = MaterialStarShape,
+                                    color = rememberColorScheme(
+                                        isDarkTheme = settingsState.isNightMode,
+                                        amoledMode = settingsState.isDynamicColors,
+                                        colorTuple = currentColorTuple,
+                                        contrastLevel = settingsState.themeContrastLevel,
+                                        style = settingsState.themeStyle,
+                                        dynamicColor = settingsState.isDynamicColors,
+                                        isInvertColors = settingsState.isInvertThemeColors
+                                    ).surfaceVariant.copy(alpha = 0.8f),
+                                    borderColor = MaterialTheme.colorScheme.outlineVariant(0.2f),
+                                    resultPadding = 0.dp
+                                )
+                                .padding(3.dp)
+                                .clip(CircleShape),
+                            backgroundColor = Color.Transparent
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(stringResource(R.string.delete_color_scheme_warn))
+                    }
+                }
+            )
             Row {
                 AnimatedVisibility(
                     visible = currentColorTuple !in ColorTupleDefaults.defaultColorTuples && !settingsState.useEmojiAsPrimaryColor
@@ -303,7 +298,7 @@ fun AvailableColorTuplesSheet(
                     },
                     steps = 198,
                     onValueChangeFinished = {
-                        updateThemeContrast(it)
+                        onUpdateThemeContrast(it)
                     },
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
@@ -462,7 +457,7 @@ fun AvailableColorTuplesSheet(
                                         borderColor = MaterialTheme.colorScheme.outlineVariant(0.2f),
                                         resultPadding = 0.dp
                                     )
-                                    .clickable { openColorPicker() }
+                                    .hapticsClickable(onClick = onOpenColorPicker)
                                     .padding(3.dp)
                                     .clip(CircleShape),
                                 backgroundColor = Color.Transparent
@@ -498,7 +493,7 @@ fun AvailableColorTuplesSheet(
             onPickTheme(it)
         }
     )
-    colorPicker(onUpdateColorTuples)
+    colorPicker()
 
     if (settingsState.isDynamicColors) onDismiss()
 }

@@ -19,135 +19,88 @@ package ru.tech.imageresizershrinker.feature.delete_exif.presentation
 
 
 import android.net.Uri
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.t8rin.dynamic.theme.LocalDynamicThemeState
-import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import ru.tech.imageresizershrinker.core.domain.image.model.ImageInfo
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.Exif
 import ru.tech.imageresizershrinker.core.resources.icons.MiniEdit
-import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.Picker
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.rememberImagePicker
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.fileSize
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.localizedName
-import ru.tech.imageresizershrinker.core.ui.utils.helper.Picker
 import ru.tech.imageresizershrinker.core.ui.utils.helper.asClip
 import ru.tech.imageresizershrinker.core.ui.utils.helper.isPortraitOrientationAsState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.localImagePickerMode
-import ru.tech.imageresizershrinker.core.ui.utils.helper.parseSaveResults
-import ru.tech.imageresizershrinker.core.ui.utils.helper.rememberImagePicker
-import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
+import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalComponentActivity
+import ru.tech.imageresizershrinker.core.ui.utils.provider.rememberLocalEssentials
 import ru.tech.imageresizershrinker.core.ui.widget.AdaptiveLayoutScreen
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.BottomButtonsBlock
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ShareButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ZoomButton
 import ru.tech.imageresizershrinker.core.ui.widget.dialogs.ExitWithoutSavingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.LoadingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.OneTimeImagePickingDialog
 import ru.tech.imageresizershrinker.core.ui.widget.dialogs.OneTimeSaveLocationSelectionDialog
 import ru.tech.imageresizershrinker.core.ui.widget.image.AutoFilePicker
 import ru.tech.imageresizershrinker.core.ui.widget.image.ImageContainer
 import ru.tech.imageresizershrinker.core.ui.widget.image.ImageCounter
 import ru.tech.imageresizershrinker.core.ui.widget.image.ImageNotPickedWidget
-import ru.tech.imageresizershrinker.core.ui.widget.other.LoadingDialog
-import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.detectSwipes
 import ru.tech.imageresizershrinker.core.ui.widget.other.TopAppBarEmoji
-import ru.tech.imageresizershrinker.core.ui.widget.other.showError
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItem
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.AddExifSheet
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.PickImageFromUrisSheet
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.ProcessImagesPreferenceSheet
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.ZoomModalSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.TopAppBarTitle
-import ru.tech.imageresizershrinker.feature.delete_exif.presentation.viewModel.DeleteExifViewModel
+import ru.tech.imageresizershrinker.core.ui.widget.utils.AutoContentBasedColors
+import ru.tech.imageresizershrinker.feature.delete_exif.presentation.screenLogic.DeleteExifComponent
 
 @Composable
 fun DeleteExifContent(
-    uriState: List<Uri>?,
-    onGoBack: () -> Unit,
-    onNavigate: (Screen) -> Unit,
-    viewModel: DeleteExifViewModel = hiltViewModel()
+    component: DeleteExifComponent
 ) {
-    val settingsState = LocalSettingsState.current
-    val context = LocalContext.current as ComponentActivity
-    val toastHostState = LocalToastHostState.current
-    val themeState = LocalDynamicThemeState.current
-    val allowChangeColor = settingsState.allowChangeColorByImage
+    val context = LocalComponentActivity.current
 
-    val scope = rememberCoroutineScope()
-    val confettiHostState = LocalConfettiHostState.current
-    val showConfetti: () -> Unit = {
-        scope.launch {
-            confettiHostState.showConfetti()
-        }
+    val essentials = rememberLocalEssentials()
+    val showConfetti: () -> Unit = essentials::showConfetti
+
+    AutoContentBasedColors(component.bitmap)
+
+    val imagePicker = rememberImagePicker { uris: List<Uri> ->
+        component.updateUris(
+            uris = uris,
+            onFailure = essentials::showFailureToast
+        )
     }
 
-    LaunchedEffect(uriState) {
-        uriState?.takeIf { it.isNotEmpty() }?.let { uris ->
-            viewModel.updateUris(uris) {
-                scope.launch {
-                    toastHostState.showError(context, it)
-                }
-            }
-        }
-    }
-    LaunchedEffect(viewModel.bitmap) {
-        viewModel.bitmap?.let {
-            if (allowChangeColor) {
-                themeState.updateColorByImage(it)
-            }
-        }
-    }
-
-    val pickImageLauncher = rememberImagePicker(
-        mode = localImagePickerMode(Picker.Multiple)
-    ) { list ->
-        list.takeIf { it.isNotEmpty() }?.let { uris ->
-            viewModel.updateUris(uris) {
-                scope.launch {
-                    toastHostState.showError(context, it)
-                }
-            }
-        }
-    }
-
-    val pickImage = pickImageLauncher::pickImage
+    val pickImage = imagePicker::pickImage
 
     AutoFilePicker(
         onAutoPick = pickImage,
-        isPickedAlready = !uriState.isNullOrEmpty()
+        isPickedAlready = !component.initialUris.isNullOrEmpty()
     )
 
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
 
     val saveBitmaps: (oneTimeSaveLocationUri: String?) -> Unit = {
-        viewModel.saveBitmaps(it) { results ->
-            context.parseSaveResults(
-                scope = scope,
-                results = results,
-                toastHostState = toastHostState,
-                isOverwritten = settingsState.overwriteFiles,
-                showConfetti = showConfetti
-            )
-        }
+        component.saveBitmaps(
+            oneTimeSaveLocationUri = it,
+            onResult = essentials::parseSaveResults
+        )
     }
 
     var showPickImageFromUrisSheet by rememberSaveable { mutableStateOf(false) }
@@ -157,7 +110,7 @@ fun DeleteExifContent(
     var showZoomSheet by rememberSaveable { mutableStateOf(false) }
 
     ZoomModalSheet(
-        data = viewModel.previewBitmap,
+        data = component.previewBitmap,
         visible = showZoomSheet,
         onDismiss = {
             showZoomSheet = false
@@ -165,35 +118,36 @@ fun DeleteExifContent(
     )
 
     AdaptiveLayoutScreen(
+        shouldDisableBackHandler = !component.haveChanges,
         title = {
             TopAppBarTitle(
                 title = stringResource(R.string.delete_exif),
-                input = viewModel.bitmap,
-                isLoading = viewModel.isImageLoading,
-                size = viewModel.selectedUri?.fileSize(LocalContext.current) ?: 0L
+                input = component.bitmap,
+                isLoading = component.isImageLoading,
+                size = component.selectedUri?.fileSize(LocalContext.current) ?: 0L
             )
         },
         onGoBack = {
-            if (viewModel.uris?.isNotEmpty() == true) showExitDialog = true
-            else onGoBack()
+            if (component.uris?.isNotEmpty() == true) showExitDialog = true
+            else component.onGoBack()
         },
         actions = {
-            if (viewModel.previewBitmap != null) {
+            if (component.previewBitmap != null) {
                 var editSheetData by remember {
                     mutableStateOf(listOf<Uri>())
                 }
                 ShareButton(
                     onShare = {
-                        viewModel.shareBitmaps(showConfetti)
+                        component.shareBitmaps(showConfetti)
                     },
                     onCopy = { manager ->
-                        viewModel.cacheCurrentImage { uri ->
-                            manager.setClip(uri.asClip(context))
+                        component.cacheCurrentImage { uri ->
+                            manager.copyToClipboard(uri.asClip(context))
                             showConfetti()
                         }
                     },
                     onEdit = {
-                        viewModel.cacheImages {
+                        component.cacheImages {
                             editSheetData = it
                         }
                     }
@@ -202,36 +156,33 @@ fun DeleteExifContent(
                     uris = editSheetData,
                     visible = editSheetData.isNotEmpty(),
                     onDismiss = {
-                        if (!it) {
-                            editSheetData = emptyList()
-                        }
+                        editSheetData = emptyList()
                     },
-                    onNavigate = { screen ->
-                        scope.launch {
-                            editSheetData = emptyList()
-                            delay(200)
-                            onNavigate(screen)
-                        }
-                    }
+                    onNavigate = component.onNavigate
                 )
             }
             ZoomButton(
                 onClick = { showZoomSheet = true },
-                visible = viewModel.bitmap != null,
+                visible = component.bitmap != null,
             )
         },
         topAppBarPersistentActions = {
-            if (viewModel.bitmap == null) {
+            if (component.bitmap == null) {
                 TopAppBarEmoji()
             }
         },
         imagePreview = {
             ImageContainer(
+                modifier = Modifier
+                    .detectSwipes(
+                        onSwipeRight = component::selectLeftUri,
+                        onSwipeLeft = component::selectRightUri
+                    ),
                 imageInside = isPortrait,
                 showOriginal = false,
-                previewBitmap = viewModel.previewBitmap,
-                originalBitmap = viewModel.bitmap,
-                isLoading = viewModel.isImageLoading,
+                previewBitmap = component.previewBitmap,
+                originalBitmap = component.bitmap,
+                isLoading = component.isImageLoading,
                 shouldShowPreview = true
             )
         },
@@ -239,7 +190,7 @@ fun DeleteExifContent(
             var showExifSelection by rememberSaveable {
                 mutableStateOf(false)
             }
-            val selectedTags = viewModel.selectedTags
+            val selectedTags = component.selectedTags
             val subtitle by remember(selectedTags) {
                 derivedStateOf {
                     if (selectedTags.isEmpty()) context.getString(R.string.all)
@@ -249,7 +200,7 @@ fun DeleteExifContent(
                 }
             }
             ImageCounter(
-                imageCount = viewModel.uris?.size?.takeIf { it > 1 },
+                imageCount = component.uris?.size?.takeIf { it > 1 },
                 onRepick = {
                     showPickImageFromUrisSheet = true
                 }
@@ -271,7 +222,7 @@ fun DeleteExifContent(
                 visible = showExifSelection,
                 onDismiss = { showExifSelection = it },
                 selectedTags = selectedTags,
-                onTagSelected = viewModel::addTag,
+                onTagSelected = component::addTag,
                 isTagsRemovable = true
             )
         },
@@ -279,8 +230,11 @@ fun DeleteExifContent(
             var showFolderSelectionDialog by rememberSaveable {
                 mutableStateOf(false)
             }
+            var showOneTimeImagePickingDialog by rememberSaveable {
+                mutableStateOf(false)
+            }
             BottomButtonsBlock(
-                targetState = (viewModel.uris.isNullOrEmpty()) to isPortrait,
+                targetState = (component.uris.isNullOrEmpty()) to isPortrait,
                 onSecondaryButtonClick = pickImage,
                 onPrimaryButtonClick = {
                     saveBitmaps(null)
@@ -290,57 +244,58 @@ fun DeleteExifContent(
                 },
                 actions = {
                     if (isPortrait) actions()
+                },
+                onSecondaryButtonLongClick = {
+                    showOneTimeImagePickingDialog = true
                 }
             )
-            if (showFolderSelectionDialog) {
-                OneTimeSaveLocationSelectionDialog(
-                    onDismiss = { showFolderSelectionDialog = false },
-                    onSaveRequest = saveBitmaps
-                )
-            }
+            OneTimeSaveLocationSelectionDialog(
+                visible = showFolderSelectionDialog,
+                onDismiss = { showFolderSelectionDialog = false },
+                onSaveRequest = saveBitmaps
+            )
+            OneTimeImagePickingDialog(
+                onDismiss = { showOneTimeImagePickingDialog = false },
+                picker = Picker.Multiple,
+                imagePicker = imagePicker,
+                visible = showOneTimeImagePickingDialog
+            )
         },
         noDataControls = {
             ImageNotPickedWidget(onPickImage = pickImage)
         },
-        canShowScreenData = !viewModel.uris.isNullOrEmpty(),
+        canShowScreenData = !component.uris.isNullOrEmpty(),
         isPortrait = isPortrait
     )
 
-    if (viewModel.isSaving) {
-        LoadingDialog(
-            done = viewModel.done,
-            left = viewModel.uris?.size ?: 1,
-            onCancelLoading = viewModel::cancelSaving
-        )
-    }
+    LoadingDialog(
+        visible = component.isSaving,
+        done = component.done,
+        left = component.uris?.size ?: 1,
+        onCancelLoading = component::cancelSaving
+    )
 
     PickImageFromUrisSheet(
-        transformations = listOf(
-            viewModel.imageInfoTransformationFactory(
-                imageInfo = ImageInfo()
-            )
-        ),
         visible = showPickImageFromUrisSheet,
         onDismiss = {
             showPickImageFromUrisSheet = false
         },
-        uris = viewModel.uris,
-        selectedUri = viewModel.selectedUri,
+        uris = component.uris,
+        selectedUri = component.selectedUri,
         onUriPicked = { uri ->
-            viewModel.setUri(uri = uri) {
-                scope.launch {
-                    toastHostState.showError(context, it)
-                }
-            }
+            component.updateSelectedUri(
+                uri = uri,
+                onFailure = essentials::showFailureToast
+            )
         },
         onUriRemoved = { uri ->
-            viewModel.updateUrisSilently(removedUri = uri)
+            component.updateUrisSilently(removedUri = uri)
         },
         columns = if (isPortrait) 2 else 4,
     )
 
     ExitWithoutSavingDialog(
-        onExit = onGoBack,
+        onExit = component.onGoBack,
         onDismiss = { showExitDialog = false },
         visible = showExitDialog
     )

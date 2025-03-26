@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BrightnessHigh
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -46,20 +45,21 @@ import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.MiniEdit
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedCheckbox
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItem
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItemOverload
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 
 
 @Composable
 fun BrightnessEnforcementSettingItem(
-    updateScreens: (Screen) -> Unit,
+    onValueChange: (Screen) -> Unit,
     shape: Shape = ContainerShapeDefaults.topShape,
-    modifier: Modifier = Modifier.padding(start = 8.dp, end = 8.dp)
+    modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
     val settingsState = LocalSettingsState.current
     val settingsScreenList = settingsState.screenListWithMaxBrightnessEnforcement
@@ -97,7 +97,7 @@ fun BrightnessEnforcementSettingItem(
         endIcon = Icons.Rounded.MiniEdit
     )
 
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         visible = showPickerSheet,
         onDismiss = {
             showPickerSheet = it
@@ -122,7 +122,10 @@ fun BrightnessEnforcementSettingItem(
                     contentPadding = PaddingValues(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(Screen.entries) { screen ->
+                    items(
+                        items = Screen.entries,
+                        key = { it.id }
+                    ) { screen ->
                         val checked by remember(screen, screenList) {
                             derivedStateOf {
                                 screenList.fastAny { it::class.isInstance(screen) }
@@ -141,15 +144,15 @@ fun BrightnessEnforcementSettingItem(
                                 }
                             },
                             endIcon = {
-                                Checkbox(
+                                EnhancedCheckbox(
                                     checked = checked,
                                     onCheckedChange = {
-                                        updateScreens(screen)
+                                        onValueChange(screen)
                                     }
                                 )
                             },
                             onClick = {
-                                updateScreens(screen)
+                                onValueChange(screen)
                             }
                         )
                     }

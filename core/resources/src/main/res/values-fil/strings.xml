@@ -226,7 +226,7 @@
     <string name="color_matrix">Kulay matrix</string>
     <string name="opacity">Opacity</string>
     <string name="quantizationLevels">Mga antas ng quantization</string>
-    <string name="snooth_toon">Smooth toon</string>
+    <string name="smooth_toon">Smooth toon</string>
     <string name="toon">Toon</string>
     <string name="posterize">Posterize</string>
     <string name="weak_pixel_inclusion">Mahinang pagsasama ng pixel</string>
@@ -282,7 +282,7 @@
     <string name="file_size_sub">Ang maximum na laki ng file ay pinaghihigpitan ng Android OS at ang memorya na magagamit, na halatang nakadepende sa iyong device.
 \nMangyaring tandaan: ang memorya ay hindi imbakan.</string>
     <string name="cipher">Cipher</string>
-    <string name="cipher_sub">I-encrypt at I-decrypt ang anumang file (hindi lamang ang imahe) batay sa AES crypto algorythm</string>
+    <string name="cipher_sub">I-encrypt at I-decrypt ang anumang file (hindi lamang ang imahe) batay sa AES crypto algorithm</string>
     <string name="pick_file_to_start">Pumili ng file upang magsimula</string>
     <string name="decryption">Pag-decryption</string>
     <string name="encryption">Pag-encrypt</string>
@@ -376,7 +376,7 @@
     <string name="blur_radius">Blur radius</string>
     <string name="draw_mode">Draw mode</string>
     <string name="create_issue">Gumawa ng Isyu</string>
-    <string name="something_went_wrong_emphasis">Ooops... Nagkaproblema. Maaari kang sumulat sa akin gamit ang mga opsyon sa ibaba at susubukan kong maghanap ng solusyon</string>
+    <string name="something_went_wrong_emphasis">Ooops… Nagkaproblema. Maaari kang sumulat sa akin gamit ang mga opsyon sa ibaba at susubukan kong maghanap ng solusyon</string>
     <string name="resize_and_convert">Baguhin ang laki at I-convert</string>
     <string name="resize_and_convert_sub">Baguhin ang laki ng mga ibinigay na larawan o i-convert ang mga ito sa iba pang mga format. Ang EXIF metadata ay maaari ding i-edit dito kung pumipili ng isang larawan.</string>
     <string name="analytics_sub">Payagan ang pagkolekta ng hindi kilalang istatistika ng paggamit ng app</string>
@@ -446,7 +446,7 @@
     <string name="lanczos_sub">Paraan ng resampling na nagpapanatili ng mataas na kalidad na interpolation sa pamamagitan ng paglalapat ng weighted sinc function sa mga pixel value</string>
     <string name="mitchell_sub">Paraan ng resampling na gumagamit ng convolution filter na may mga adjustable na parameter para magkaroon ng balanse sa pagitan ng sharpness at anti-aliasing sa naka-scale na imahe</string>
     <string name="spline_sub">Gumagamit ng piecewise-defined polynomial functions upang maayos na i-interpolate at tantiyahin ang isang curve o surface, flexible at tuluy-tuloy na representasyon ng hugis</string>
-    <string name="force_exif_widget_inital_value_sub">Pinipilit ang exif widget na masuri sa simula</string>
+    <string name="force_exif_widget_initial_value_sub">Pinipilit ang exif widget na masuri sa simula</string>
     <string name="allow_multiple_languages">Payagan ang Maramihang Wika</string>
     <string name="segmentation_mode_auto_osd">Auto Orientation &amp; Script Detection</string>
     <string name="segmentation_mode_auto_only">Auto lang</string>
@@ -737,7 +737,7 @@
     <string name="saved_to_original">Na-overwrite na file na may pangalang %s sa orihinal na destinasyon</string>
     <string name="magnifier">Magnifier</string>
     <string name="magnifier_sub">Pinapagana ang magnifier sa tuktok ng daliri sa mga mode ng pagguhit para sa mas mahusay na accessibility</string>
-    <string name="force_exif_widget_inital_value">Pilitin ang paunang halaga</string>
+    <string name="force_exif_widget_initial_value">Pilitin ang paunang halaga</string>
     <string name="favorite">Paborito</string>
     <string name="no_favorite_filters">Wala pang naidagdag na mga paboritong filter</string>
     <string name="b_spline">B Spline</string>
@@ -804,4 +804,12 @@
     <string name="zip">Zip</string>
     <string name="zip_sub">Lumikha ng Zip file mula sa mga ibinigay na file o larawan</string>
     <string name="drag_handle_width">I-drag ang Lapad ng Handle</string>
+    <string name="confetti_type">Uri ng Confetti</string>
+    <string name="festive">Masigasig</string>
+    <string name="explode">Pasabog</string>
+    <string name="rain">Ulan</string>
+    <string name="corners">Kanto</string>
+    <string name="jxl_tools">Mga Kagamitan para sa JXL</string>
+    <string name="jxl_type_to_jpeg">JXL papuntang JPEG</string>
+    <string name="jxl_tools_sub">Mag-transcode sa pagitan ng JXL at JPEG nang walang pagkabawas sa kalidad, o i-convert ang GIF/APNG papunta sa animasyong JXL</string>
 </resources>

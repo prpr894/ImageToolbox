@@ -17,17 +17,18 @@
 
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
-import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
+import ru.tech.imageresizershrinker.core.domain.model.ColorModel
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.FilterValueWrapper
 import ru.tech.imageresizershrinker.core.filters.domain.model.wrap
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.ui.utils.helper.toModel
 
 
 class UiColorFilter(
-    override val value: FilterValueWrapper<Color> = Color.Yellow.copy(0.3f).wrap(),
-) : UiFilter<FilterValueWrapper<Color>>(
+    override val value: FilterValueWrapper<ColorModel> = Color.Yellow.copy(0.3f).toModel().wrap(),
+) : UiFilter<FilterValueWrapper<ColorModel>>(
     title = R.string.color_filter,
     value = value
-), Filter.Color<Bitmap, Color>
+), Filter.Color

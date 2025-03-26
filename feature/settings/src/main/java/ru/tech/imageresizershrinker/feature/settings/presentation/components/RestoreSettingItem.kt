@@ -18,62 +18,33 @@
 package ru.tech.imageresizershrinker.feature.settings.presentation.components
 
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FolderOff
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.DownloadFile
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.rememberFilePicker
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
-import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
-import ru.tech.imageresizershrinker.core.ui.widget.other.ToastDuration
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItem
 
 @Composable
 fun RestoreSettingItem(
-    restoreBackupFrom: (uri: Uri) -> Unit,
+    onObtainBackupFile: (uri: Uri) -> Unit,
     shape: Shape = ContainerShapeDefaults.centerShape,
-    modifier: Modifier = Modifier.padding(start = 8.dp, end = 8.dp)
+    modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
-    val filePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-        onResult = { uri ->
-            uri?.let {
-                restoreBackupFrom(it)
-            }
-        }
-    )
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val toastHostState = LocalToastHostState.current
+    val filePicker = rememberFilePicker(onSuccess = onObtainBackupFile)
 
     PreferenceItem(
-        onClick = {
-            runCatching {
-                filePicker.launch(arrayOf("*/*"))
-            }.onFailure {
-                scope.launch {
-                    toastHostState.showToast(
-                        message = context.getString(R.string.activate_files),
-                        icon = Icons.Outlined.FolderOff,
-                        duration = ToastDuration.Long
-                    )
-                }
-            }
-        },
+        onClick = filePicker::pickFile,
         shape = shape,
         modifier = modifier,
         title = stringResource(R.string.restore),
         subtitle = stringResource(R.string.restore_sub),
-        startIcon = Icons.Rounded.DownloadFile
+        startIcon = Icons.Outlined.DownloadFile
     )
 }

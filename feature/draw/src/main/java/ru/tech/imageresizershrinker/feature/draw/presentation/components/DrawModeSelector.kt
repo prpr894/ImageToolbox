@@ -17,6 +17,7 @@
 
 package ru.tech.imageresizershrinker.feature.draw.presentation.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -33,17 +34,21 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoFixHigh
+import androidx.compose.material.icons.outlined.Healing
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.rounded.AutoFixNormal
 import androidx.compose.material.icons.rounded.BlurCircular
-import androidx.compose.material.icons.rounded.Brush
 import androidx.compose.material.icons.rounded.TextFormat
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -55,38 +60,57 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.smarttoolfactory.colordetector.util.ColorUtil.roundToTwoDigits
+import ru.tech.imageresizershrinker.core.domain.model.Pt
+import ru.tech.imageresizershrinker.core.domain.model.coerceIn
+import ru.tech.imageresizershrinker.core.domain.model.pt
+import ru.tech.imageresizershrinker.core.filters.presentation.model.toUiFilter
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.AddFilterButton
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.FilterItem
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.FilterTemplateCreationSheetComponent
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.addFilters.AddFiltersSheet
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.addFilters.AddFiltersSheetComponent
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.Cube
 import ru.tech.imageresizershrinker.core.resources.icons.Highlighter
-import ru.tech.imageresizershrinker.core.resources.icons.Laser
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.resources.icons.NeonBrush
+import ru.tech.imageresizershrinker.core.resources.icons.Pen
+import ru.tech.imageresizershrinker.core.settings.presentation.model.toUiFont
+import ru.tech.imageresizershrinker.core.ui.theme.mixedContainer
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.SupportingButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ToggleGroupButton
-import ru.tech.imageresizershrinker.core.ui.widget.controls.EnhancedSliderItem
 import ru.tech.imageresizershrinker.core.ui.widget.controls.resize_group.components.BlurRadiusSelector
-import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.FontResSelector
+import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.FontSelector
 import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.ImageSelector
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedSliderItem
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.animateShape
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
+import ru.tech.imageresizershrinker.core.ui.widget.other.InfoContainer
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwitch
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.RoundedTextField
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 import ru.tech.imageresizershrinker.feature.draw.domain.DrawMode
-import ru.tech.imageresizershrinker.feature.draw.domain.Pt
-import ru.tech.imageresizershrinker.feature.draw.domain.coerceIn
-import ru.tech.imageresizershrinker.feature.draw.domain.pt
 
 @Composable
 fun DrawModeSelector(
+    addFiltersSheetComponent: AddFiltersSheetComponent,
+    filterTemplateCreationSheetComponent: FilterTemplateCreationSheetComponent,
     modifier: Modifier,
     value: DrawMode,
     strokeWidth: Pt,
-    onValueChange: (DrawMode) -> Unit
+    onValueChange: (DrawMode) -> Unit,
+    values: List<DrawMode> = DrawMode.entries
 ) {
     var isSheetVisible by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(values, value) {
+        if (values.find { it::class.isInstance(value) } == null) {
+            values.firstOrNull()?.let { onValueChange(it) }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -95,7 +119,7 @@ fun DrawModeSelector(
     ) {
         ToggleGroupButton(
             enabled = true,
-            itemCount = DrawMode.entries.size,
+            itemCount = values.size,
             title = {
                 Text(
                     text = stringResource(R.string.draw_mode),
@@ -109,20 +133,21 @@ fun DrawModeSelector(
                     }
                 )
             },
-            selectedIndex = DrawMode.entries.indexOfFirst {
+            selectedIndex = values.indexOfFirst {
                 value::class.isInstance(it)
             },
             buttonIcon = {},
             itemContent = {
                 Icon(
-                    imageVector = DrawMode.entries[it].getIcon(),
+                    imageVector = values[it].getIcon(),
                     contentDescription = null
                 )
             },
-            indexChanged = {
-                onValueChange(DrawMode.entries[it])
+            onIndexChange = {
+                onValueChange(values[it])
             }
         )
+
         AnimatedVisibility(
             visible = value is DrawMode.PathEffect.PrivacyBlur,
             enter = fadeIn() + expandVertically(),
@@ -138,6 +163,7 @@ fun DrawModeSelector(
                 color = MaterialTheme.colorScheme.surface
             )
         }
+
         AnimatedVisibility(
             visible = value is DrawMode.PathEffect.Pixelation,
             enter = fadeIn() + expandVertically(),
@@ -152,6 +178,7 @@ fun DrawModeSelector(
                 color = MaterialTheme.colorScheme.surface
             )
         }
+
         AnimatedVisibility(
             visible = value is DrawMode.Text,
             enter = fadeIn() + expandVertically(),
@@ -163,9 +190,9 @@ fun DrawModeSelector(
                         .padding(horizontal = 8.dp)
                         .container(
                             shape = ContainerShapeDefaults.topShape,
-                            color = MaterialTheme.colorScheme.surface
-                        )
-                        .padding(8.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            resultPadding = 8.dp
+                        ),
                     value = (value as? DrawMode.Text)?.text ?: "",
                     singleLine = false,
                     onValueChange = {
@@ -180,12 +207,12 @@ fun DrawModeSelector(
                     }
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                FontResSelector(
-                    fontRes = (value as? DrawMode.Text)?.font ?: 0,
+                FontSelector(
+                    value = (value as? DrawMode.Text)?.font.toUiFont(),
                     onValueChange = {
                         onValueChange(
                             (value as? DrawMode.Text)?.copy(
-                                font = it.fontRes ?: 0
+                                font = it.type
                             ) ?: value
                         )
                     },
@@ -215,7 +242,7 @@ fun DrawModeSelector(
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp),
                     resultModifier = Modifier.padding(16.dp),
-                    applyHorPadding = false
+                    applyHorizontalPadding = false
                 )
                 Spacer(
                     modifier = Modifier.height(
@@ -279,12 +306,12 @@ fun DrawModeSelector(
                 LaunchedEffect(dashMinimum, value) {
                     if (value is DrawMode.Image && value.repeatingInterval < dashMinimum.pt) {
                         onValueChange(
-                            (value as? DrawMode.Image)?.copy(
+                            value.copy(
                                 repeatingInterval = value.repeatingInterval.coerceIn(
                                     dashMinimum.pt,
                                     100.pt
                                 )
-                            ) ?: value
+                            )
                         )
                     }
                 }
@@ -312,8 +339,96 @@ fun DrawModeSelector(
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
+
+        AnimatedVisibility(
+            visible = value is DrawMode.PathEffect.Custom,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            val filter by remember(value) {
+                derivedStateOf {
+                    (value as? DrawMode.PathEffect.Custom)?.filter?.toUiFilter()
+                }
+            }
+            var showFilterSelection by rememberSaveable {
+                mutableStateOf(false)
+            }
+            AnimatedContent(targetState = filter != null) { notNull ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                ) {
+                    if (notNull && filter != null) {
+                        FilterItem(
+                            filter = filter!!,
+                            showDragHandle = false,
+                            onRemove = {
+                                onValueChange(
+                                    DrawMode.PathEffect.Custom()
+                                )
+                            },
+                            onFilterChange = { value ->
+                                onValueChange(
+                                    DrawMode.PathEffect.Custom(filter!!.copy(value))
+                                )
+                            },
+                            backgroundColor = MaterialTheme.colorScheme.surface,
+                            shape = RoundedCornerShape(16.dp),
+                            canHide = false
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        EnhancedButton(
+                            containerColor = MaterialTheme.colorScheme.mixedContainer,
+                            onClick = {
+                                showFilterSelection = true
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.AutoFixNormal,
+                                contentDescription = stringResource(R.string.replace_filter)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(id = R.string.replace_filter))
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    } else {
+                        InfoContainer(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            text = stringResource(R.string.pick_filter_info)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        AddFilterButton(
+                            onClick = {
+                                showFilterSelection = true
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+                AddFiltersSheet(
+                    component = addFiltersSheetComponent,
+                    filterTemplateCreationSheetComponent = filterTemplateCreationSheetComponent,
+                    visible = showFilterSelection,
+                    onVisibleChange = {
+                        showFilterSelection = it
+                    },
+                    canAddTemplates = false,
+                    previewBitmap = null,
+                    onFilterPicked = {
+                        onValueChange(
+                            DrawMode.PathEffect.Custom(it.newInstance())
+                        )
+                    },
+                    onFilterPickedWithParams = {
+                        onValueChange(
+                            DrawMode.PathEffect.Custom(it)
+                        )
+                    }
+                )
+            }
+        }
     }
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         sheetContent = {
             Column(
                 modifier = Modifier
@@ -321,19 +436,22 @@ fun DrawModeSelector(
                     .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                DrawMode.entries.forEachIndexed { index, item ->
+                values.forEachIndexed { index, item ->
                     Column(
                         Modifier
                             .fillMaxWidth()
                             .container(
                                 shape = ContainerShapeDefaults.shapeForIndex(
-                                    index,
-                                    DrawMode.entries.size
+                                    index = index,
+                                    size = values.size
                                 ),
                                 resultPadding = 0.dp
                             )
                     ) {
-                        TitleItem(text = stringResource(item.getTitle()), icon = item.getIcon())
+                        TitleItem(
+                            text = stringResource(item.getTitle()),
+                            icon = item.getIcon()
+                        )
                         Text(
                             text = stringResource(item.getSubtitle()),
                             modifier = Modifier.padding(
@@ -374,6 +492,8 @@ private fun DrawMode.getSubtitle(): Int = when (this) {
     is DrawMode.PathEffect.Pixelation -> R.string.pixelation_sub
     is DrawMode.Text -> R.string.draw_text_sub
     is DrawMode.Image -> R.string.draw_mode_image_sub
+    is DrawMode.PathEffect.Custom -> R.string.draw_filter_sub
+    DrawMode.SpotHeal -> R.string.spot_heal_sub
 }
 
 private fun DrawMode.getTitle(): Int = when (this) {
@@ -384,14 +504,18 @@ private fun DrawMode.getTitle(): Int = when (this) {
     is DrawMode.PathEffect.Pixelation -> R.string.pixelation
     is DrawMode.Text -> R.string.text
     is DrawMode.Image -> R.string.image
+    is DrawMode.PathEffect.Custom -> R.string.filter
+    is DrawMode.SpotHeal -> R.string.spot_heal
 }
 
 private fun DrawMode.getIcon(): ImageVector = when (this) {
-    is DrawMode.Highlighter -> Icons.Rounded.Highlighter
-    is DrawMode.Neon -> Icons.Rounded.Laser
-    is DrawMode.Pen -> Icons.Rounded.Brush
+    is DrawMode.Highlighter -> Icons.Outlined.Highlighter
+    is DrawMode.Neon -> Icons.Outlined.NeonBrush
+    is DrawMode.Pen -> Icons.Outlined.Pen
     is DrawMode.PathEffect.PrivacyBlur -> Icons.Rounded.BlurCircular
     is DrawMode.PathEffect.Pixelation -> Icons.Rounded.Cube
     is DrawMode.Text -> Icons.Rounded.TextFormat
     is DrawMode.Image -> Icons.Outlined.Image
+    is DrawMode.PathEffect.Custom -> Icons.Outlined.AutoFixHigh
+    DrawMode.SpotHeal -> Icons.Outlined.Healing
 }

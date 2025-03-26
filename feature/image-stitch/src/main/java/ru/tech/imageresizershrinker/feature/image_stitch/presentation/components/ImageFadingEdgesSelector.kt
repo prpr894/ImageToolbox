@@ -45,9 +45,11 @@ fun ImageFadingEdgesSelector(
             modifier = Modifier.padding(start = 3.dp, end = 2.dp),
             enabled = true,
             title = {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(stringResource(id = R.string.fading_edges))
-                Spacer(modifier = Modifier.height(8.dp))
+                Column {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(stringResource(id = R.string.fading_edges))
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             },
             items = listOf(
                 stringResource(R.string.disabled),
@@ -59,7 +61,7 @@ fun ImageFadingEdgesSelector(
                 0 -> 1
                 else -> 2
             },
-            indexChanged = {
+            onIndexChange = {
                 onValueChange(
                     when (it) {
                         0 -> null

@@ -17,6 +17,9 @@
 
 @file:Suppress("UnstableApiUsage")
 
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+
 plugins {
     id("com.android.test")
     id("org.jetbrains.kotlin.android")
@@ -28,8 +31,8 @@ android {
     compileSdk = libs.versions.androidCompileSdk.get().toIntOrNull()
 
     defaultConfig {
-        minSdk = 28
-        targetSdk = libs.versions.androidCompileSdk.get().toIntOrNull()
+        minSdk = libs.versions.androidMinSdk.get().toIntOrNull()
+        targetSdk = libs.versions.androidTargetSdk.get().toIntOrNull()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -39,8 +42,10 @@ android {
         targetCompatibility = JavaVersion.toVersion(libs.versions.jvmTarget.get())
     }
 
-    kotlinOptions {
-        jvmTarget = libs.versions.jvmTarget.get()
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.fromTarget(libs.versions.jvmTarget.get()))
+        }
     }
 
     buildTypes {

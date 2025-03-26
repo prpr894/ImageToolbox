@@ -19,11 +19,17 @@ package ru.tech.imageresizershrinker.feature.gif_tools.data
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Matrix
+import android.graphics.PorterDuff
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.applyCanvas
 import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
 import com.awxkee.jxlcoder.JxlCoder
 import com.awxkee.jxlcoder.JxlDecodingSpeed
 import com.awxkee.jxlcoder.JxlEffort
+import com.t8rin.awebp.encoder.AnimatedWebpEncoder
 import com.t8rin.gif_converter.GifDecoder
 import com.t8rin.gif_converter.GifEncoder
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -33,6 +39,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
+import ru.tech.imageresizershrinker.core.data.utils.safeConfig
+import ru.tech.imageresizershrinker.core.data.utils.toSoftware
 import ru.tech.imageresizershrinker.core.domain.dispatchers.DispatchersHolder
 import ru.tech.imageresizershrinker.core.domain.image.ImageGetter
 import ru.tech.imageresizershrinker.core.domain.image.ShareProvider
@@ -40,9 +48,13 @@ import ru.tech.imageresizershrinker.core.domain.image.model.ImageFormat
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageFrames
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageInfo
 import ru.tech.imageresizershrinker.core.domain.image.model.Quality
+import ru.tech.imageresizershrinker.core.domain.utils.runSuspendCatching
 import ru.tech.imageresizershrinker.feature.gif_tools.domain.GifConverter
 import ru.tech.imageresizershrinker.feature.gif_tools.domain.GifParams
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import javax.inject.Inject
 
 
@@ -93,14 +105,14 @@ internal class AndroidGifConverter @Inject constructor(
     override suspend fun createGifFromImageUris(
         imageUris: List<String>,
         params: GifParams,
-        onError: (Throwable) -> Unit,
+        onFailure: (Throwable) -> Unit,
         onProgress: () -> Unit
     ): ByteArray? = withContext(defaultDispatcher) {
         val out = ByteArrayOutputStream()
         val encoder = GifEncoder().apply {
             params.size?.let { size ->
                 if (size.width <= 0 || size.height <= 0) {
-                    onError(IllegalArgumentException("Width and height must be > 0"))
+                    onFailure(IllegalArgumentException("Width and height must be > 0"))
                     return@withContext null
                 }
 
@@ -114,18 +126,57 @@ internal class AndroidGifConverter @Inject constructor(
                 (100 - ((params.quality.qualityValue - 1) * (100 / 19f))).toInt()
             )
             setFrameRate(params.fps.toFloat())
+            setDispose(
+                if (params.dontStack) 2 else 0
+            )
+            setTransparent(Color.Transparent.toArgb())
             start(out)
         }
-        imageUris.forEach { uri ->
+        imageUris.forEachIndexed { index, uri ->
             imageGetter.getImage(
                 data = uri,
                 size = params.size
-            )?.let(encoder::addFrame)
+            )?.apply { setHasAlpha(true) }?.let { frame ->
+                encoder.addFrame(frame)
+                if (params.crossfadeCount > 1) {
+                    val list = mutableSetOf(0, 255)
+                    for (a in 0..255 step (255 / params.crossfadeCount)) {
+                        list.add(a)
+                    }
+                    val alphas = list.sortedDescending()
+
+
+                    imageGetter.getImage(
+                        data = imageUris.getOrNull(index + 1) ?: Unit,
+                        size = params.size
+                    )?.let { next ->
+                        alphas.forEach { alpha ->
+                            encoder.addFrame(
+                                next.overlay(
+                                    frame.copy(frame.safeConfig, true).applyCanvas {
+                                        drawColor(
+                                            Color.Black.copy(alpha / 255f).toArgb(),
+                                            PorterDuff.Mode.DST_IN
+                                        )
+                                    }
+                                )
+                            )
+                        }
+                    }
+                }
+            }
             onProgress()
         }
         encoder.finish()
 
         out.toByteArray()
+    }
+
+    private fun Bitmap.overlay(overlay: Bitmap): Bitmap {
+        return Bitmap.createBitmap(width, height, safeConfig.toSoftware()).applyCanvas {
+            drawBitmap(this@overlay, Matrix(), null)
+            drawBitmap(overlay.toSoftware(), 0f, 0f, null)
+        }
     }
 
     override suspend fun convertGifToJxl(
@@ -135,7 +186,7 @@ internal class AndroidGifConverter @Inject constructor(
     ) = withContext(defaultDispatcher) {
         gifUris.forEach { uri ->
             uri.bytes?.let { gifData ->
-                runCatching {
+                runSuspendCatching {
                     JxlCoder.Convenience.gif2JXL(
                         gifData = gifData,
                         quality = quality.qualityValue,
@@ -149,10 +200,47 @@ internal class AndroidGifConverter @Inject constructor(
         }
     }
 
-    private val String.bytes: ByteArray?
+    override suspend fun convertGifToWebp(
+        gifUris: List<String>,
+        quality: Quality.Base,
+        onProgress: suspend (String, ByteArray) -> Unit
+    ) = withContext(defaultDispatcher) {
+        gifUris.forEach { uri ->
+            runCatching {
+                val encoder = AnimatedWebpEncoder(
+                    quality = quality.qualityValue,
+                    loopCount = 1,
+                    backgroundColor = Color.Transparent.toArgb()
+                )
+
+                runSuspendCatching {
+                    encoder
+                        .loadGif(uri.file)
+                        .encode()
+                        .let {
+                            onProgress(uri, it)
+                        }
+                }.getOrNull()
+            }
+        }
+    }
+
+    private val String.inputStream: InputStream?
         get() = context
             .contentResolver
-            .openInputStream(toUri())?.use {
-                it.readBytes()
+            .openInputStream(toUri())
+
+    private val String.bytes: ByteArray?
+        get() = inputStream?.use {
+            it.readBytes()
+        }
+
+    private val String.file: File
+        get() {
+            val gifFile = File(context.cacheDir, "temp.gif")
+            inputStream?.use { gifStream ->
+                gifStream.copyTo(FileOutputStream(gifFile))
             }
+            return gifFile
+        }
 }

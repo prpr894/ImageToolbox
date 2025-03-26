@@ -17,7 +17,6 @@
 
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
-import android.graphics.Bitmap
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.FilterParam
 import ru.tech.imageresizershrinker.core.resources.R
@@ -30,8 +29,8 @@ class UiNativeStackBlurFilter(
     paramsInfo = listOf(
         FilterParam(
             title = null,
-            valueRange = 3f..200f,
+            valueRange = 3f..250f,
             roundTo = 0
         )
     )
-), Filter.NativeStackBlur<Bitmap>
+), Filter.NativeStackBlur

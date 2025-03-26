@@ -23,7 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Numbers
+import androidx.compose.material.icons.outlined.FitScreen
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
@@ -38,42 +38,46 @@ import androidx.compose.ui.unit.sp
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageScaleMode
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.shapes.IconShapeContainer
 import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.ScaleModeSelector
+import ru.tech.imageresizershrinker.core.ui.widget.icon_shape.IconShapeContainer
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 
 @Composable
 fun DefaultScaleModeSettingItem(
     onValueChange: (ImageScaleMode) -> Unit,
-    shape: Shape = ContainerShapeDefaults.defaultShape,
+    shape: Shape = ContainerShapeDefaults.topShape,
     modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
     val settingsState = LocalSettingsState.current
     ScaleModeSelector(
         modifier = modifier,
         shape = shape,
-        showAsColumns = true,
         backgroundColor = Color.Unspecified,
         value = settingsState.defaultImageScaleMode,
         onValueChange = onValueChange,
-        enableItemsCardBackground = false,
-        titlePadding = PaddingValues(16.dp),
+        titlePadding = PaddingValues(
+            top = 16.dp,
+            start = 16.dp,
+            end = 16.dp
+        ),
         titleArrangement = Arrangement.Start,
+        enableItemsCardBackground = false,
         title = {
             IconShapeContainer(
                 enabled = true,
                 content = {
                     Icon(
-                        imageVector = Icons.Outlined.Numbers,
+                        imageVector = Icons.Outlined.FitScreen,
                         contentDescription = null
                     )
                 }
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
-                text = stringResource(R.string.default_value),
+                text = stringResource(R.string.scale_mode),
                 style = LocalTextStyle.current.copy(lineHeight = 18.sp),
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f, false)
             )
         }
     )

@@ -18,35 +18,42 @@
 package ru.tech.imageresizershrinker.core.filters.domain
 
 import kotlinx.coroutines.flow.Flow
+import ru.tech.imageresizershrinker.core.domain.model.ImageModel
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.TemplateFilter
 
-interface FavoriteFiltersInteractor<Image> {
+interface FavoriteFiltersInteractor {
 
-    fun getFavoriteFilters(): Flow<List<Filter<Image, *>>>
+    fun getFavoriteFilters(): Flow<List<Filter<*>>>
 
-    suspend fun toggleFavorite(filter: Filter<Image, *>)
+    suspend fun toggleFavorite(filter: Filter<*>)
 
-    suspend fun addTemplateFilter(templateFilter: TemplateFilter<Image>)
+    suspend fun addTemplateFilter(templateFilter: TemplateFilter)
 
-    fun getTemplateFilters(): Flow<List<TemplateFilter<Image>>>
+    fun getTemplateFilters(): Flow<List<TemplateFilter>>
 
     suspend fun addTemplateFilterFromString(
         string: String,
         onSuccess: suspend (filterName: String, filtersCount: Int) -> Unit,
-        onError: suspend () -> Unit
+        onFailure: suspend () -> Unit
     )
 
-    suspend fun convertTemplateFilterToString(templateFilter: TemplateFilter<Image>): String
+    suspend fun convertTemplateFilterToString(templateFilter: TemplateFilter): String
 
-    suspend fun removeTemplateFilter(templateFilter: TemplateFilter<Image>)
+    suspend fun removeTemplateFilter(templateFilter: TemplateFilter)
 
     suspend fun addTemplateFilterFromUri(
         uri: String,
         onSuccess: suspend (filterName: String, filtersCount: Int) -> Unit,
-        onError: suspend () -> Unit
+        onFailure: suspend () -> Unit
     )
 
     fun isValidTemplateFilter(string: String): Boolean
+
+    suspend fun reorderFavoriteFilters(newOrder: List<Filter<*>>)
+
+    fun getFilterPreviewModel(): Flow<ImageModel>
+
+    suspend fun setFilterPreviewModel(uri: String)
 
 }

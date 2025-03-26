@@ -23,3 +23,7 @@ plugins {
 }
 
 android.namespace = "ru.tech.imageresizershrinker.feature.compare"
+
+dependencies {
+    implementation(libs.toolbox.opencvTools)
+}

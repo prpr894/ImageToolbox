@@ -17,24 +17,46 @@
 
 package ru.tech.imageresizershrinker.core.ui.widget.controls
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import ru.tech.imageresizershrinker.core.domain.image.model.ImageFormat
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageInfo
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.restrict
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.CalculatorDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
+import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.RoundedTextField
 
 @Composable
@@ -48,83 +70,140 @@ fun ResizeImageField(
     Column(
         modifier = Modifier
             .container(shape = RoundedCornerShape(24.dp))
+            .padding(8.dp)
             .animateContentSize()
     ) {
         Row {
-            RoundedTextField(
-                value = imageInfo.width.takeIf { it != 0 }
-                    .let { it ?: "" }
-                    .toString(),
-                onValueChange = { value ->
-                    val maxValue = if (imageInfo.height != 0) {
-                        (ImageUtils.Dimens.MAX_IMAGE_SIZE / imageInfo.height).coerceAtMost(32768)
-                    } else 32768
+            val widthField: @Composable RowScope.() -> Unit = {
+                ResizeImageFieldImpl(
+                    value = imageInfo.width.takeIf { it > 0 }
+                        .let { it ?: "" }
+                        .toString(),
+                    onValueChange = { value ->
+                        val maxValue = if (imageInfo.height > 0) {
+                            (ImageUtils.Dimens.MAX_IMAGE_SIZE / imageInfo.height).coerceAtMost(32768)
+                        } else 32768
 
-                    onWidthChange(
-                        value
-                            .restrict(maxValue)
-                            .toIntOrNull() ?: 0
-                    )
-                },
-                shape = RoundedCornerShape(12.dp),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
-                ),
-                label = {
-                    Text(
-                        stringResource(
-                            R.string.width,
-                            originalSize?.width?.toString() ?: ""
+                        onWidthChange(
+                            value
+                                .restrict(maxValue)
+                                .toIntOrNull() ?: 0
                         )
-                    )
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(
-                        start = 8.dp,
-                        top = 8.dp,
-                        bottom = 8.dp,
-                        end = 4.dp
-                    )
-            )
-            RoundedTextField(
-                value = imageInfo.height.takeIf { it != 0 }
-                    .let { it ?: "" }
-                    .toString(),
-                onValueChange = { value ->
-                    val maxValue = if (imageInfo.width != 0) {
-                        (ImageUtils.Dimens.MAX_IMAGE_SIZE / imageInfo.width).coerceAtMost(32768)
-                    } else 32768
-
-                    onHeightChange(
-                        value
-                            .restrict(maxValue)
-                            .toIntOrNull() ?: 0
-                    )
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
-                ),
-                shape = RoundedCornerShape(12.dp),
-                label = {
-                    Text(
-                        stringResource(
-                            R.string.height,
-                            originalSize?.height?.toString()
-                                ?: ""
-                        )
-                    )
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(
-                        start = 4.dp,
-                        top = 8.dp,
-                        bottom = 8.dp,
-                        end = 8.dp
+                    },
+                    shape = RoundedCornerShape(
+                        topStart = 12.dp,
+                        topEnd = 6.dp,
+                        bottomStart = 12.dp,
+                        bottomEnd = 6.dp
                     ),
-            )
+                    label = {
+                        AutoSizeText(
+                            stringResource(
+                                R.string.width,
+                                originalSize?.width?.toString() ?: ""
+                            )
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            val heightField: @Composable RowScope.() -> Unit = {
+                ResizeImageFieldImpl(
+                    value = imageInfo.height.takeIf { it > 0 }
+                        .let { it ?: "" }
+                        .toString(),
+                    onValueChange = { value ->
+                        val maxValue = if (imageInfo.width > 0) {
+                            (ImageUtils.Dimens.MAX_IMAGE_SIZE / imageInfo.width).coerceAtMost(32768)
+                        } else 32768
+
+                        onHeightChange(
+                            value
+                                .restrict(maxValue)
+                                .toIntOrNull() ?: 0
+                        )
+                    },
+                    shape = RoundedCornerShape(
+                        topEnd = 12.dp,
+                        topStart = 6.dp,
+                        bottomEnd = 12.dp,
+                        bottomStart = 6.dp
+                    ),
+                    label = {
+                        AutoSizeText(
+                            stringResource(
+                                R.string.height,
+                                originalSize?.height?.toString()
+                                    ?: ""
+                            )
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            widthField()
+            Spacer(modifier = Modifier.width(4.dp))
+            heightField()
         }
+        IcoSizeWarning(
+            visible = imageInfo.run {
+                imageFormat == ImageFormat.Ico && (width > 256 || height > 256)
+            }
+        )
         OOMWarning(visible = showWarning)
     }
+}
+
+@Composable
+internal fun ResizeImageFieldImpl(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: @Composable () -> Unit,
+    shape: Shape,
+    modifier: Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    var showCalculator by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    RoundedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        shape = shape,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number
+        ),
+        label = label,
+        endIcon = {
+            AnimatedVisibility(
+                visible = isFocused,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut()
+            ) {
+                EnhancedIconButton(
+                    onClick = {
+                        showCalculator = true
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Calculate,
+                        contentDescription = null
+                    )
+                }
+            }
+        },
+        modifier = modifier,
+        interactionSource = interactionSource
+    )
+
+    CalculatorDialog(
+        visible = showCalculator,
+        onDismiss = { showCalculator = false },
+        initialValue = value.toBigDecimalOrNull(),
+        onValueChange = { onValueChange(it.toInt().toString()) }
+    )
 }

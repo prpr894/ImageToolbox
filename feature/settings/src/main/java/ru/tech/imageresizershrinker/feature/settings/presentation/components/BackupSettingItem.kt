@@ -22,59 +22,46 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FolderOff
-import androidx.compose.material.icons.rounded.UploadFile
+import androidx.compose.material.icons.outlined.UploadFile
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.ui.utils.provider.rememberLocalEssentials
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
-import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
-import ru.tech.imageresizershrinker.core.ui.widget.other.ToastDuration
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItem
 
 @Composable
 fun BackupSettingItem(
-    createBackupFilename: () -> String,
-    createBackup: (Uri) -> Unit,
+    onCreateBackupFilename: () -> String,
+    onCreateBackup: (Uri) -> Unit,
     shape: Shape = ContainerShapeDefaults.topShape,
-    modifier: Modifier = Modifier.padding(start = 8.dp, end = 8.dp)
+    modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val toastHostState = LocalToastHostState.current
+    val essentials = rememberLocalEssentials()
 
     val backupSavingLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("*/*"),
         onResult = {
             it?.let { uri ->
-                createBackup(uri)
+                onCreateBackup(uri)
             }
         }
     )
     PreferenceItem(
         onClick = {
             runCatching {
-                backupSavingLauncher.launch(createBackupFilename())
+                backupSavingLauncher.launch(onCreateBackupFilename())
             }.onFailure {
-                scope.launch {
-                    toastHostState.showToast(
-                        message = context.getString(R.string.activate_files),
-                        icon = Icons.Outlined.FolderOff,
-                        duration = ToastDuration.Long
-                    )
-                }
+                essentials.showActivateFilesToast()
             }
         },
         shape = shape,
         modifier = modifier,
         title = stringResource(R.string.backup),
         subtitle = stringResource(R.string.backup_sub),
-        startIcon = Icons.Rounded.UploadFile
+        startIcon = Icons.Outlined.UploadFile
     )
 }

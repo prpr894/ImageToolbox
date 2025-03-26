@@ -26,7 +26,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +39,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -54,35 +54,41 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.burnoutcrew.reorderable.ReorderableItem
-import org.burnoutcrew.reorderable.detectReorderAfterLongPress
-import org.burnoutcrew.reorderable.rememberReorderableLazyListState
-import org.burnoutcrew.reorderable.reorderable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.tech.imageresizershrinker.core.domain.model.SortType
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.ui.utils.helper.sortedByType
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.longPress
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.press
 import ru.tech.imageresizershrinker.core.ui.widget.image.Picture
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.other.BoxAnimatedVisibility
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun ImageReorderCarousel(
@@ -95,17 +101,17 @@ fun ImageReorderCarousel(
 ) {
     val data = remember { mutableStateOf(images ?: emptyList()) }
 
+    val haptics = LocalHapticFeedback.current
+    val listState = rememberLazyListState()
     val state = rememberReorderableLazyListState(
+        lazyListState = listState,
         onMove = { from, to ->
+            haptics.press()
             data.value = data.value.toMutableList().apply {
                 add(to.index, removeAt(from.index))
             }
-        },
-        onDragEnd = { _, _ ->
-            onReorder(data.value)
         }
     )
-    val listState = state.listState
 
     LaunchedEffect(images) {
         if (data.value.sorted() != images?.sorted()) {
@@ -167,7 +173,7 @@ fun ImageReorderCarousel(
                     modifier = Modifier.size(20.dp)
                 )
             }
-            SimpleSheet(
+            EnhancedModalBottomSheet(
                 visible = showSortTypeSelection,
                 onDismiss = { showSortTypeSelection = it },
                 title = {
@@ -197,6 +203,7 @@ fun ImageReorderCarousel(
                     val items = remember {
                         SortType.entries
                     }
+                    val scope = rememberCoroutineScope()
 
                     items.forEachIndexed { index, item ->
                         Column(
@@ -209,16 +216,20 @@ fun ImageReorderCarousel(
                                     ),
                                     resultPadding = 0.dp
                                 )
-                                .clickable {
-                                    val newValue = images
-                                        ?.sortedByType(
-                                            sortType = item,
-                                            context = context
-                                        )
-                                        ?.reversed() ?: emptyList()
-                                    data.value = newValue
-                                    onReorder(newValue)
-                                    showSortTypeSelection = false
+                                .hapticsClickable {
+                                    scope.launch(Dispatchers.IO) {
+                                        val newValue = images
+                                            ?.sortedByType(
+                                                sortType = item,
+                                                context = context
+                                            )
+                                            ?.reversed() ?: emptyList()
+                                        withContext(Dispatchers.Main.immediate) {
+                                            data.value = newValue
+                                            onReorder(newValue)
+                                            showSortTypeSelection = false
+                                        }
+                                    }
                                 }
                         ) {
                             TitleItem(text = item.title)
@@ -230,27 +241,39 @@ fun ImageReorderCarousel(
         Box {
             LazyRow(
                 state = listState,
-                modifier = Modifier
-                    .reorderable(state)
-                    .detectReorderAfterLongPress(state)
-                    .animateContentSize(),
+                modifier = Modifier.animateContentSize(),
                 contentPadding = PaddingValues(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                itemsIndexed(data.value, key = { _, uri -> uri.hashCode() }) { index, uri ->
+                itemsIndexed(
+                    items = data.value,
+                    key = { _, uri -> uri.toString() + uri.hashCode() }
+                ) { index, uri ->
                     ReorderableItem(
-                        reorderableState = state,
-                        key = uri.hashCode()
+                        state = state,
+                        key = uri.toString() + uri.hashCode()
                     ) { isDragging ->
-                        val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
                         val alpha by animateFloatAsState(if (isDragging) 0.3f else 0.6f)
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(
-                                Modifier
+                                modifier = Modifier
                                     .size(120.dp)
-                                    .shadow(elevation, RoundedCornerShape(16.dp))
+                                    .longPressDraggableHandle(
+                                        onDragStarted = {
+                                            haptics.longPress()
+                                        },
+                                        onDragStopped = {
+                                            onReorder(data.value)
+                                        }
+                                    )
+                                    .scale(
+                                        animateFloatAsState(
+                                            if (isDragging) 1.05f
+                                            else 1f
+                                        ).value
+                                    )
                                     .container(
                                         shape = RoundedCornerShape(16.dp),
                                         color = Color.Transparent,
@@ -283,7 +306,7 @@ fun ImageReorderCarousel(
                                 }
                             }
                             BoxAnimatedVisibility(
-                                visible = (images?.size ?: 0) > 2 && state.draggingItemKey == null,
+                                visible = (images?.size ?: 0) > 2 && !state.isAnyItemDragging,
                                 enter = scaleIn() + fadeIn(),
                                 exit = scaleOut() + fadeOut()
                             ) {
@@ -303,7 +326,7 @@ fun ImageReorderCarousel(
                 }
             }
             val edgeHeight by animateDpAsState(
-                120.dp + if (state.draggingItemKey == null && (images?.size
+                120.dp + if (!state.isAnyItemDragging && (images?.size
                         ?: 0) > 2
                 ) 50.dp else 0.dp
             )
@@ -313,7 +336,7 @@ fun ImageReorderCarousel(
                     .width(12.dp)
                     .height(edgeHeight)
                     .background(
-                        brush = Brush.Companion.horizontalGradient(
+                        brush = Brush.horizontalGradient(
                             0f to MaterialTheme
                                 .colorScheme
                                 .surfaceContainerLow,
@@ -327,7 +350,7 @@ fun ImageReorderCarousel(
                     .width(12.dp)
                     .height(edgeHeight)
                     .background(
-                        brush = Brush.Companion.horizontalGradient(
+                        brush = Brush.horizontalGradient(
                             0f to Color.Transparent,
                             1f to MaterialTheme
                                 .colorScheme

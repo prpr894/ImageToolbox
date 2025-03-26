@@ -29,6 +29,14 @@ sealed interface ScaleColorSpace {
     data object F32Gamma22 : ScaleColorSpace
     data object F32Gamma28 : ScaleColorSpace
     data object LCH : ScaleColorSpace
+    data object OklabSRGB : ScaleColorSpace
+    data object OklabRec709 : ScaleColorSpace
+    data object OklabGamma22 : ScaleColorSpace
+    data object OklabGamma28 : ScaleColorSpace
+    data object JzazbzSRGB : ScaleColorSpace
+    data object JzazbzRec709 : ScaleColorSpace
+    data object JzazbzGamma22 : ScaleColorSpace
+    data object JzazbzGamma28 : ScaleColorSpace
 
     companion object {
         val Default = Linear
@@ -45,7 +53,15 @@ sealed interface ScaleColorSpace {
                 F32Rec709,
                 F32Gamma22,
                 F32Gamma28,
-                LCH
+                LCH,
+                OklabSRGB,
+                OklabRec709,
+                OklabGamma22,
+                OklabGamma28,
+                JzazbzSRGB,
+                JzazbzRec709,
+                JzazbzGamma22,
+                JzazbzGamma28
             )
         }
     }
@@ -481,6 +497,14 @@ sealed class ImageScaleMode(val value: Int) {
         ): ImageScaleMode = Lanczos6Jinc(scaleColorSpace)
     }
 
+    class Area(
+        override val scaleColorSpace: ScaleColorSpace = ScaleColorSpace.Default
+    ) : ImageScaleMode(48) {
+        override fun copy(
+            scaleColorSpace: ScaleColorSpace
+        ): ImageScaleMode = Area(scaleColorSpace)
+    }
+
     companion object {
         val Default = Bilinear()
 
@@ -522,6 +546,7 @@ sealed class ImageScaleMode(val value: Int) {
                 Lagrange3(),
                 Lanczos6(),
                 Lanczos6Jinc(),
+                Area()
             )
         }
 

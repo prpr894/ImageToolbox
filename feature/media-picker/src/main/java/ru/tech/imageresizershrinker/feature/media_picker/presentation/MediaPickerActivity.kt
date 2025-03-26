@@ -16,120 +16,25 @@
  */
 package ru.tech.imageresizershrinker.feature.media_picker.presentation
 
-import android.content.Intent
-import android.net.Uri
-import android.os.Bundle
-import androidx.activity.compose.setContent
-import androidx.activity.viewModels
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalHapticFeedback
-import com.t8rin.dynamic.theme.ColorTuple
-import com.t8rin.dynamic.theme.LocalDynamicThemeState
+import androidx.compose.runtime.Composable
+import com.arkivanov.decompose.retainedComponent
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import ru.tech.imageresizershrinker.core.crash.components.M3Activity
-import ru.tech.imageresizershrinker.core.resources.R
-import ru.tech.imageresizershrinker.core.resources.emoji.Emoji
-import ru.tech.imageresizershrinker.core.settings.presentation.model.toUiState
-import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.shapes.IconShapeDefaults
-import ru.tech.imageresizershrinker.core.ui.theme.ImageToolboxTheme
-import ru.tech.imageresizershrinker.core.ui.utils.confetti.ConfettiHost
-import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
-import ru.tech.imageresizershrinker.core.ui.utils.confetti.rememberConfettiHostState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.ColorSchemeName
-import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalImageLoader
-import ru.tech.imageresizershrinker.core.ui.widget.haptics.rememberCustomHapticFeedback
-import ru.tech.imageresizershrinker.core.ui.widget.other.SecureModeHandler
-import ru.tech.imageresizershrinker.feature.media_picker.domain.model.AllowedMedia
-import ru.tech.imageresizershrinker.feature.media_picker.presentation.components.MediaPickerRoot
-import ru.tech.imageresizershrinker.feature.media_picker.presentation.viewModel.MediaPickerViewModel
+import ru.tech.imageresizershrinker.core.ui.utils.ComposeActivity
+import ru.tech.imageresizershrinker.feature.media_picker.presentation.components.MediaPickerRootContent
+import ru.tech.imageresizershrinker.feature.media_picker.presentation.screenLogic.MediaPickerComponent
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class MediaPickerActivity : M3Activity() {
+class MediaPickerActivity : ComposeActivity() {
 
-    internal val viewModel by viewModels<MediaPickerViewModel>()
+    @Inject
+    lateinit var componentFactory: MediaPickerComponent.Factory
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        val allowMultiple = intent.getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE, false)
-
-        val title = if (allowMultiple) {
-            getString(R.string.pick_multiple_media)
-        } else {
-            getString(R.string.pick_single_media)
-        }
-        setContent {
-            val settingsState = viewModel.settingsState.toUiState(
-                allEmojis = Emoji.allIcons(),
-                allIconShapes = IconShapeDefaults.shapes,
-                getEmojiColorTuple = viewModel::getColorTupleFromEmoji
-            )
-
-            CompositionLocalProvider(
-                LocalSettingsState provides settingsState,
-                LocalConfettiHostState provides rememberConfettiHostState(),
-                LocalImageLoader provides viewModel.imageLoader,
-                LocalHapticFeedback provides rememberCustomHapticFeedback(settingsState.hapticsStrength),
-                LocalConfettiHostState provides rememberConfettiHostState(),
-            ) {
-                SecureModeHandler()
-
-                ImageToolboxTheme {
-                    val dynamicTheme = LocalDynamicThemeState.current
-                    MediaPickerRoot(
-                        title = title,
-                        allowedMedia = intent.type.allowedMedia,
-                        allowMultiple = allowMultiple
-                    )
-                    ConfettiHost()
-
-                    val scope = rememberCoroutineScope()
-                    SideEffect {
-                        intent.getIntExtra(ColorSchemeName, Color.Transparent.toArgb()).takeIf {
-                            it != Color.Transparent.toArgb()
-                        }?.let {
-                            scope.launch {
-                                while (dynamicTheme.colorTuple.value.primary != Color(it)) {
-                                    dynamicTheme.updateColorTuple(ColorTuple(Color(it)))
-                                    delay(500L)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    private val component: MediaPickerComponent by lazy {
+        retainedComponent(factory = componentFactory::invoke)
     }
 
+    @Composable
+    override fun Content() = MediaPickerRootContent(component)
 
-    internal fun sendMediaAsResult(selectedMedia: List<Uri>) {
-        val newIntent = Intent(
-            if (selectedMedia.size == 1) Intent.ACTION_SEND
-            else Intent.ACTION_SEND_MULTIPLE
-        ).apply {
-            if (selectedMedia.size == 1) data = selectedMedia.first()
-            else putParcelableArrayListExtra(
-                Intent.EXTRA_STREAM,
-                ArrayList(selectedMedia)
-            )
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        setResult(RESULT_OK, newIntent)
-
-        finish()
-    }
-
-    private val String?.pickImage: Boolean get() = this?.startsWith("image") ?: false
-    private val String?.pickVideo: Boolean get() = this?.startsWith("video") ?: false
-    private val String?.allowedMedia: AllowedMedia
-        get() = if (pickImage) AllowedMedia.Photos(this?.takeLastWhile { it != '/' })
-        else if (pickVideo) AllowedMedia.Videos
-        else AllowedMedia.Both
 }

@@ -17,20 +17,16 @@
 
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
-import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
+import ru.tech.imageresizershrinker.core.domain.model.ColorModel
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.ui.utils.helper.toModel
 
 
 class UiFalseColorFilter(
-    override val value: Pair<Color, Color> = Color(
-        red = 1.0f,
-        green = 0.596f,
-        blue = 0.0f,
-        alpha = 1.0f
-    ) to Color(red = 0.914f, green = 0.118f, blue = 0.388f, alpha = 1.0f),
-) : UiFilter<Pair<Color, Color>>(
+    override val value: Pair<ColorModel, ColorModel> = Color.Yellow.toModel() to Color.Magenta.toModel()
+) : UiFilter<Pair<ColorModel, ColorModel>>(
     title = R.string.false_color,
     value = value,
-), Filter.FalseColor<Bitmap, Color>
+), Filter.FalseColor

@@ -17,11 +17,14 @@
 
 package ru.tech.imageresizershrinker.core.ui.widget.other
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,7 +38,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,11 +50,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.utils.animation.FancyTransitionEasing
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsCombinedClickable
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.animateContentSizeNoClip
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.shapeByInteraction
 
 @Composable
 fun ExpandableItem(
@@ -62,33 +66,46 @@ fun ExpandableItem(
     initialState: Boolean = false,
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     shape: Shape = RoundedCornerShape(20.dp),
+    pressedShape: Shape = RoundedCornerShape(6.dp),
     color: Color = Color.Unspecified,
-    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    canExpand: Boolean = true,
+    onClick: () -> Unit = {},
+    onLongClick: (() -> Unit)? = null,
+    expansionIconContainerColor: Color = Color.Transparent
 ) {
-    val haptics = LocalHapticFeedback.current
+    val animatedShape = shapeByInteraction(
+        shape = shape,
+        pressedShape = pressedShape,
+        interactionSource = interactionSource
+    )
+
     Column(
-        Modifier
-            .animateContentSize()
+        modifier = Modifier
             .then(modifier)
             .container(
                 color = color,
                 resultPadding = 0.dp,
-                shape = shape
+                shape = animatedShape
+            )
+            .animateContentSizeNoClip(
+                animationSpec = spec(10)
             )
     ) {
-        var expanded by rememberSaveable { mutableStateOf(initialState) }
+        var expanded by rememberSaveable(initialState) { mutableStateOf(initialState) }
         val rotation by animateFloatAsState(if (expanded) 180f else 0f)
         Row(
             modifier = Modifier
-                .clip(shape)
-                .clickable(
+                .clip(animatedShape)
+                .hapticsCombinedClickable(
                     interactionSource = interactionSource,
-                    indication = LocalIndication.current
+                    indication = LocalIndication.current,
+                    onLongClick = onLongClick
                 ) {
-                    haptics.performHapticFeedback(
-                        HapticFeedbackType.LongPress
-                    )
-                    expanded = !expanded
+                    if (canExpand) {
+                        expanded = !expanded
+                    }
+                    onClick()
                 }
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -96,20 +113,24 @@ fun ExpandableItem(
             Row(Modifier.weight(1f)) {
                 visibleContent(expanded)
             }
-            EnhancedIconButton(
-                containerColor = Color.Transparent,
-                contentColor = LocalContentColor.current,
-                enableAutoShadowAndBorder = false,
-                onClick = { expanded = !expanded }
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.KeyboardArrowDown,
-                    contentDescription = "Expand",
-                    modifier = Modifier.rotate(rotation)
-                )
+            if (canExpand) {
+                EnhancedIconButton(
+                    containerColor = expansionIconContainerColor,
+                    onClick = { expanded = !expanded }
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        contentDescription = "Expand",
+                        modifier = Modifier.rotate(rotation)
+                    )
+                }
             }
         }
-        AnimatedVisibility(expanded) {
+        BoxAnimatedVisibility(
+            visible = expanded,
+            enter = fadeIn(spec(500)) + expandVertically(spec(500)),
+            exit = fadeOut(spec(700)) + shrinkVertically(spec(700))
+        ) {
             Column(verticalArrangement = verticalArrangement) {
                 Spacer(modifier = Modifier.height(8.dp))
                 expandableContent(expanded)
@@ -118,3 +139,8 @@ fun ExpandableItem(
         }
     }
 }
+
+private fun <T> spec(duration: Int): FiniteAnimationSpec<T> = tween(
+    durationMillis = duration,
+    easing = FancyTransitionEasing
+)

@@ -26,11 +26,12 @@ android.namespace = "ru.tech.imageresizershrinker.core.ui"
 dependencies {
     api(projects.core.resources)
     api(projects.core.domain)
+    implementation(projects.core.di)
     implementation(projects.core.settings)
 
     // Navigation
-    api(libs.reimagined)
-    api(libs.reimagined.hilt)
+    api(libs.decompose)
+    api(libs.decomposeExtensions)
 
     //AndroidX
     api(libs.activityCompose)
@@ -48,13 +49,31 @@ dependencies {
     api(libs.coilCompose)
     api(libs.coilGif)
     api(libs.coilSvg)
+    api(libs.coilNetwork)
+    api(libs.ktor)
 
     //Modules
-    api(libs.imageToolboxLibs)
+    api(libs.toolbox.uCrop)
+    api(libs.toolbox.cropper)
+    api(libs.toolbox.dynamicTheme)
+    api(libs.toolbox.colordetector)
+    api(libs.toolbox.gesture)
+    api(libs.toolbox.beforeafter)
+    api(libs.toolbox.image)
+    api(libs.toolbox.screenshot)
+    api(libs.toolbox.modalsheet)
+    api(libs.toolbox.colorpicker)
+    api(libs.toolbox.systemuicontroller)
+    api(libs.toolbox.placeholder)
+    api(libs.toolbox.logger)
+    api(libs.toolbox.zoomable)
+    api(libs.toolbox.snowfall)
+    api(libs.toolbox.extendedcolors)
+    api(libs.toolbox.histogram)
 
     api(libs.reorderable)
 
-    api(libs.compose)
+    api(libs.shadowGadgets)
     api(libs.shadowsPlus)
 
     api(libs.kotlinx.collections.immutable)
@@ -76,7 +95,9 @@ dependencies {
 
     "marketImplementation"(libs.quickie.bundled)
     "fossImplementation"(libs.quickie.foss)
-    api(libs.zxing.android.embedded)
+    implementation(libs.zxing.android.embedded)
+    implementation(libs.jsoup)
 
     api(libs.capturable)
+    api(libs.evaluator)
 }

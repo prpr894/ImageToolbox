@@ -26,7 +26,7 @@ import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 
 internal class BoxBlurFilter(
     override val value: Float = 10f,
-) : Transformation<Bitmap>, Filter.BoxBlur<Bitmap> {
+) : Transformation<Bitmap>, Filter.BoxBlur {
 
     override val cacheKey: String
         get() = value.hashCode().toString()
@@ -36,7 +36,7 @@ internal class BoxBlurFilter(
         size: IntegerSize
     ): Bitmap = Aire.boxBlur(
         bitmap = input,
-        kernelSize = 2 * value.toInt() + 1
+        radius = value.toInt()
     )
 
 }

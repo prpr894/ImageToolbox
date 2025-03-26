@@ -18,6 +18,7 @@
 package ru.tech.imageresizershrinker.feature.filters.data.model
 
 import android.graphics.Bitmap
+import ru.tech.imageresizershrinker.core.data.utils.safeConfig
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
@@ -25,8 +26,8 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 internal class StackBlurFilter(
-    override val value: Pair<Float, Int> = 0.5f to 25,
-) : Transformation<Bitmap>, Filter.StackBlur<Bitmap> {
+    override val value: Pair<Float, Int> = 0.5f to 10,
+) : Transformation<Bitmap>, Filter.StackBlur {
 
     override val cacheKey: String
         get() = (value).hashCode().toString()
@@ -45,7 +46,7 @@ private fun Bitmap.stackBlur(
     val width = (sentBitmap.width * scale).roundToInt().coerceAtLeast(1)
     val height = (sentBitmap.height * scale).roundToInt().coerceAtLeast(1)
     sentBitmap = Bitmap.createScaledBitmap(sentBitmap, width, height, true)
-    val bitmap = sentBitmap.copy(sentBitmap.config, true)
+    val bitmap = sentBitmap.copy(sentBitmap.safeConfig, true)
     if (radius < 1) {
         return this
     }

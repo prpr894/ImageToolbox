@@ -34,16 +34,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.MiniEdit
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItem
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 import ru.tech.imageresizershrinker.feature.recognize.text.domain.SegmentationMode
 
@@ -52,8 +50,6 @@ fun ModelTypeSelector(
     value: SegmentationMode,
     onValueChange: (SegmentationMode) -> Unit
 ) {
-    val haptics = LocalHapticFeedback.current
-
     var showSelectionSheet by remember {
         mutableStateOf(false)
     }
@@ -69,7 +65,7 @@ fun ModelTypeSelector(
         endIcon = Icons.Rounded.MiniEdit
     )
 
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         visible = showSelectionSheet,
         onDismiss = {
             showSelectionSheet = it
@@ -95,14 +91,14 @@ fun ModelTypeSelector(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            itemsIndexed(SegmentationMode.entries) { index, mode ->
+            itemsIndexed(
+                items = SegmentationMode.entries,
+                key = { _, e -> e.name }
+            ) { index, mode ->
                 PreferenceItem(
                     modifier = Modifier.fillMaxWidth(),
                     title = stringResource(id = mode.title),
                     onClick = {
-                        haptics.performHapticFeedback(
-                            HapticFeedbackType.LongPress
-                        )
                         onValueChange(mode)
                     },
                     color = animateColorAsState(

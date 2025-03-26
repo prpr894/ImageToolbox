@@ -18,14 +18,14 @@
 package ru.tech.imageresizershrinker.feature.filters.data.model
 
 import android.graphics.Bitmap
-import jp.co.cyberagent.android.gpuimage.GPUImageNativeLibrary
+import com.t8rin.trickle.Trickle
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 
 internal class ShuffleBlurFilter(
     override val value: Pair<Int, Float> = 35 to 1f
-) : Transformation<Bitmap>, Filter.ShuffleBlur<Bitmap> {
+) : Transformation<Bitmap>, Filter.ShuffleBlur {
 
     private val radiusMapping = listOf(0f, RAD_1) + List(200) {
         RAD_2 + STEP * it
@@ -37,12 +37,11 @@ internal class ShuffleBlurFilter(
     override suspend fun transform(
         input: Bitmap,
         size: IntegerSize
-    ): Bitmap = input.copy(input.config, true).apply {
-        GPUImageNativeLibrary.shuffle(
-            this, value.second,
-            radiusMapping.getOrNull(value.first) ?: 0f
-        )
-    }
+    ): Bitmap = Trickle.shuffleBlur(
+        input = input,
+        threshold = value.second,
+        strength = radiusMapping.getOrNull(value.first) ?: 0f
+    )
 
     private companion object {
         private const val RAD_1 = 0.001f

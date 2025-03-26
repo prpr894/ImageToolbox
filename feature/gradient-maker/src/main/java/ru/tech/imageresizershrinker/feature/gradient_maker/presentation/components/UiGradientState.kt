@@ -20,6 +20,7 @@ package ru.tech.imageresizershrinker.feature.gradient_maker.presentation.compone
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,12 +36,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import ru.tech.imageresizershrinker.feature.gradient_maker.domain.GradientState
 import ru.tech.imageresizershrinker.feature.gradient_maker.domain.GradientType
+import ru.tech.imageresizershrinker.feature.gradient_maker.domain.MeshGradientState
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 @Composable
 fun rememberGradientState(
@@ -63,7 +66,6 @@ fun rememberGradientState(
         UiGradientState(sizePx)
     }
 }
-
 
 class UiGradientState(
     size: Size = Size.Zero
@@ -144,3 +146,28 @@ class UiGradientState(
     override var centerFriction by mutableStateOf(Offset(.5f, .5f))
     override var radiusFriction by mutableFloatStateOf(.5f)
 }
+
+class UiMeshGradientState : MeshGradientState<Color, Offset> {
+
+    override val points = mutableStateListOf<List<Pair<Offset, Color>>>().apply {
+        addAll(generateMesh(2))
+    }
+
+    val gridSize: Int
+        get() = points.firstOrNull()?.size ?: 0
+
+    override var resolutionX: Int by mutableIntStateOf(16)
+
+    override var resolutionY: Int by mutableIntStateOf(16)
+
+}
+
+fun generateMesh(size: Int): List<List<Pair<Offset, Color>>> {
+    return List(size) { y ->
+        List(size) { x ->
+            Offset(x / (size - 1f), y / (size - 1f)) to Color.random()
+        }
+    }
+}
+
+private fun Color.Companion.random(): Color = Color(Random.nextInt()).copy(1f)

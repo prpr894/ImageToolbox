@@ -17,18 +17,24 @@
 
 package ru.tech.imageresizershrinker.feature.cipher.domain
 
+import ru.tech.imageresizershrinker.core.domain.model.CipherType
+
 interface CryptographyManager {
 
-    fun generateRandomString(len: Int): String
+    fun generateRandomString(
+        length: Int
+    ): String
 
     suspend fun decrypt(
         data: ByteArray,
-        key: String
+        key: String,
+        type: CipherType
     ): ByteArray
 
     suspend fun encrypt(
         data: ByteArray,
-        key: String
+        key: String,
+        type: CipherType
     ): ByteArray
 
 }

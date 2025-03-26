@@ -37,10 +37,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ru.tech.imageresizershrinker.core.resources.BuildConfig
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.resources.shapes.MaterialStarShape
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.shapes.MaterialStarShape
 import ru.tech.imageresizershrinker.core.ui.theme.blend
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
+import ru.tech.imageresizershrinker.core.ui.utils.helper.AppVersion
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.pulsate
@@ -48,7 +49,7 @@ import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRow
 
 @Composable
 fun CurrentVersionCodeSettingItem(
-    updateAvailable: Boolean,
+    isUpdateAvailable: Boolean,
     onClick: () -> Unit,
     shape: Shape = ContainerShapeDefaults.topShape,
     modifier: Modifier = Modifier.padding(horizontal = 8.dp)
@@ -58,18 +59,18 @@ fun CurrentVersionCodeSettingItem(
         shape = shape,
         modifier = Modifier
             .pulsate(
-                enabled = updateAvailable,
+                enabled = isUpdateAvailable,
                 range = 0.98f..1.02f
             )
             .then(modifier),
         title = stringResource(R.string.version),
         subtitle = remember {
-            "${BuildConfig.VERSION_NAME}${if (BuildConfig.FLAVOR == "foss") "-foss" else ""} (${BuildConfig.VERSION_CODE})"
+            "$AppVersion (${BuildConfig.VERSION_CODE})"
         },
         startIcon = Icons.Outlined.Verified,
         endContent = {
             Icon(
-                painter = painterResource(R.drawable.ic_launcher_monochrome),
+                painter = painterResource(R.drawable.ic_launcher_foreground),
                 contentDescription = null,
                 tint = animateColorAsState(
                     if (settingsState.isNightMode) {
@@ -79,7 +80,7 @@ fun CurrentVersionCodeSettingItem(
                     }
                 ).value,
                 modifier = Modifier
-                    .padding(start = 8.dp, end = 8.dp)
+                    .padding(horizontal = 8.dp)
                     .size(64.dp)
                     .container(
                         resultPadding = 0.dp,

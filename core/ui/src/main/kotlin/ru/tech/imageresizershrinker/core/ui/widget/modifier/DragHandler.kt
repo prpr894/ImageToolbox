@@ -28,12 +28,11 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toIntRect
-import com.t8rin.logger.makeLog
 import ru.tech.imageresizershrinker.core.ui.utils.state.update
 
 
 /**
-Modifier which helps you to implement google photos selection grid,
+[Modifier] which helps you to implement google photos selection grid,
 to make it work pass [key] and list item key which is should be "[key]-position"
  **/
 fun Modifier.dragHandler(
@@ -44,7 +43,12 @@ fun Modifier.dragHandler(
     selectedItems: MutableState<Set<Int>>,
     onSelectionChange: (Set<Int>) -> Unit = {},
     autoScrollSpeed: MutableState<Float>,
-    autoScrollThreshold: Float
+    autoScrollThreshold: Float,
+    enabled: Boolean = true,
+    onTap: (Int) -> Unit = {},
+    onLongTap: (Int) -> Unit = {},
+    shouldHandleLongTap: Boolean = true,
+    tapEnabled: Boolean = true
 ): Modifier {
     fun LazyGridState.gridItemKeyAtPosition(hitPoint: Offset): Int? {
         val find = layoutInfo.visibleItemsInfo.find { itemInfo ->
@@ -55,81 +59,87 @@ fun Modifier.dragHandler(
     }
 
     return this
-        .pointerInput(key) {
-            detectTapGestures { offset ->
-                lazyGridState
-                    .gridItemKeyAtPosition(offset)
-                    .makeLog("Logger_TAP")
-                    ?.let { key ->
-                        val newItems = if (selectedItems.value.contains(key)) {
-                            selectedItems.value - key
-                        } else {
-                            selectedItems.value + key
-                        }
-                        selectedItems.update { newItems }
-                        onSelectionChange(newItems)
-                    }
-            }
-        }
-        .pointerInput(key) {
-            var initialKey: Int? = null
-            var currentKey: Int? = null
-            detectDragGesturesAfterLongPress(
-                onDragStart = { offset ->
+        .pointerInput(key, tapEnabled, enabled) {
+            if (enabled) {
+                detectTapGestures { offset ->
                     lazyGridState
                         .gridItemKeyAtPosition(offset)
-                        .makeLog("Logger_START")
                         ?.let { key ->
-                            if (!selectedItems.value.contains(key)) {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                initialKey = key
-                                currentKey = key
-                                val newItems = selectedItems.value + key
+                            if (tapEnabled) {
+                                val newItems = if (selectedItems.value.contains(key)) {
+                                    selectedItems.value - key
+                                } else {
+                                    selectedItems.value + key
+                                }
                                 selectedItems.update { newItems }
                                 onSelectionChange(newItems)
                             }
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onTap(key - 1)
                         }
-                },
-                onDragCancel = {
-                    initialKey = null
-                    autoScrollSpeed.value = 0f
-                },
-                onDragEnd = {
-                    initialKey = null
-                    autoScrollSpeed.value = 0f
-                },
-                onDrag = { change, _ ->
-                    if (initialKey != null) {
-                        val distFromBottom = if (isVertical) {
-                            lazyGridState.layoutInfo.viewportSize.height - change.position.y
-                        } else lazyGridState.layoutInfo.viewportSize.width - change.position.x
-                        val distFromTop = if (isVertical) {
-                            change.position.y
-                        } else change.position.x
-                        autoScrollSpeed.value = when {
-                            distFromBottom < autoScrollThreshold -> autoScrollThreshold - distFromBottom
-                            distFromTop < autoScrollThreshold -> -(autoScrollThreshold - distFromTop)
-                            else -> 0f
-                        }
-
+                }
+            }
+        }
+        .pointerInput(key, shouldHandleLongTap, enabled) {
+            if (enabled) {
+                var initialKey: Int? = null
+                var currentKey: Int? = null
+                detectDragGesturesAfterLongPress(
+                    onDragStart = { offset ->
                         lazyGridState
-                            .gridItemKeyAtPosition(change.position)
-                            .makeLog("Logger_DRAG")
+                            .gridItemKeyAtPosition(offset)
                             ?.let { key ->
-                                if (currentKey != key) {
-                                    val newItems = selectedItems.value
-                                        .minus(initialKey!!..currentKey!!)
-                                        .minus(currentKey!!..initialKey!!)
-                                        .plus(initialKey!!..key)
-                                        .plus(key..initialKey!!)
-
+                                if (!selectedItems.value.contains(key) && shouldHandleLongTap) {
+                                    initialKey = key
+                                    currentKey = key
+                                    val newItems = selectedItems.value + key
                                     selectedItems.update { newItems }
                                     onSelectionChange(newItems)
-                                    currentKey = key
                                 }
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onLongTap(key - 1)
                             }
+                    },
+                    onDragCancel = {
+                        initialKey = null
+                        autoScrollSpeed.value = 0f
+                    },
+                    onDragEnd = {
+                        initialKey = null
+                        autoScrollSpeed.value = 0f
+                    },
+                    onDrag = { change, _ ->
+                        if (initialKey != null) {
+                            val distFromBottom = if (isVertical) {
+                                lazyGridState.layoutInfo.viewportSize.height - change.position.y
+                            } else lazyGridState.layoutInfo.viewportSize.width - change.position.x
+                            val distFromTop = if (isVertical) {
+                                change.position.y
+                            } else change.position.x
+                            autoScrollSpeed.value = when {
+                                distFromBottom < autoScrollThreshold -> autoScrollThreshold - distFromBottom
+                                distFromTop < autoScrollThreshold -> -(autoScrollThreshold - distFromTop)
+                                else -> 0f
+                            }
+
+                            lazyGridState
+                                .gridItemKeyAtPosition(change.position)
+                                ?.let { key ->
+                                    if (currentKey != key) {
+                                        val newItems = selectedItems.value
+                                            .minus(initialKey!!..currentKey!!)
+                                            .minus(currentKey!!..initialKey!!)
+                                            .plus(initialKey!!..key)
+                                            .plus(key..initialKey!!)
+
+                                        selectedItems.update { newItems }
+                                        onSelectionChange(newItems)
+                                        currentKey = key
+                                    }
+                                }
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 }

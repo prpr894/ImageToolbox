@@ -19,9 +19,7 @@ package ru.tech.imageresizershrinker.core.ui.widget.color_picker
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
@@ -48,13 +46,14 @@ import com.t8rin.dynamic.theme.ColorTupleItem
 import com.t8rin.dynamic.theme.PaletteStyle
 import com.t8rin.dynamic.theme.rememberColorScheme
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.resources.shapes.MaterialStarShape
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.shapes.MaterialStarShape
 import ru.tech.imageresizershrinker.core.ui.theme.inverse
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 fun ColorTuplePreview(
     modifier: Modifier = Modifier,
@@ -90,9 +89,7 @@ fun ColorTuplePreview(
                 borderColor = MaterialTheme.colorScheme.outlineVariant(0.2f),
                 resultPadding = 0.dp
             )
-            .combinedClickable(
-                onClick = onClick
-            )
+            .hapticsClickable(onClick = onClick)
             .padding(3.dp)
             .clip(CircleShape),
         backgroundColor = Color.Transparent
@@ -112,7 +109,7 @@ fun ColorTuplePreview(
                 if (selected) {
                     Box(
                         modifier = Modifier
-                            .size(maxWidth * (5 / 9f))
+                            .size(this.maxWidth * (5 / 9f))
                             .background(
                                 color = animateColorAsState(
                                     colorTuple.primary.inverse(

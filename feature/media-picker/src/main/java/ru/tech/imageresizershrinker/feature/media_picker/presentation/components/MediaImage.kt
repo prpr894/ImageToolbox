@@ -17,17 +17,17 @@
 
 package ru.tech.imageresizershrinker.feature.media_picker.presentation.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,32 +37,40 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.twotone.BrokenImage
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import ru.tech.imageresizershrinker.core.resources.icons.BrokenImageAlt
+import ru.tech.imageresizershrinker.core.ui.theme.Red
 import ru.tech.imageresizershrinker.core.ui.theme.White
+import ru.tech.imageresizershrinker.core.ui.theme.takeColorFromScheme
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsCombinedClickable
 import ru.tech.imageresizershrinker.core.ui.widget.image.Picture
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.Media
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaImage(
     modifier: Modifier = Modifier,
     media: Media,
-    selectionState: MutableState<Boolean>,
+    isInSelection: Boolean = true,
     isSelected: Boolean,
+    selectionIndex: Int,
     canClick: Boolean,
     onItemClick: (Media) -> Unit,
     onItemLongClick: (Media) -> Unit,
@@ -79,24 +87,31 @@ fun MediaImage(
     val strokeSize by animateDpAsState(
         targetValue = if (isSelected) 2.dp else 0.dp, label = "strokeSize"
     )
-    val strokeColor by animateColorAsState(
-        targetValue = if (isSelected) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else Color.Transparent,
-        label = "strokeColor"
-    )
+    var isImageError by remember {
+        mutableStateOf(false)
+    }
+    val strokeColor = takeColorFromScheme {
+        if (isSelected) {
+            if (isImageError) errorContainer
+            else primaryContainer
+        } else Color.Transparent
+    }
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .combinedClickable(
-                enabled = canClick,
-                onClick = {
-                    onItemClick(media)
-                },
-                onLongClick = {
-                    onItemLongClick(media)
-                },
+            .then(
+                if (canClick) {
+                    Modifier.hapticsCombinedClickable(
+                        onClick = {
+                            onItemClick(media)
+                        },
+                        onLongClick = {
+                            onItemLongClick(media)
+                        },
+                    )
+                } else Modifier
             )
             .aspectRatio(1f)
     ) {
@@ -129,32 +144,55 @@ fun MediaImage(
                 model = media.uri,
                 contentDescription = media.label,
                 contentScale = ContentScale.Crop,
+                onSuccess = {
+                    isImageError = false
+                },
+                onError = {
+                    isImageError = true
+                },
                 error = {
                     Box(
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.background(
+                            takeColorFromScheme { isNightMode ->
+                                errorContainer.copy(
+                                    if (isNightMode) 0.25f
+                                    else 1f
+                                ).compositeOver(surface)
+                            }
+                        )
                     ) {
                         Icon(
-                            imageVector = Icons.TwoTone.BrokenImage,
+                            imageVector = Icons.Rounded.BrokenImageAlt,
                             contentDescription = null,
-                            modifier = Modifier.fillMaxSize(0.5f)
+                            modifier = Modifier.fillMaxSize(0.5f),
+                            tint = MaterialTheme.colorScheme.onErrorContainer.copy(0.8f)
                         )
                     }
                 }
             )
         }
 
-        AnimatedVisibility(
-            visible = media.duration != null,
-            enter = fadeIn(),
-            exit = fadeOut(),
+        AnimatedContent(
+            targetState = media.duration != null,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
             modifier = Modifier.align(Alignment.TopEnd)
-        ) {
-            MediaVideoDurationHeader(
-                modifier = Modifier
-                    .padding(selectedSize / 2)
-                    .scale(scale),
-                media = media
-            )
+        ) { haveDuration ->
+            if (haveDuration) {
+                MediaVideoDurationHeader(
+                    modifier = Modifier
+                        .padding(selectedSize / 2)
+                        .scale(scale),
+                    media = media
+                )
+            } else {
+                MediaExtensionHeader(
+                    modifier = Modifier
+                        .padding(selectedSize / 2)
+                        .scale(scale),
+                    media = media
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -171,13 +209,13 @@ fun MediaImage(
                     .padding(8.dp)
                     .size(16.dp),
                 imageVector = Icons.Filled.Favorite,
-                colorFilter = ColorFilter.tint(Color.Red),
+                colorFilter = ColorFilter.tint(Red),
                 contentDescription = null
             )
         }
 
         AnimatedVisibility(
-            visible = selectionState.value,
+            visible = isInSelection,
             enter = fadeIn(),
             exit = fadeOut()
         ) {
@@ -189,6 +227,13 @@ fun MediaImage(
                 MediaCheckBox(
                     isChecked = isSelected,
                     uncheckedColor = White.copy(0.8f),
+                    checkedColor = if (isImageError) {
+                        MaterialTheme.colorScheme.error
+                    } else MaterialTheme.colorScheme.primary,
+                    checkedIcon = if (isImageError) {
+                        Icons.Filled.Error
+                    } else Icons.Filled.CheckCircle,
+                    selectionIndex = selectionIndex,
                     modifier = Modifier
                         .clip(CircleShape)
                         .background(

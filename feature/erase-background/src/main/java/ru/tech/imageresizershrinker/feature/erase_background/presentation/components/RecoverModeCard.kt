@@ -21,7 +21,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Brush
+import androidx.compose.material.icons.rounded.Healing
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -33,23 +33,24 @@ import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.ui.theme.mixedContainer
 import ru.tech.imageresizershrinker.core.ui.theme.onMixedContainer
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwitch
 
 @Composable
 fun RecoverModeCard(
+    modifier: Modifier = Modifier
+        .padding(start = 16.dp, end = 16.dp, top = 8.dp),
     selected: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
     PreferenceRowSwitch(
-        modifier = Modifier
-            .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+        modifier = modifier,
         shape = RoundedCornerShape(24.dp),
         enabled = enabled,
         title = stringResource(R.string.restore_background),
         subtitle = stringResource(R.string.restore_background_sub),
-        startIcon = Icons.Rounded.Brush,
+        startIcon = Icons.Rounded.Healing,
         checked = selected,
         onClick = {
             onClick()
@@ -62,7 +63,7 @@ fun RecoverModeButton(
     selected: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     EnhancedIconButton(
         modifier = modifier,
@@ -81,7 +82,7 @@ fun RecoverModeButton(
         onClick = onClick
     ) {
         Icon(
-            imageVector = Icons.Rounded.Brush,
+            imageVector = Icons.Rounded.Healing,
             contentDescription = "Brush"
         )
     }

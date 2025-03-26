@@ -17,22 +17,21 @@
 
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
-import android.graphics.Bitmap
+import ru.tech.imageresizershrinker.core.domain.utils.NEAREST_ODD_ROUNDING
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.FilterParam
-import ru.tech.imageresizershrinker.core.filters.domain.model.NEAREST_ODD_ROUNDING
 import ru.tech.imageresizershrinker.core.resources.R
 
 class UiTentBlurFilter(
-    override val value: Float = 15f,
+    override val value: Float = 10f,
 ) : UiFilter<Float>(
     title = R.string.tent_blur,
     value = value,
     paramsInfo = listOf(
         FilterParam(
             title = null,
-            valueRange = 1f..100f,
+            valueRange = 1f..300f,
             roundTo = NEAREST_ODD_ROUNDING
         )
     )
-), Filter.TentBlur<Bitmap>
+), Filter.TentBlur

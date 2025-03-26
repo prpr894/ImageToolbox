@@ -25,14 +25,15 @@ interface ImageGetter<I, M> {
 
     suspend fun getImage(
         uri: String,
-        originalSize: Boolean = true
+        originalSize: Boolean = true,
+        onFailure: (Throwable) -> Unit = {}
     ): ImageData<I, M>?
 
     fun getImageAsync(
         uri: String,
         originalSize: Boolean = true,
         onGetImage: (ImageData<I, M>) -> Unit,
-        onError: (Throwable) -> Unit
+        onFailure: (Throwable) -> Unit
     )
 
     suspend fun getImageWithTransformations(

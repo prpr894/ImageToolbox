@@ -17,141 +17,96 @@
 
 package ru.tech.imageresizershrinker.feature.watermarking.presentation
 
-import android.app.Activity
 import android.net.Uri
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import coil.request.ImageRequest
-import com.t8rin.dynamic.theme.LocalDynamicThemeState
-import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import coil3.request.ImageRequest
+import coil3.toBitmap
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.ImageReset
-import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.toBitmap
-import ru.tech.imageresizershrinker.core.ui.utils.helper.Picker
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.Picker
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.rememberImagePicker
 import ru.tech.imageresizershrinker.core.ui.utils.helper.asClip
 import ru.tech.imageresizershrinker.core.ui.utils.helper.isPortraitOrientationAsState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.localImagePickerMode
-import ru.tech.imageresizershrinker.core.ui.utils.helper.parseSaveResults
-import ru.tech.imageresizershrinker.core.ui.utils.helper.rememberImagePicker
-import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
+import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalComponentActivity
 import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalImageLoader
+import ru.tech.imageresizershrinker.core.ui.utils.provider.rememberLocalEssentials
 import ru.tech.imageresizershrinker.core.ui.widget.AdaptiveLayoutScreen
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.BottomButtonsBlock
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.CompareButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ShareButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ShowOriginalButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ZoomButton
 import ru.tech.imageresizershrinker.core.ui.widget.controls.SaveExifWidget
 import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.ImageFormatSelector
+import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.QualitySelector
 import ru.tech.imageresizershrinker.core.ui.widget.dialogs.ExitWithoutSavingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.LoadingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.OneTimeImagePickingDialog
 import ru.tech.imageresizershrinker.core.ui.widget.dialogs.OneTimeSaveLocationSelectionDialog
 import ru.tech.imageresizershrinker.core.ui.widget.dialogs.ResetDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.image.AutoFilePicker
 import ru.tech.imageresizershrinker.core.ui.widget.image.ImageContainer
 import ru.tech.imageresizershrinker.core.ui.widget.image.ImageCounter
 import ru.tech.imageresizershrinker.core.ui.widget.image.ImageNotPickedWidget
-import ru.tech.imageresizershrinker.core.ui.widget.other.LoadingDialog
-import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.detectSwipes
 import ru.tech.imageresizershrinker.core.ui.widget.other.TopAppBarEmoji
-import ru.tech.imageresizershrinker.core.ui.widget.other.showError
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.PickImageFromUrisSheet
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.ProcessImagesPreferenceSheet
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.ZoomModalSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.TopAppBarTitle
+import ru.tech.imageresizershrinker.core.ui.widget.utils.AutoContentBasedColors
 import ru.tech.imageresizershrinker.feature.compare.presentation.components.CompareSheet
 import ru.tech.imageresizershrinker.feature.watermarking.domain.WatermarkParams
 import ru.tech.imageresizershrinker.feature.watermarking.presentation.components.WatermarkDataSelector
 import ru.tech.imageresizershrinker.feature.watermarking.presentation.components.WatermarkParamsSelectionGroup
 import ru.tech.imageresizershrinker.feature.watermarking.presentation.components.WatermarkingTypeSelector
-import ru.tech.imageresizershrinker.feature.watermarking.presentation.viewModel.WatermarkingViewModel
+import ru.tech.imageresizershrinker.feature.watermarking.presentation.screenLogic.WatermarkingComponent
 
 @Composable
 fun WatermarkingContent(
-    uriState: List<Uri>?,
-    onGoBack: () -> Unit,
-    onNavigate: (Screen) -> Unit,
-    viewModel: WatermarkingViewModel = hiltViewModel()
+    component: WatermarkingComponent
 ) {
-    val scope = rememberCoroutineScope()
-    val themeState = LocalDynamicThemeState.current
+    val context = LocalComponentActivity.current
 
-    val settingsState = LocalSettingsState.current
-    val allowChangeColor = settingsState.allowChangeColorByImage
-
-    val context = LocalContext.current as Activity
-
-    val confettiHostState = LocalConfettiHostState.current
-    val toastHostState = LocalToastHostState.current
-
-    val showConfetti: () -> Unit = {
-        scope.launch {
-            confettiHostState.showConfetti()
-        }
-    }
-
-    LaunchedEffect(uriState) {
-        uriState?.let {
-            viewModel.setUris(it) {
-                scope.launch {
-                    toastHostState.showError(context, it)
-                }
-            }
-        }
-    }
+    val essentials = rememberLocalEssentials()
+    val showConfetti: () -> Unit = essentials::showConfetti
 
     val imageLoader = LocalImageLoader.current
-    LaunchedEffect(viewModel.selectedUri) {
-        viewModel.selectedUri.let {
-            if (allowChangeColor) {
-                imageLoader.execute(
-                    ImageRequest.Builder(context).data(it).build()
-                ).drawable?.toBitmap()?.let { bitmap ->
-                    themeState.updateColorByImage(bitmap)
-                }
-            }
+    AutoContentBasedColors(
+        model = component.selectedUri,
+        selector = {
+            imageLoader.execute(
+                ImageRequest.Builder(context).data(it).build()
+            ).image?.toBitmap()
         }
+    )
+
+    val imagePicker = rememberImagePicker { uris: List<Uri> ->
+        component.setUris(
+            uris = uris,
+            onFailure = essentials::showFailureToast
+        )
     }
 
-    val pickImageLauncher =
-        rememberImagePicker(
-            mode = localImagePickerMode(Picker.Multiple)
-        ) { list ->
-            list.takeIf { it.isNotEmpty() }?.let {
-                viewModel.setUris(it) {
-                    scope.launch {
-                        toastHostState.showError(context, it)
-                    }
-                }
-            }
-        }
-
-    val pickImage = pickImageLauncher::pickImage
+    val pickImage = imagePicker::pickImage
 
     AutoFilePicker(
         onAutoPick = pickImage,
-        isPickedAlready = !uriState.isNullOrEmpty()
+        isPickedAlready = !component.initialUris.isNullOrEmpty()
     )
 
     val isPortrait by isPortraitOrientationAsState()
@@ -164,27 +119,28 @@ fun WatermarkingContent(
     var showResetDialog by rememberSaveable { mutableStateOf(false) }
 
     AdaptiveLayoutScreen(
+        shouldDisableBackHandler = !component.haveChanges,
         title = {
             TopAppBarTitle(
                 title = stringResource(R.string.watermarking),
-                input = viewModel.selectedUri.takeIf { it != Uri.EMPTY },
-                isLoading = viewModel.isImageLoading,
+                input = component.selectedUri.takeIf { it != Uri.EMPTY },
+                isLoading = component.isImageLoading,
                 size = null
             )
         },
         onGoBack = {
-            if (viewModel.haveChanges) showExitDialog = true
-            else onGoBack()
+            if (component.haveChanges) showExitDialog = true
+            else component.onGoBack()
         },
         topAppBarPersistentActions = {
-            if (viewModel.previewBitmap == null) TopAppBarEmoji()
+            if (component.previewBitmap == null) TopAppBarEmoji()
             CompareButton(
                 onClick = { showCompareSheet = true },
-                visible = viewModel.previewBitmap != null && viewModel.internalBitmap != null
+                visible = component.previewBitmap != null && component.internalBitmap != null
             )
             ZoomButton(
                 onClick = { showZoomSheet = true },
-                visible = viewModel.previewBitmap != null
+                visible = component.previewBitmap != null
             )
         },
         actions = {
@@ -192,18 +148,18 @@ fun WatermarkingContent(
                 mutableStateOf(listOf<Uri>())
             }
             ShareButton(
-                enabled = viewModel.previewBitmap != null,
+                enabled = component.previewBitmap != null,
                 onShare = {
-                    viewModel.shareBitmaps(showConfetti)
+                    component.shareBitmaps(showConfetti)
                 },
                 onCopy = { manager ->
-                    viewModel.cacheCurrentImage { uri ->
-                        manager.setClip(uri.asClip(context))
+                    component.cacheCurrentImage { uri ->
+                        manager.copyToClipboard(uri.asClip(context))
                         showConfetti()
                     }
                 },
                 onEdit = {
-                    viewModel.cacheImages {
+                    component.cacheImages {
                         editSheetData = it
                     }
                 }
@@ -212,23 +168,12 @@ fun WatermarkingContent(
                 uris = editSheetData,
                 visible = editSheetData.isNotEmpty(),
                 onDismiss = {
-                    if (!it) {
-                        editSheetData = emptyList()
-                    }
+                    editSheetData = emptyList()
                 },
-                onNavigate = { screen ->
-                    scope.launch {
-                        editSheetData = emptyList()
-                        delay(200)
-                        onNavigate(screen)
-                    }
-                }
+                onNavigate = component.onNavigate
             )
             EnhancedIconButton(
-                containerColor = Color.Transparent,
-                contentColor = LocalContentColor.current,
-                enableAutoShadowAndBorder = false,
-                enabled = viewModel.internalBitmap != null,
+                enabled = component.internalBitmap != null,
                 onClick = { showResetDialog = true }
             ) {
                 Icon(
@@ -236,9 +181,8 @@ fun WatermarkingContent(
                     contentDescription = stringResource(R.string.reset_image)
                 )
             }
-            if (viewModel.internalBitmap != null) {
+            if (component.internalBitmap != null) {
                 ShowOriginalButton(
-                    canShow = true,
                     onStateChange = {
                         showOriginal = it
                     }
@@ -248,66 +192,72 @@ fun WatermarkingContent(
         forceImagePreviewToMax = showOriginal,
         imagePreview = {
             ImageContainer(
+                modifier = Modifier
+                    .detectSwipes(
+                        onSwipeRight = component::selectLeftUri,
+                        onSwipeLeft = component::selectRightUri
+                    ),
                 imageInside = isPortrait,
                 showOriginal = showOriginal,
-                previewBitmap = viewModel.previewBitmap,
-                originalBitmap = viewModel.internalBitmap,
-                isLoading = viewModel.isImageLoading,
+                previewBitmap = component.previewBitmap,
+                originalBitmap = component.internalBitmap,
+                isLoading = component.isImageLoading,
                 shouldShowPreview = true
             )
         },
         controls = {
-            ImageCounter(
-                imageCount = viewModel.uris.size.takeIf { it > 1 },
-                onRepick = {
-                    showPickImageFromUrisSheet = true
-                }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            WatermarkingTypeSelector(
-                value = viewModel.watermarkParams,
-                onValueChange = viewModel::updateWatermarkParams
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            WatermarkParamsSelectionGroup(
-                value = viewModel.watermarkParams,
-                onValueChange = viewModel::updateWatermarkParams
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            WatermarkDataSelector(
-                value = viewModel.watermarkParams,
-                onValueChange = viewModel::updateWatermarkParams
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            SaveExifWidget(
-                checked = viewModel.keepExif,
-                imageFormat = viewModel.imageFormat,
-                onCheckedChange = viewModel::toggleKeepExif
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            ImageFormatSelector(
-                value = viewModel.imageFormat,
-                onValueChange = viewModel::setImageFormat
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ImageCounter(
+                    imageCount = component.uris.size.takeIf { it > 1 },
+                    onRepick = {
+                        showPickImageFromUrisSheet = true
+                    }
+                )
+                WatermarkingTypeSelector(
+                    value = component.watermarkParams,
+                    onValueChange = component::updateWatermarkParams
+                )
+                WatermarkDataSelector(
+                    value = component.watermarkParams,
+                    onValueChange = component::updateWatermarkParams
+                )
+                WatermarkParamsSelectionGroup(
+                    value = component.watermarkParams,
+                    onValueChange = component::updateWatermarkParams
+                )
+                SaveExifWidget(
+                    checked = component.keepExif,
+                    imageFormat = component.imageFormat,
+                    onCheckedChange = component::toggleKeepExif
+                )
+                QualitySelector(
+                    imageFormat = component.imageFormat,
+                    quality = component.quality,
+                    onQualityChange = component::setQuality
+                )
+                ImageFormatSelector(
+                    value = component.imageFormat,
+                    onValueChange = component::setImageFormat
+                )
+            }
         },
         buttons = {
             val saveBitmaps: (oneTimeSaveLocationUri: String?) -> Unit = {
-                viewModel.saveBitmaps(it) { results ->
-                    context.parseSaveResults(
-                        scope = scope,
-                        results = results,
-                        toastHostState = toastHostState,
-                        isOverwritten = settingsState.overwriteFiles,
-                        showConfetti = showConfetti
-                    )
-                }
+                component.saveBitmaps(
+                    oneTimeSaveLocationUri = it,
+                    onResult = essentials::parseSaveResults
+                )
             }
             var showFolderSelectionDialog by rememberSaveable {
                 mutableStateOf(false)
             }
+            var showOneTimeImagePickingDialog by rememberSaveable {
+                mutableStateOf(false)
+            }
             BottomButtonsBlock(
-                targetState = (viewModel.uris.isEmpty()) to isPortrait,
+                targetState = (component.uris.isEmpty()) to isPortrait,
                 onSecondaryButtonClick = pickImage,
                 onPrimaryButtonClick = {
                     saveBitmaps(null)
@@ -317,26 +267,35 @@ fun WatermarkingContent(
                 },
                 actions = {
                     if (isPortrait) it()
+                },
+                onSecondaryButtonLongClick = {
+                    showOneTimeImagePickingDialog = true
                 }
             )
-            if (showFolderSelectionDialog) {
-                OneTimeSaveLocationSelectionDialog(
-                    onDismiss = { showFolderSelectionDialog = false },
-                    onSaveRequest = saveBitmaps
-                )
-            }
+            OneTimeSaveLocationSelectionDialog(
+                visible = showFolderSelectionDialog,
+                onDismiss = { showFolderSelectionDialog = false },
+                onSaveRequest = saveBitmaps,
+                formatForFilenameSelection = component.getFormatForFilenameSelection()
+            )
+            OneTimeImagePickingDialog(
+                onDismiss = { showOneTimeImagePickingDialog = false },
+                picker = Picker.Multiple,
+                imagePicker = imagePicker,
+                visible = showOneTimeImagePickingDialog
+            )
         },
         noDataControls = {
             ImageNotPickedWidget(onPickImage = pickImage)
         },
         isPortrait = isPortrait,
-        canShowScreenData = viewModel.uris.isNotEmpty()
+        canShowScreenData = component.uris.isNotEmpty()
     )
 
-    val transformations by remember(viewModel.previewBitmap) {
+    val transformations by remember(component.previewBitmap) {
         derivedStateOf {
             listOf(
-                viewModel.getWatermarkTransformation()
+                component.getWatermarkTransformation()
             )
         }
     }
@@ -347,17 +306,16 @@ fun WatermarkingContent(
         onDismiss = {
             showPickImageFromUrisSheet = false
         },
-        uris = viewModel.uris,
-        selectedUri = viewModel.selectedUri,
+        uris = component.uris,
+        selectedUri = component.selectedUri,
         onUriPicked = { uri ->
-            viewModel.setUri(uri = uri) {
-                scope.launch {
-                    toastHostState.showError(context, it)
-                }
-            }
+            component.updateSelectedUri(
+                uri = uri,
+                onFailure = essentials::showFailureToast
+            )
         },
         onUriRemoved = { uri ->
-            viewModel.updateUrisSilently(removedUri = uri)
+            component.updateUrisSilently(removedUri = uri)
         },
         columns = if (isPortrait) 2 else 4,
     )
@@ -368,12 +326,12 @@ fun WatermarkingContent(
         title = stringResource(R.string.reset_properties),
         text = stringResource(R.string.reset_properties_sub),
         onReset = {
-            viewModel.updateWatermarkParams(WatermarkParams.Default)
+            component.updateWatermarkParams(WatermarkParams.Default)
         }
     )
 
     CompareSheet(
-        data = viewModel.internalBitmap to viewModel.previewBitmap,
+        data = component.internalBitmap to component.previewBitmap,
         visible = showCompareSheet,
         onDismiss = {
             showCompareSheet = false
@@ -381,7 +339,7 @@ fun WatermarkingContent(
     )
 
     ZoomModalSheet(
-        data = viewModel.selectedUri,
+        data = component.selectedUri,
         visible = showZoomSheet,
         transformations = transformations,
         onDismiss = {
@@ -389,16 +347,15 @@ fun WatermarkingContent(
         }
     )
 
-    if (viewModel.isSaving) {
-        LoadingDialog(
-            done = viewModel.done,
-            left = viewModel.left,
-            onCancelLoading = viewModel::cancelSaving
-        )
-    }
+    LoadingDialog(
+        visible = component.isSaving,
+        done = component.done,
+        left = component.left,
+        onCancelLoading = component::cancelSaving
+    )
 
     ExitWithoutSavingDialog(
-        onExit = onGoBack,
+        onExit = component.onGoBack,
         onDismiss = { showExitDialog = false },
         visible = showExitDialog
     )

@@ -23,11 +23,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -46,17 +46,17 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.shapes.IconShapeContainer
 import ru.tech.imageresizershrinker.core.ui.utils.provider.ProvideContainerDefaults
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
+import ru.tech.imageresizershrinker.core.ui.widget.icon_shape.IconShapeContainer
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.shapeByInteraction
 
 @Composable
 fun PreferenceRow(
@@ -67,7 +67,7 @@ fun PreferenceRow(
     enabled: Boolean = true,
     shape: Shape = RoundedCornerShape(16.dp),
     contentColor: Color? = null,
-    applyHorPadding: Boolean = true,
+    applyHorizontalPadding: Boolean = true,
     maxLines: Int = Int.MAX_VALUE,
     startContent: (@Composable () -> Unit)? = null,
     endContent: (@Composable () -> Unit)? = null,
@@ -81,9 +81,16 @@ fun PreferenceRow(
     onClick: (() -> Unit)?,
     onDisabledClick: (() -> Unit)? = null,
     autoShadowElevation: Dp = 1.dp,
-    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    additionalContent: (@Composable () -> Unit)? = null,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    drawContainer: Boolean = true,
 ) {
-    val haptics = LocalHapticFeedback.current
+    val animatedShape = shapeByInteraction(
+        shape = shape,
+        pressedShape = RoundedCornerShape(6.dp),
+        interactionSource = interactionSource
+    )
+
     val internalColor = contentColor
         ?: contentColorFor(backgroundColor = color)
     CompositionLocalProvider(
@@ -98,105 +105,113 @@ fun PreferenceRow(
             ) else it
         }
     ) {
-        Row(
-            modifier = modifier
-                .then(
-                    if (applyHorPadding) {
-                        Modifier.padding(horizontal = 16.dp)
-                    } else Modifier
-                )
-                .container(
-                    color = color,
-                    shape = shape,
-                    resultPadding = 0.dp,
-                    autoShadowElevation = autoShadowElevation
-                )
-                .then(
-                    onClick
-                        ?.let {
-                            if (enabled) {
-                                Modifier.combinedClickable(
+        val rowModifier = modifier
+            .then(
+                if (applyHorizontalPadding) {
+                    Modifier.padding(horizontal = 16.dp)
+                } else Modifier
+            )
+            .then(
+                if (drawContainer) {
+                    Modifier.container(
+                        color = color,
+                        shape = animatedShape,
+                        resultPadding = 0.dp,
+                        autoShadowElevation = autoShadowElevation
+                    )
+                } else Modifier
+            )
+            .then(
+                onClick
+                    ?.let {
+                        if (enabled) {
+                            Modifier.hapticsClickable(
+                                interactionSource = interactionSource,
+                                indication = LocalIndication.current,
+                                onClick = onClick
+                            )
+                        } else Modifier.then(
+                            if (onDisabledClick != null) {
+                                Modifier.hapticsClickable(
                                     interactionSource = interactionSource,
                                     indication = LocalIndication.current,
-                                    onClick = {
-                                        haptics.performHapticFeedback(
-                                            HapticFeedbackType.LongPress
-                                        )
-                                        onClick()
-                                    }
+                                    onClick = onDisabledClick
                                 )
-                            } else Modifier.then(
-                                if (onDisabledClick != null) {
-                                    Modifier.combinedClickable(
-                                        interactionSource = interactionSource,
-                                        indication = LocalIndication.current,
-                                        onClick = {
-                                            haptics.performHapticFeedback(
-                                                HapticFeedbackType.LongPress
-                                            )
-                                            onDisabledClick()
-                                        }
-                                    )
-                                } else Modifier
-                            )
-                        } ?: Modifier
-                )
-                .then(resultModifier)
-                .then(
-                    if (changeAlphaWhenDisabled) Modifier.alpha(animateFloatAsState(targetValue = if (enabled) 1f else 0.5f).value)
-                    else Modifier
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            startContent?.let { content ->
-                ProvideContainerDefaults(null) {
-                    if (drawStartIconContainer) {
-                        IconShapeContainer(
-                            enabled = true,
-                            content = {
-                                content()
-                            },
-                            modifier = Modifier.padding(end = 16.dp)
+                            } else Modifier
                         )
-                    } else content()
-                }
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                AnimatedContent(
-                    targetState = title,
-                    transitionSpec = {
-                        fadeIn().togetherWith(fadeOut())
+                    } ?: Modifier
+            )
+            .then(resultModifier)
+            .then(
+                if (changeAlphaWhenDisabled) Modifier.alpha(animateFloatAsState(targetValue = if (enabled) 1f else 0.5f).value)
+                else Modifier
+            )
+
+        val rowContent: @Composable (Modifier) -> Unit = {
+            Row(
+                modifier = it,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                startContent?.let { content ->
+                    ProvideContainerDefaults(null) {
+                        if (drawStartIconContainer) {
+                            IconShapeContainer(
+                                enabled = true,
+                                content = {
+                                    content()
+                                },
+                                modifier = Modifier.padding(end = 16.dp)
+                            )
+                        } else content()
                     }
-                ) {
-                    Text(
-                        text = it,
-                        maxLines = maxLines,
-                        style = titleFontStyle,
-                        fontWeight = FontWeight.Medium
-                    )
                 }
-                Spacer(modifier = Modifier.height(2.dp))
-                AnimatedContent(
-                    targetState = subtitle,
-                    transitionSpec = {
-                        fadeIn().togetherWith(fadeOut())
-                    }
-                ) {
-                    it?.let {
+                Column(modifier = Modifier.weight(1f)) {
+                    AnimatedContent(
+                        targetState = title,
+                        transitionSpec = {
+                            fadeIn().togetherWith(fadeOut())
+                        }
+                    ) {
                         Text(
                             text = it,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Normal,
-                            lineHeight = 14.sp,
-                            color = LocalContentColor.current.copy(alpha = 0.5f)
+                            maxLines = maxLines,
+                            style = titleFontStyle,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    AnimatedContent(
+                        targetState = subtitle,
+                        transitionSpec = {
+                            fadeIn().togetherWith(fadeOut())
+                        }
+                    ) {
+                        it?.let {
+                            Text(
+                                text = it,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Normal,
+                                lineHeight = 14.sp,
+                                color = LocalContentColor.current.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.width(8.dp))
+                ProvideContainerDefaults(null) {
+                    endContent?.invoke()
                 }
             }
-            Spacer(Modifier.width(8.dp))
-            ProvideContainerDefaults(null) {
-                endContent?.invoke()
+        }
+
+        if (additionalContent != null) {
+            Column(rowModifier) {
+                rowContent(Modifier)
+                additionalContent()
             }
+        } else {
+            rowContent(rowModifier)
         }
     }
 }
@@ -215,9 +230,11 @@ fun PreferenceRow(
     changeAlphaWhenDisabled: Boolean = true,
     contentColor: Color? = null,
     shape: Shape = RoundedCornerShape(16.dp),
+    titleFontStyle: TextStyle = LocalTextStyle.current.copy(lineHeight = 18.sp),
     startIcon: ImageVector?,
     endContent: (@Composable () -> Unit)? = null,
-    onClick: () -> Unit
+    additionalContent: (@Composable () -> Unit)? = null,
+    onClick: (() -> Unit)?,
 ) {
     PreferenceRow(
         modifier = modifier,
@@ -229,6 +246,7 @@ fun PreferenceRow(
         color = color,
         contentColor = contentColor,
         shape = shape,
+        titleFontStyle = titleFontStyle,
         onDisabledClick = onDisabledClick,
         drawStartIconContainer = false,
         startContent = startIcon?.let {
@@ -236,10 +254,12 @@ fun PreferenceRow(
                 IconShapeContainer(
                     enabled = drawStartIconContainer,
                     content = {
-                        Icon(
-                            imageVector = startIcon,
-                            contentDescription = null
-                        )
+                        AnimatedContent(startIcon) { startIcon ->
+                            Icon(
+                                imageVector = startIcon,
+                                contentDescription = null
+                            )
+                        }
                     },
                     modifier = Modifier.padding(end = 16.dp)
                 )
@@ -253,7 +273,8 @@ fun PreferenceRow(
                 bottom = 8.dp
             )
         } else Modifier.padding(16.dp),
-        applyHorPadding = false,
-        onClick = onClick
+        applyHorizontalPadding = false,
+        onClick = onClick,
+        additionalContent = additionalContent
     )
 }

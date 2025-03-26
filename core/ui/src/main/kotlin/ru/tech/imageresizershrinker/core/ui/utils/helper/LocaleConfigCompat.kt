@@ -21,11 +21,11 @@ import android.app.LocaleConfig
 import android.content.Context
 import android.content.res.XmlResourceParser
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.annotation.XmlRes
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.os.LocaleListCompat
+import com.t8rin.logger.makeLog
 import org.xmlpull.v1.XmlPullParser
 import java.io.FileNotFoundException
 import java.util.Locale
@@ -74,16 +74,16 @@ class LocaleConfigCompat(context: Context) {
 
     private class Api21Impl(context: Context) : Impl() {
         override var status = 0
-            private set
 
         override var supportedLocales: LocaleListCompat? = null
-            private set
 
         init {
             val resourceId = try {
                 getLocaleConfigResourceId(context)
-            } catch (e: Exception) {
-                Log.w(TAG, "The resource file pointed to by the given resource ID isn't found.", e)
+            } catch (e: Throwable) {
+                "The resource file pointed to by the given resource ID isn't found.".makeLog(TAG)
+
+                ResourcesCompat.ID_NULL
             }
             if (resourceId == ResourcesCompat.ID_NULL) {
                 status = STATUS_NOT_SPECIFIED
@@ -92,9 +92,9 @@ class LocaleConfigCompat(context: Context) {
                 try {
                     supportedLocales = resources.getXml(resourceId).use { parseLocaleConfig(it) }
                     status = STATUS_SUCCESS
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     val resourceEntryName = resources.getResourceEntryName(resourceId)
-                    Log.w(TAG, "Failed to parse XML configuration from $resourceEntryName", e)
+                    "Failed to parse XML configuration from $resourceEntryName".makeLog(TAG)
                     status = STATUS_PARSING_FAILED
                 }
             }
@@ -113,7 +113,7 @@ class LocaleConfigCompat(context: Context) {
             while (true) {
                 val parser = try {
                     context.assets.openXmlResourceParser(cookie, FILE_NAME_ANDROID_MANIFEST)
-                } catch (e: FileNotFoundException) {
+                } catch (_: FileNotFoundException) {
                     if (!isAndroidManifestFound) {
                         ++cookie
                         continue
@@ -209,10 +209,8 @@ class LocaleConfigCompat(context: Context) {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private class Api33Impl(context: Context) : Impl() {
         override var status: Int = 0
-            private set
 
         override var supportedLocales: LocaleListCompat? = null
-            private set
 
         init {
             val platformLocaleConfig = LocaleConfig(context)

@@ -20,7 +20,6 @@ plugins {
     alias(libs.plugins.image.toolbox.feature)
     alias(libs.plugins.image.toolbox.hilt)
     alias(libs.plugins.image.toolbox.compose)
-    kotlin("plugin.serialization")
 }
 
 android.namespace = "ru.tech.imageresizershrinker.feature.filters"
@@ -31,4 +30,8 @@ dependencies {
     implementation(projects.feature.pickColor)
     implementation(projects.feature.compare)
     implementation(libs.kotlin.reflect)
+    implementation(libs.aire)
+    implementation(libs.trickle)
+    implementation(libs.toolbox.gpuimage)
+    implementation(libs.toolbox.opencvTools)
 }

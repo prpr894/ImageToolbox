@@ -19,7 +19,15 @@ package ru.tech.imageresizershrinker.core.ui.widget.buttons
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -27,15 +35,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -46,6 +59,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -55,6 +69,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.ui.theme.takeColorFromScheme
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedFloatingActionButton
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.drawHorizontalStroke
 
@@ -62,35 +77,57 @@ import ru.tech.imageresizershrinker.core.ui.widget.modifier.drawHorizontalStroke
 fun BottomButtonsBlock(
     targetState: Pair<Boolean, Boolean>,
     onSecondaryButtonClick: () -> Unit,
+    onSecondaryButtonLongClick: (() -> Unit)? = null,
     secondaryButtonIcon: ImageVector = Icons.Rounded.AddPhotoAlternate,
     secondaryButtonText: String = stringResource(R.string.pick_image_alt),
     onPrimaryButtonClick: () -> Unit,
     onPrimaryButtonLongClick: (() -> Unit)? = null,
     primaryButtonIcon: ImageVector = Icons.Rounded.Save,
+    primaryButtonText: String = "",
     isPrimaryButtonVisible: Boolean = true,
     isSecondaryButtonVisible: Boolean = true,
     showNullDataButtonAsContainer: Boolean = false,
     columnarFab: (@Composable ColumnScope.() -> Unit)? = null,
-    actions: @Composable RowScope.() -> Unit
+    actions: @Composable RowScope.() -> Unit,
+    isPrimaryButtonEnabled: Boolean = true,
+    showColumnarFabInRow: Boolean = false,
 ) {
     AnimatedContent(
-        targetState = targetState
+        targetState = targetState,
+        transitionSpec = {
+            fadeIn() + slideInVertically { it / 2 } togetherWith fadeOut() + slideOutVertically { it / 2 }
+        }
     ) { (isNull, inside) ->
         if (isNull) {
             val button = @Composable {
-                EnhancedFloatingActionButton(
-                    onClick = onSecondaryButtonClick,
+                Row(
                     modifier = Modifier
-                        .navigationBarsPadding()
+                        .windowInsetsPadding(
+                            WindowInsets.navigationBars.union(
+                                WindowInsets.displayCutout.only(
+                                    WindowInsetsSides.Horizontal
+                                )
+                            )
+                        )
                         .padding(16.dp),
-                    content = {
-                        Spacer(Modifier.width(16.dp))
-                        Icon(secondaryButtonIcon, null)
-                        Spacer(Modifier.width(16.dp))
-                        Text(secondaryButtonText)
-                        Spacer(Modifier.width(16.dp))
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    EnhancedFloatingActionButton(
+                        onClick = onSecondaryButtonClick,
+                        onLongClick = onSecondaryButtonLongClick,
+                        content = {
+                            Spacer(Modifier.width(16.dp))
+                            Icon(secondaryButtonIcon, null)
+                            Spacer(Modifier.width(16.dp))
+                            Text(secondaryButtonText)
+                            Spacer(Modifier.width(16.dp))
+                        }
+                    )
+                    if (showColumnarFabInRow && columnarFab != null) {
+                        Column { columnarFab() }
                     }
-                )
+                }
             }
             if (showNullDataButtonAsContainer) {
                 Row(
@@ -110,10 +147,13 @@ fun BottomButtonsBlock(
                 modifier = Modifier.drawHorizontalStroke(true),
                 actions = actions,
                 floatingActionButton = {
-                    Row {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         AnimatedVisibility(visible = isSecondaryButtonVisible) {
                             EnhancedFloatingActionButton(
                                 onClick = onSecondaryButtonClick,
+                                onLongClick = onSecondaryButtonLongClick,
                                 containerColor = takeColorFromScheme {
                                     if (isPrimaryButtonVisible) tertiaryContainer
                                     else primaryContainer
@@ -125,17 +165,46 @@ fun BottomButtonsBlock(
                                 )
                             }
                         }
+                        AnimatedVisibility(visible = showColumnarFabInRow) {
+                            columnarFab?.let {
+                                Column { it() }
+                            }
+                        }
                         AnimatedVisibility(visible = isPrimaryButtonVisible) {
-                            Row {
-                                Spacer(Modifier.width(8.dp))
-                                EnhancedFloatingActionButton(
-                                    onClick = onPrimaryButtonClick,
-                                    onLongClick = onPrimaryButtonLongClick
-                                ) {
-                                    Icon(
-                                        imageVector = primaryButtonIcon,
-                                        contentDescription = null
-                                    )
+                            EnhancedFloatingActionButton(
+                                onClick = onPrimaryButtonClick.takeIf { isPrimaryButtonEnabled },
+                                onLongClick = onPrimaryButtonLongClick.takeIf { isPrimaryButtonEnabled },
+                                interactionSource = remember { MutableInteractionSource() }.takeIf { isPrimaryButtonEnabled },
+                                containerColor = takeColorFromScheme {
+                                    if (isPrimaryButtonEnabled) primaryContainer
+                                    else surfaceContainerHighest
+                                },
+                                contentColor = takeColorFromScheme {
+                                    if (isPrimaryButtonEnabled) onPrimaryContainer
+                                    else outline
+                                }
+                            ) {
+                                AnimatedContent(
+                                    targetState = primaryButtonIcon to primaryButtonText,
+                                    transitionSpec = { fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut() }
+                                ) { (icon, text) ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        if (text.isNotEmpty()) {
+                                            Spacer(Modifier.width(16.dp))
+                                        }
+                                        Icon(
+                                            imageVector = icon,
+                                            contentDescription = null
+                                        )
+                                        if (text.isNotEmpty()) {
+                                            Spacer(Modifier.width(16.dp))
+                                            Text(text)
+                                            Spacer(Modifier.width(16.dp))
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -167,7 +236,11 @@ fun BottomButtonsBlock(
                 AnimatedVisibility(visible = isSecondaryButtonVisible) {
                     EnhancedFloatingActionButton(
                         onClick = onSecondaryButtonClick,
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        onLongClick = onSecondaryButtonLongClick,
+                        containerColor = takeColorFromScheme {
+                            if (isPrimaryButtonVisible) tertiaryContainer
+                            else primaryContainer
+                        }
                     ) {
                         Icon(
                             imageVector = secondaryButtonIcon,
@@ -180,16 +253,41 @@ fun BottomButtonsBlock(
                     it()
                 }
                 AnimatedVisibility(visible = isPrimaryButtonVisible) {
-                    Column {
-                        Spacer(Modifier.height(8.dp))
-                        EnhancedFloatingActionButton(
-                            onClick = onPrimaryButtonClick,
-                            onLongClick = onPrimaryButtonLongClick
-                        ) {
-                            Icon(
-                                imageVector = primaryButtonIcon,
-                                contentDescription = null
-                            )
+                    EnhancedFloatingActionButton(
+                        onClick = onPrimaryButtonClick.takeIf { isPrimaryButtonEnabled },
+                        onLongClick = onPrimaryButtonLongClick.takeIf { isPrimaryButtonEnabled },
+                        interactionSource = remember { MutableInteractionSource() }.takeIf { isPrimaryButtonEnabled },
+                        containerColor = takeColorFromScheme {
+                            if (isPrimaryButtonEnabled) primaryContainer
+                            else surfaceContainerHighest
+                        },
+                        contentColor = takeColorFromScheme {
+                            if (isPrimaryButtonEnabled) onPrimaryContainer
+                            else outline
+                        },
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) {
+                        AnimatedContent(
+                            targetState = primaryButtonIcon to primaryButtonText,
+                            transitionSpec = { fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut() }
+                        ) { (icon, text) ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                if (text.isNotEmpty()) {
+                                    Spacer(Modifier.width(16.dp))
+                                }
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null
+                                )
+                                if (text.isNotEmpty()) {
+                                    Spacer(Modifier.width(16.dp))
+                                    Text(text)
+                                    Spacer(Modifier.width(16.dp))
+                                }
+                            }
                         }
                     }
                 }

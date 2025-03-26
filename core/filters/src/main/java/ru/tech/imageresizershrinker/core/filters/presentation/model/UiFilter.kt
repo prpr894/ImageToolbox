@@ -18,10 +18,10 @@
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
 import android.content.Context
-import android.graphics.Bitmap
 import androidx.annotation.StringRes
-import com.t8rin.logger.makeLog
-import kotlinx.coroutines.coroutineScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.FilterParam
 import kotlin.reflect.full.primaryConstructor
@@ -29,8 +29,10 @@ import kotlin.reflect.full.primaryConstructor
 sealed class UiFilter<T>(
     @StringRes val title: Int,
     val paramsInfo: List<FilterParam> = listOf(),
-    override val value: T
-) : Filter<Bitmap, T> {
+    override val value: T,
+) : Filter<T> {
+
+    override var isVisible: Boolean by mutableStateOf(true)
 
     constructor(
         @StringRes title: Int,
@@ -51,10 +53,16 @@ sealed class UiFilter<T>(
             this::class.primaryConstructor?.run {
                 callBy(mapOf(parameters[0] to value))
             }
-        }.getOrNull() ?: newInstance()
+        }.getOrNull()?.also { it.isVisible = this.isVisible } ?: newInstance()
     }
 
-    fun newInstance(): UiFilter<*> = this::class.primaryConstructor!!.callBy(emptyMap())
+    fun newInstance(): UiFilter<*> {
+        val instance = this::class.primaryConstructor!!.callBy(emptyMap())
+
+        return if (this.value is Unit) {
+            instance.also { it.isVisible = this.isVisible }
+        } else instance
+    }
 
     companion object {
         val groupedEntries by lazy {
@@ -109,7 +117,13 @@ sealed class UiFilter<T>(
                     UiRedSwirlFilter(),
                     UiDigitalCodeFilter(),
                     UiOldTvFilter(),
-                    UiEqualizeHistogramFilter()
+                    UiEqualizeHistogramFilter(),
+                    UiSimpleOldTvFilter(),
+                    UiGothamFilter(),
+                    UiHDRFilter(),
+                    UiSimpleSketchFilter(),
+                    UiSobelSimpleFilter(),
+                    UiLaplacianSimpleFilter()
                 ),
                 listOf(
                     UiHueFilter(),
@@ -124,7 +138,34 @@ sealed class UiFilter<T>(
                     UiMonochromeFilter(),
                     UiColorMatrix4x4Filter(),
                     UiColorMatrix3x3Filter(),
-                    UiColorBalanceFilter()
+                    UiColorBalanceFilter(),
+                    UiPaletteTransferFilter(),
+                    UiPaletteTransferVariantFilter(),
+                    UiPosterizeFilter(),
+                    UiColorPosterFilter(),
+                    UiTriToneFilter(),
+                    UiPopArtFilter()
+                ),
+                listOf(
+                    UiLUT512x512Filter(),
+                    UiAmatorkaFilter(),
+                    UiMissEtikateFilter(),
+                    UiSoftEleganceFilter(),
+                    UiSoftEleganceVariantFilter(),
+                    UiCubeLutFilter(),
+                    UiBleachBypassFilter(),
+                    UiCandlelightFilter(),
+                    UiDropBluesFilter(),
+                    UiEdgyAmberFilter(),
+                    UiFallColorsFilter(),
+                    UiFilmStock50Filter(),
+                    UiFoggyNightFilter(),
+                    UiKodakFilter(),
+                    UiCelluloidFilter(),
+                    UiCoffeeFilter(),
+                    UiGoldenForestFilter(),
+                    UiGreenishFilter(),
+                    UiRetroYellowFilter()
                 ),
                 listOf(
                     UiBrightnessFilter(),
@@ -156,26 +197,38 @@ sealed class UiFilter<T>(
                     UiMobiusFilter(),
                     UiAldridgeFilter(),
                     UiUchimuraFilter(),
-                    UiDragoFilter()
+                    UiDragoFilter(),
+                    UiClaheOklabFilter(),
+                    UiClaheOklchFilter(),
+                    UiClaheJzazbzFilter()
                 ),
                 listOf(
+                    UiNoiseFilter(),
+                    UiAnisotropicDiffusionFilter(),
                     UiSharpenFilter(),
                     UiUnsharpFilter(),
                     UiGrainFilter(),
                     UiSobelEdgeDetectionFilter(),
+                    UiCannyFilter(),
                     UiOilFilter(),
+                    UiEnhancedOilFilter(),
                     UiEmbossFilter(),
                     UiVignetteFilter(),
                     UiKuwaharaFilter(),
                     UiErodeFilter(),
                     UiDilationFilter(),
+                    UiOpeningFilter(),
+                    UiClosingFilter(),
+                    UiMorphologicalGradientFilter(),
+                    UiTopHatFilter(),
+                    UiBlackHatFilter(),
                     UiOpacityFilter(),
                     UiSideFadeFilter(),
                     UiCropToContentFilter(),
+                    UiAutoCropFilter(),
                     UiToonFilter(),
                     UiSmoothToonFilter(),
                     UiSketchFilter(),
-                    UiPosterizeFilter(),
                     UiLookupFilter(),
                     UiConvolution3x3Filter(),
                     UiThresholdFilter()
@@ -196,15 +249,23 @@ sealed class UiFilter<T>(
                     UiStackBlurFilter(),
                     UiFastBlurFilter(),
                     UiZoomBlurFilter(),
-                    UiMotionBlurFilter(),
-                    UiAnisotropicDiffusionFilter(),
+                    UiEnhancedZoomBlurFilter(),
                     UiFastBilaterialBlurFilter(),
                     UiPoissonBlurFilter(),
                     UiMedianBlurFilter(),
                     UiBokehFilter(),
                     UiFastGaussianBlur2DFilter(),
                     UiFastGaussianBlur3DFilter(),
-                    UiFastGaussianBlur4DFilter()
+                    UiFastGaussianBlur4DFilter(),
+                    UiLinearBoxBlurFilter(),
+                    UiLinearTentBlurFilter(),
+                    UiLinearGaussianBoxBlurFilter(),
+                    UiLinearStackBlurFilter(),
+                    UiGaussianBoxBlurFilter(),
+                    UiLinearFastGaussianBlurNextFilter(),
+                    UiLinearFastGaussianBlurFilter(),
+                    UiLinearGaussianBlurFilter(),
+                    UiMotionBlurFilter()
                 ),
                 listOf(
                     UiCrystallizeFilter(),
@@ -215,7 +276,10 @@ sealed class UiFilter<T>(
                     UiEnhancedDiamondPixelationFilter(),
                     UiCirclePixelationFilter(),
                     UiEnhancedCirclePixelationFilter(),
-                    UiStrokePixelationFilter()
+                    UiStrokePixelationFilter(),
+                    UiLowPolyFilter(),
+                    UiSandPaintingFilter(),
+                    UiPolkaDotFilter()
                 ),
                 listOf(
                     UiEnhancedGlitchFilter(),
@@ -228,7 +292,6 @@ sealed class UiFilter<T>(
                     UiPerlinDistortionFilter(),
                     UiAnaglyphFilter(),
                     UiHorizontalWindStaggerFilter(),
-                    UiNoiseFilter(),
                     UiSwirlDistortionFilter(),
                     UiBulgeDistortionFilter(),
                     UiSphereRefractionFilter(),
@@ -253,13 +316,17 @@ sealed class UiFilter<T>(
                     UiLeftToRightDitheringFilter(),
                     UiRandomDitheringFilter(),
                     UiSimpleThresholdDitheringFilter(),
-                    UiQuantizierFilter()
+                    UiQuantizierFilter(),
+                    UiClustered2x2DitheringFilter(),
+                    UiClustered4x4DitheringFilter(),
+                    UiClustered8x8DitheringFilter(),
+                    UiYililomaDitheringFilter()
                 )
             )
         }
 
         fun groupedEntries(
-            context: Context
+            context: Context,
         ) = groupedEntries.map { list ->
             list.sortedBy { context.getString(it.title) }
         }
@@ -269,37 +336,44 @@ sealed class UiFilter<T>(
 
 private val sealedValues = UiFilter::class.sealedSubclasses
 
-fun Filter<Bitmap, *>.toUiFilter(): UiFilter<*> = sealedValues.first {
+fun Filter<*>.toUiFilter(
+    preserveVisibility: Boolean = true
+): UiFilter<*> = sealedValues.first {
     it.java.isAssignableFrom(this::class.java)
 }.primaryConstructor!!.run {
     if (parameters.isNotEmpty()) callBy(mapOf(parameters[0] to value))
     else callBy(emptyMap())
+}.also {
+    if (preserveVisibility) {
+        it.isVisible = isVisible
+    }
 }
+
 
 infix fun Int.paramTo(valueRange: ClosedFloatingPointRange<Float>) = FilterParam(
     title = this,
     valueRange = valueRange
 )
 
-private suspend fun reflectionTest() = coroutineScope {
-    val filters = UiFilter.groupedEntries.flatten()
-    val failedCopy = mutableListOf<Pair<String, String?>>()
-    val failedToUi = mutableListOf<Pair<String, String?>>()
-    filters.forEach { filter ->
-        runCatching {
-            filter.copy(filter.value)
-        }.onFailure {
-            failedCopy.add(filter::class.simpleName.toString() to it.message)
-        }
-        runCatching {
-            filter.toUiFilter()
-        }.onFailure {
-            failedToUi.add(filter::class.simpleName.toString() to it.message)
-        }
-    }
-    "------------------".makeLog()
-    failedCopy.makeLog()
-    " ".makeLog()
-    failedToUi.makeLog()
-    "------------------".makeLog()
-}
+//private suspend fun reflectionTest() = coroutineScope {
+//    val filters = UiFilter.groupedEntries.flatten()
+//    val failedCopy = mutableListOf<Pair<String, String?>>()
+//    val failedToUi = mutableListOf<Pair<String, String?>>()
+//    filters.forEach { filter ->
+//        runCatching {
+//            filter.copy(filter.value)
+//        }.onFailure {
+//            failedCopy.add(filter::class.simpleName.toString() to it.message)
+//        }
+//        runCatching {
+//            filter.toUiFilter()
+//        }.onFailure {
+//            failedToUi.add(filter::class.simpleName.toString() to it.message)
+//        }
+//    }
+//    "------------------".makeLog()
+//    failedCopy.makeLog()
+//    " ".makeLog()
+//    failedToUi.makeLog()
+//    "------------------".makeLog()
+//}

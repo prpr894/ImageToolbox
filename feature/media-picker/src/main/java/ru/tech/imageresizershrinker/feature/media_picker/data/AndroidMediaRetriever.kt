@@ -17,21 +17,23 @@
 
 package ru.tech.imageresizershrinker.feature.media_picker.data
 
-import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
 import android.os.Bundle
 import android.provider.MediaStore
+import androidx.annotation.RequiresApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import ru.tech.imageresizershrinker.core.domain.dispatchers.DispatchersHolder
+import ru.tech.imageresizershrinker.core.domain.utils.runSuspendCatching
 import ru.tech.imageresizershrinker.feature.media_picker.data.utils.Query
 import ru.tech.imageresizershrinker.feature.media_picker.data.utils.contentFlowObserver
 import ru.tech.imageresizershrinker.feature.media_picker.data.utils.getAlbums
 import ru.tech.imageresizershrinker.feature.media_picker.data.utils.getMedia
+import ru.tech.imageresizershrinker.feature.media_picker.data.utils.getSupportedFileSequence
 import ru.tech.imageresizershrinker.feature.media_picker.domain.MediaRetriever
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.Album
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.AllowedMedia
@@ -40,12 +42,12 @@ import ru.tech.imageresizershrinker.feature.media_picker.domain.model.MediaOrder
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.OrderType
 import javax.inject.Inject
 
+@RequiresApi(26)
 internal class AndroidMediaRetriever @Inject constructor(
     @ApplicationContext private val context: Context,
     dispatchersHolder: DispatchersHolder
 ) : DispatchersHolder by dispatchersHolder, MediaRetriever {
 
-    @SuppressLint("InlinedApi")
     override fun getAlbumsWithType(
         allowedMedia: AllowedMedia
     ): Flow<Result<List<Album>>> = context.retrieveAlbums {
@@ -66,7 +68,25 @@ internal class AndroidMediaRetriever @Inject constructor(
                 )
             }
         )
-        it.getAlbums(query, mediaOrder = MediaOrder.Label(OrderType.Ascending))
+        val fileQuery = Query.AlbumQuery().copy(
+            bundle = Bundle().apply {
+                val extensions = getSupportedFileSequence(allowedMedia).toList()
+                putString(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION,
+                    extensions.asSequence().map { MediaStore.MediaColumns.DATA + " LIKE ?" }
+                        .joinToString(" OR ")
+                )
+                putStringArray(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                    extensions.toTypedArray()
+                )
+            }
+        )
+        it.getAlbums(
+            query = query,
+            fileQuery = fileQuery,
+            mediaOrder = MediaOrder.Date(OrderType.Descending)
+        )
     }
 
     override fun mediaFlowWithType(
@@ -78,7 +98,6 @@ internal class AndroidMediaRetriever @Inject constructor(
         getMediaByType(allowedMedia)
     }.flowOn(defaultDispatcher).conflate()
 
-    @SuppressLint("InlinedApi")
     override fun getMediaByAlbumIdWithType(
         albumId: Long,
         allowedMedia: AllowedMedia
@@ -92,51 +111,79 @@ internal class AndroidMediaRetriever @Inject constructor(
                 }
                 putString(
                     ContentResolver.QUERY_ARG_SQL_SELECTION,
-                    MediaStore.MediaColumns.BUCKET_ID + "= ? and " + MediaStore.MediaColumns.MIME_TYPE + " like ?"
+                    MediaStore.MediaColumns.BUCKET_ID + "= ? and (" + MediaStore.MediaColumns.MIME_TYPE + " like ? OR ${MediaStore.MediaColumns.DATA} LIKE ? OR ${MediaStore.MediaColumns.DATA} LIKE ?)"
                 )
                 putStringArray(
                     ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                    arrayOf(albumId.toString(), mimeType)
+                    arrayOf(albumId.toString(), mimeType, "%.jxl", "%.qoi")
+                )
+            }
+        )
+        val fileQuery = Query.MediaQuery().copy(
+            bundle = Bundle().apply {
+                val extensions = getSupportedFileSequence(allowedMedia).toList()
+
+                putString(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION,
+                    MediaStore.MediaColumns.BUCKET_ID + "= ? and ("
+                            + extensions.asSequence()
+                        .map { MediaStore.MediaColumns.DATA + " LIKE ?" }
+                        .joinToString(" OR ")
+                            + ")"
+                )
+                putStringArray(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                    arrayOf(albumId.toString(), *extensions.toTypedArray())
                 )
             }
         )
         /** return@retrieveMedia */
-        it.getMedia(query)
+        it.getMedia(
+            mediaQuery = query,
+            fileQuery = fileQuery
+        )
     }
 
     override fun getMediaByType(
         allowedMedia: AllowedMedia
-    ): Flow<Result<List<Media>>> = context.retrieveMedia {
+    ): Flow<Result<List<Media>>> = context.retrieveMedia { it ->
         val query = when (allowedMedia) {
             is AllowedMedia.Photos -> Query.PhotoQuery()
             AllowedMedia.Videos -> Query.VideoQuery()
             AllowedMedia.Both -> Query.MediaQuery()
         }
-        it.getMedia(mediaQuery = query)
+        val fileQuery = Query.FileQuery(getSupportedFileSequence(allowedMedia).toList())
+        it.getMedia(
+            mediaQuery = query,
+            fileQuery = fileQuery
+        )
     }
 
     private val uris = arrayOf(
         MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-        MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+        MediaStore.Files.getContentUri("external")
     )
 
     private fun Context.retrieveMedia(
         dataBody: suspend (ContentResolver) -> List<Media>
-    ) = contentFlowObserver(uris).map {
-        try {
-            Result.success(dataBody.invoke(contentResolver))
-        } catch (e: Exception) {
-            Result.failure(e)
+    ) = contentFlowObserver(
+        uris = uris,
+        coroutineContext = ioDispatcher
+    ).map {
+        runSuspendCatching {
+            dataBody.invoke(contentResolver)
         }
     }.conflate()
 
     private fun Context.retrieveAlbums(
         dataBody: suspend (ContentResolver) -> List<Album>
-    ) = contentFlowObserver(uris).map {
-        try {
-            Result.success(dataBody.invoke(contentResolver))
-        } catch (e: Exception) {
-            Result.failure(e)
+    ) = contentFlowObserver(
+        uris = uris,
+        coroutineContext = ioDispatcher
+    ).map {
+        runSuspendCatching {
+            dataBody.invoke(contentResolver)
         }
     }.conflate()
 

@@ -32,11 +32,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,23 +50,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ru.tech.imageresizershrinker.core.resources.R
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
+import ru.tech.imageresizershrinker.core.ui.widget.other.LoadingIndicator
 
 @Composable
-fun OCRTextPreviewItem(
-    text: String,
+internal fun OCRTextPreviewItem(
+    text: String?,
+    onTextEdit: (String) -> Unit,
     isLoading: Boolean,
     loadingProgress: Int,
     accuracy: Int
 ) {
-    AnimatedContent(targetState = isLoading to text) { (loading, dataText) ->
+    var expanded by rememberSaveable {
+        mutableStateOf(true)
+    }
+
+    AnimatedContent(targetState = isLoading) { loading ->
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -83,21 +91,16 @@ fun OCRTextPreviewItem(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.padding(24.dp),
-                        color = MaterialTheme.colorScheme.tertiary.copy(0.5f),
-                        trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        strokeCap = StrokeCap.Round
-                    )
-                    CircularProgressIndicator(
-                        modifier = Modifier.padding(24.dp),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        strokeCap = StrokeCap.Round,
-                        trackColor = Color.Transparent,
-                        progress = {
-                            loadingProgress / 100f
-                        }
-                    )
+                    Box(
+                        modifier = Modifier
+                            .padding(24.dp)
+                            .size(72.dp)
+                    ) {
+                        LoadingIndicator(
+                            progress = loadingProgress / 100f,
+                            loaderSize = 36.dp
+                        )
+                    }
                 }
             } else {
                 Column(
@@ -111,9 +114,6 @@ fun OCRTextPreviewItem(
                         .padding(16.dp)
                         .animateContentSize()
                 ) {
-                    var expanded by rememberSaveable(dataText.length) {
-                        mutableStateOf(true)
-                    }
                     Row(
                         verticalAlignment = Alignment.Top
                     ) {
@@ -124,7 +124,7 @@ fun OCRTextPreviewItem(
                             color = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.weight(1f)
                         )
-                        if (dataText.length >= 100) {
+                        if ((text?.length ?: 0) >= 100) {
                             val rotation by animateFloatAsState(
                                 if (expanded) 180f
                                 else 0f
@@ -150,11 +150,25 @@ fun OCRTextPreviewItem(
                         }
                     ) { showFull ->
                         SelectionContainer {
-                            Text(
-                                text = dataText,
-                                maxLines = if (showFull) Int.MAX_VALUE else 3,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            if (showFull) {
+                                BasicTextField(
+                                    value = text
+                                        ?: stringResource(R.string.picture_has_no_text),
+                                    onValueChange = onTextEdit,
+                                    enabled = text != null,
+                                    textStyle = LocalTextStyle.current.copy(
+                                        color = LocalContentColor.current
+                                    ),
+                                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                )
+                            } else {
+                                Text(
+                                    text = text ?: stringResource(R.string.picture_has_no_text),
+                                    maxLines = if (text == null) Int.MAX_VALUE else 3,
+                                    overflow = TextOverflow.Ellipsis,
+                                    style = LocalTextStyle.current
+                                )
+                            }
                         }
                     }
                 }

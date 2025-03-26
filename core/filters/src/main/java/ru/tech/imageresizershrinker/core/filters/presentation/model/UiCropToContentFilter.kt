@@ -17,15 +17,16 @@
 
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
-import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
+import ru.tech.imageresizershrinker.core.domain.model.ColorModel
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.FilterParam
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.ui.utils.helper.toModel
 
 class UiCropToContentFilter(
-    override val value: Pair<Float, Color> = 0f to Color.Black
-) : UiFilter<Pair<Float, Color>>(
+    override val value: Pair<Float, ColorModel> = 0f to Color.Black.toModel()
+) : UiFilter<Pair<Float, ColorModel>>(
     title = R.string.crop_to_content,
     paramsInfo = listOf(
         FilterParam(
@@ -38,4 +39,4 @@ class UiCropToContentFilter(
         )
     ),
     value = value
-), Filter.CropToContent<Bitmap, Color>
+), Filter.CropToContent

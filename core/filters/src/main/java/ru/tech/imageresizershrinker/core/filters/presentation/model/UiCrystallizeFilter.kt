@@ -17,18 +17,19 @@
 
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
-import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
+import ru.tech.imageresizershrinker.core.domain.model.ColorModel
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.ui.utils.helper.toModel
 
 class UiCrystallizeFilter(
-    override val value: Pair<Float, Color> = 1f to Color.Transparent
-) : UiFilter<Pair<Float, Color>>(
+    override val value: Pair<Float, ColorModel> = 1f to Color.Transparent.toModel()
+) : UiFilter<Pair<Float, ColorModel>>(
     title = R.string.crystallize,
     value = value,
     paramsInfo = listOf(
         R.string.amount paramTo 0.01f..2f,
         R.string.stroke_color paramTo 0f..0f
     )
-), Filter.Crystallize<Bitmap, Color>
+), Filter.Crystallize

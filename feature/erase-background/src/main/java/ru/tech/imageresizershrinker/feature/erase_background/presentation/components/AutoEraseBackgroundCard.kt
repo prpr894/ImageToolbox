@@ -19,7 +19,6 @@
 
 package ru.tech.imageresizershrinker.feature.erase_background.presentation.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,17 +42,19 @@ import ru.tech.imageresizershrinker.core.resources.BuildConfig
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.ui.theme.mixedContainer
 import ru.tech.imageresizershrinker.core.ui.theme.onMixedContainer
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 
 @Composable
 fun AutoEraseBackgroundCard(
+    modifier: Modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
     onClick: () -> Unit,
     onReset: () -> Unit
 ) {
     Column(
         Modifier
-            .padding(start = 16.dp, end = 16.dp, top = 8.dp)
+            .then(modifier)
             .container(resultPadding = 8.dp, shape = RoundedCornerShape(24.dp))
     ) {
         val notFoss = BuildConfig.FLAVOR != "foss"
@@ -64,7 +65,7 @@ fun AutoEraseBackgroundCard(
                         resultPadding = 0.dp,
                         color = MaterialTheme.colorScheme.mixedContainer.copy(0.7f)
                     )
-                    .clickable { onClick() }
+                    .hapticsClickable(onClick = onClick)
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {

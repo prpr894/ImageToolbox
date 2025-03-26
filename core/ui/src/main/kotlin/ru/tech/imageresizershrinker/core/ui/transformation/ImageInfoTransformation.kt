@@ -18,13 +18,15 @@
 package ru.tech.imageresizershrinker.core.ui.transformation
 
 import android.graphics.Bitmap
-import coil.size.Size
+import coil3.size.Size
+import coil3.size.pxOrElse
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import ru.tech.imageresizershrinker.core.domain.image.ImagePreviewCreator
 import ru.tech.imageresizershrinker.core.domain.image.ImageScaler
 import ru.tech.imageresizershrinker.core.domain.image.ImageTransformer
+import ru.tech.imageresizershrinker.core.domain.image.ShareProvider
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageInfo
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageScaleMode
 import ru.tech.imageresizershrinker.core.domain.image.model.Preset
@@ -33,19 +35,20 @@ import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.ui.utils.helper.asCoil
 import kotlin.math.roundToInt
-import coil.transform.Transformation as CoilTransformation
+import coil3.transform.Transformation as CoilTransformation
 
-class ImageInfoTransformation @AssistedInject constructor(
+class ImageInfoTransformation @AssistedInject internal constructor(
     @Assisted private val imageInfo: ImageInfo,
     @Assisted private val preset: Preset,
     @Assisted private val transformations: List<Transformation<Bitmap>>,
     private val imageTransformer: ImageTransformer<Bitmap>,
     private val imageScaler: ImageScaler<Bitmap>,
-    private val imagePreviewCreator: ImagePreviewCreator<Bitmap>
-) : CoilTransformation, Transformation<Bitmap> {
+    private val imagePreviewCreator: ImagePreviewCreator<Bitmap>,
+    private val shareProvider: ShareProvider<Bitmap>
+) : CoilTransformation(), Transformation<Bitmap> {
 
     override val cacheKey: String
-        get() = (imageInfo to preset to transformations).hashCode().toString()
+        get() = Triple(imageInfo, preset, transformations).hashCode().toString()
 
     override suspend fun transform(
         input: Bitmap,
@@ -58,47 +61,50 @@ class ImageInfoTransformation @AssistedInject constructor(
     ): Bitmap {
         val transformedInput = imageScaler.scaleImage(
             image = input,
-            width = imageInfo.width,
-            height = imageInfo.height,
+            width = size.width.pxOrElse { imageInfo.width },
+            height = size.height.pxOrElse { imageInfo.height },
             resizeType = ResizeType.Flexible,
             imageScaleMode = ImageScaleMode.NotPresent
         )
 
-        val info = if (!preset.isEmpty()) {
-            imageTransformer.applyPresetBy(
-                image = transformedInput,
-                preset = preset,
-                currentInfo = imageInfo.copy(
-                    originalUri = null
-                )
-            ).let {
-                if (it.quality != imageInfo.quality) {
-                    it.copy(quality = imageInfo.quality)
-                } else it
-            }
-        } else {
-            imageInfo
-        }.run {
-            val presetValue = preset.value()
-            copy(
-                originalUri = null,
-                resizeType = resizeType.withOriginalSizeIfCrop(
-                    if (presetValue != null) {
-                        if (presetValue > 100) {
-                            IntegerSize(
-                                (transformedInput.width.toFloat() / (presetValue / 100f)).roundToInt(),
-                                (transformedInput.height.toFloat() / (presetValue / 100f)).roundToInt()
-                            )
-                        } else {
-                            IntegerSize(
-                                transformedInput.width,
-                                transformedInput.height
-                            )
-                        }
-                    } else IntegerSize(width, height)
-                )
+        val originalUri = shareProvider.cacheImage(
+            image = input,
+            imageInfo = ImageInfo(
+                width = input.width,
+                height = input.height
             )
-        }
+        )
+
+        val presetValue = preset.value()
+        val presetInfo = imageTransformer.applyPresetBy(
+            image = transformedInput,
+            preset = preset,
+            currentInfo = imageInfo.copy(
+                originalUri = originalUri
+            )
+        )
+
+        val info = presetInfo.copy(
+            originalUri = originalUri,
+            resizeType = presetInfo.resizeType.withOriginalSizeIfCrop(
+                if (presetValue != null) {
+                    if (presetValue > 100) {
+                        IntegerSize(
+                            (transformedInput.width.toFloat() / (presetValue / 100f)).roundToInt(),
+                            (transformedInput.height.toFloat() / (presetValue / 100f)).roundToInt()
+                        )
+                    } else {
+                        IntegerSize(
+                            transformedInput.width,
+                            transformedInput.height
+                        )
+                    }
+                } else {
+                    IntegerSize(input.width, input.height)
+                }
+            )
+        )
+
         return imagePreviewCreator.createPreview(
             image = transformedInput,
             imageInfo = info,

@@ -80,6 +80,36 @@ sealed class ImageFormatGroup(
         )
     )
 
+    data object Jpeg2000 : ImageFormatGroup(
+        title = "JPEG 2000",
+        formats = listOf(
+            ImageFormat.Jpeg2000.Jp2,
+            ImageFormat.Jpeg2000.J2k
+        )
+    )
+
+    data object Tiff : ImageFormatGroup(
+        title = "TIFF",
+        formats = listOf(
+            ImageFormat.Tif,
+            ImageFormat.Tiff
+        )
+    )
+
+    data object Qoi : ImageFormatGroup(
+        title = "QOI",
+        formats = listOf(
+            ImageFormat.Qoi
+        )
+    )
+
+    data object Ico : ImageFormatGroup(
+        title = "ICO",
+        formats = listOf(
+            ImageFormat.Ico
+        )
+    )
+
     data class Custom(
         override val title: String,
         override val formats: List<ImageFormat>
@@ -87,7 +117,7 @@ sealed class ImageFormatGroup(
 
     companion object {
         val entries by lazy {
-            listOf(Jpg, Png, Webp, Avif, Heic, Jxl, Bmp)
+            listOf(Jpg, Png, Webp, Avif, Heic, Jxl, Bmp, Jpeg2000, Tiff, Qoi, Ico)
         }
 
         val alphaContainedEntries
@@ -96,7 +126,10 @@ sealed class ImageFormatGroup(
                 Webp,
                 Avif,
                 Heic,
-                Jxl
+                Jxl,
+                Jpeg2000,
+                Qoi,
+                Ico
             )
 
         val highLevelFormats by lazy {
@@ -110,4 +143,8 @@ sealed class ImageFormatGroup(
             imageFormat: ImageFormat
         ): ImageFormatGroup = entries.first { imageFormat in it.formats }
     }
+}
+
+val ImageFormat.Companion.alphaContainedEntries: List<ImageFormat> by lazy {
+    ImageFormatGroup.alphaContainedEntries.flatMap { it.formats }
 }

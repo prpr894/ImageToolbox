@@ -18,7 +18,6 @@
 package ru.tech.imageresizershrinker.feature.settings.presentation.components
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -50,16 +49,17 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.resources.shapes.CloverShape
 import ru.tech.imageresizershrinker.core.settings.presentation.model.IconShape
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.shapes.CloverShape
-import ru.tech.imageresizershrinker.core.ui.shapes.IconShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.utils.provider.SafeLocalContainerColor
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRow
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 
 @Composable
@@ -101,7 +101,7 @@ fun IconShapeSettingItem(
         }
     )
 
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         visible = showPickerSheet,
         onDismiss = { showPickerSheet = false },
         title = {
@@ -135,7 +135,7 @@ fun IconShapeSettingItem(
             ),
             contentPadding = PaddingValues(16.dp)
         ) {
-            itemsIndexed(IconShapeDefaults.shapes) { index, iconShape ->
+            itemsIndexed(IconShape.entries) { index, iconShape ->
                 val selected by remember(index, value) {
                     derivedStateOf {
                         index == value
@@ -143,7 +143,7 @@ fun IconShapeSettingItem(
                 }
                 val color by animateColorAsState(
                     if (selected) MaterialTheme.colorScheme.primaryContainer
-                    else Color.Unspecified
+                    else SafeLocalContainerColor
                 )
                 val borderColor by animateColorAsState(
                     if (selected) {
@@ -161,7 +161,7 @@ fun IconShapeSettingItem(
                             borderColor = borderColor,
                             resultPadding = 0.dp
                         )
-                        .clickable {
+                        .hapticsClickable {
                             onValueChange(index)
                         },
                     contentAlignment = Alignment.Center
@@ -177,9 +177,7 @@ fun IconShapeSettingItem(
                 }
                 val color by animateColorAsState(
                     if (selected) MaterialTheme.colorScheme.primaryContainer
-                    else MaterialTheme.colorScheme.secondaryContainer.copy(
-                        alpha = 0.2f
-                    )
+                    else SafeLocalContainerColor
                 )
                 val borderColor by animateColorAsState(
                     if (selected) {
@@ -197,7 +195,7 @@ fun IconShapeSettingItem(
                             borderColor = borderColor,
                             resultPadding = 0.dp
                         )
-                        .clickable {
+                        .hapticsClickable {
                             onValueChange(-1)
                         },
                     contentAlignment = Alignment.Center

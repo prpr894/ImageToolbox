@@ -17,14 +17,13 @@
 
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
-import android.graphics.Bitmap
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.FilterParam
 import ru.tech.imageresizershrinker.core.resources.R
 
 
 class UiStackBlurFilter(
-    override val value: Pair<Float, Int> = 0.5f to 25,
+    override val value: Pair<Float, Int> = 0.5f to 10,
 ) : UiFilter<Pair<Float, Int>>(
     title = R.string.stack_blur,
     value = value,
@@ -32,4 +31,4 @@ class UiStackBlurFilter(
         FilterParam(R.string.scale, 0.1f..1f, 2),
         FilterParam(R.string.radius, 0f..100f, 0)
     )
-), Filter.StackBlur<Bitmap>
+), Filter.StackBlur

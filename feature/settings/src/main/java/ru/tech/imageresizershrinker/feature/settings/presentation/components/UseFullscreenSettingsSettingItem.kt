@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -34,11 +33,10 @@ import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSet
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwitch
 
-@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun UseFullscreenSettingsSettingItem(
     onClick: () -> Unit,
-    onNavigateToSettings: () -> Boolean,
+    onNavigateToSettings: () -> Unit,
     shape: Shape = ContainerShapeDefaults.centerShape,
     modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
@@ -52,11 +50,10 @@ fun UseFullscreenSettingsSettingItem(
         checked = settingsState.useFullscreenSettings,
         onClick = {
             if (it) {
-                if (onNavigateToSettings()) {
-                    GlobalScope.launch {
-                        delay(1000)
-                        onClick()
-                    }
+                onNavigateToSettings()
+                GlobalScope.launch {
+                    delay(1000)
+                    onClick()
                 }
             } else onClick()
         },

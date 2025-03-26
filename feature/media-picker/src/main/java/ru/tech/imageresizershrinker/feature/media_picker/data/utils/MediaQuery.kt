@@ -17,26 +17,19 @@
 
 package ru.tech.imageresizershrinker.feature.media_picker.data.utils
 
-import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.ContentUris
-import android.content.Context
-import android.media.MediaMetadataRetriever
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.webkit.MimeTypeMap
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import androidx.annotation.RequiresApi
+import kotlinx.coroutines.coroutineScope
+import ru.tech.imageresizershrinker.core.resources.BuildConfig
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.Album
-import ru.tech.imageresizershrinker.feature.media_picker.domain.model.EXTENDED_DATE_FORMAT
-import ru.tech.imageresizershrinker.feature.media_picker.domain.model.Media
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.MediaOrder
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.OrderType
-import java.io.File
-import kotlin.random.Random
 
+@RequiresApi(26)
 sealed class Query(
     var projection: Array<String>,
     var bundle: Bundle? = null
@@ -60,7 +53,6 @@ sealed class Query(
         ).toTypedArray(),
     )
 
-    @SuppressLint("InlinedApi")
     class PhotoQuery : Query(
         projection = listOfNotNull(
             MediaStore.MediaColumns._ID,
@@ -90,7 +82,6 @@ sealed class Query(
         }
     )
 
-    @SuppressLint("InlinedApi")
     class VideoQuery : Query(
         projection = listOfNotNull(
             MediaStore.MediaColumns._ID,
@@ -136,6 +127,36 @@ sealed class Query(
         )
     )
 
+    class FileQuery(fileExtensions: List<String>) : Query(
+        projection = listOfNotNull(
+            MediaStore.MediaColumns._ID,
+            MediaStore.MediaColumns.DATA,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.MediaColumns.RELATIVE_PATH
+            } else MediaStore.MediaColumns.DATA,
+            MediaStore.MediaColumns.DISPLAY_NAME,
+            MediaStore.MediaColumns.BUCKET_ID,
+            MediaStore.MediaColumns.DATE_MODIFIED,
+            MediaStore.MediaColumns.DATE_TAKEN,
+            MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.MediaColumns.DURATION
+            } else null,
+            MediaStore.MediaColumns.MIME_TYPE
+        ).toTypedArray(),
+        bundle = defaultBundle.deepCopy().apply {
+            putString(
+                ContentResolver.QUERY_ARG_SQL_SELECTION,
+                fileExtensions.indices.asSequence().map { "${MediaStore.MediaColumns.DATA} like ?" }
+                    .joinToString(" OR ")
+            )
+            putStringArray(
+                ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                fileExtensions.toTypedArray()
+            )
+        }
+    )
+
     fun copy(
         projection: Array<String> = this.projection,
         bundle: Bundle? = this.bundle,
@@ -146,7 +167,6 @@ sealed class Query(
     }
 
     companion object {
-        @SuppressLint("InlinedApi")
         val defaultBundle = Bundle().apply {
             putStringArray(
                 ContentResolver.QUERY_ARG_SORT_COLUMNS,
@@ -161,143 +181,99 @@ sealed class Query(
 
 }
 
-@SuppressLint("InlinedApi")
+@RequiresApi(26)
+private fun Query.copyAsAlbum(): Query {
+    val bundle = this.bundle ?: Bundle()
+
+    return this.copy(
+        bundle = bundle.apply {
+            putInt(
+                ContentResolver.QUERY_ARG_SORT_DIRECTION,
+                ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+            )
+            putStringArray(
+                ContentResolver.QUERY_ARG_SORT_COLUMNS,
+                arrayOf(MediaStore.MediaColumns.DATE_MODIFIED)
+            )
+        }
+    )
+}
+
+@RequiresApi(26)
 suspend fun ContentResolver.getAlbums(
     query: Query = Query.AlbumQuery(),
+    fileQuery: Query = Query.AlbumQuery(),
     mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)
-): List<Album> {
-    return withContext(Dispatchers.IO) {
-        val timeStart = System.currentTimeMillis()
-        val albums = ArrayList<Album>()
-        val bundle = query.bundle ?: Bundle()
-        val albumQuery = query.copy(
-            bundle = bundle.apply {
-                putInt(
-                    ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                    ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-                )
-                putStringArray(
-                    ContentResolver.QUERY_ARG_SORT_COLUMNS,
-                    arrayOf(MediaStore.MediaColumns.DATE_MODIFIED)
-                )
-            },
-        )
-        query(albumQuery).use {
-            with(it) {
-                while (moveToNext()) {
-                    try {
-                        val albumId =
-                            getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_ID))
-                        val id = getLong(getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
-                        val label: String? = try {
-                            getString(
-                                getColumnIndexOrThrow(
-                                    MediaStore.MediaColumns.BUCKET_DISPLAY_NAME
-                                )
-                            )
-                        } catch (e: Exception) {
-                            Build.MODEL
-                        }
-                        val thumbnailPath =
-                            getString(getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
-                        val thumbnailRelativePath =
-                            getString(
-                                getColumnIndexOrThrow(
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                        MediaStore.MediaColumns.RELATIVE_PATH
-                                    } else MediaStore.MediaColumns.DATA
-                                )
-                            )
-                        val thumbnailDate =
-                            getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
-                        val mimeType =
-                            getString(getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
-                        val contentUri = if (mimeType.contains("image"))
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                        else
-                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                        val album = Album(
-                            id = albumId,
-                            label = label ?: Build.MODEL,
-                            uri = ContentUris.withAppendedId(contentUri, id).toString(),
-                            pathToThumbnail = thumbnailPath,
-                            relativePath = thumbnailRelativePath,
-                            timestamp = thumbnailDate,
-                            count = 1
-                        )
-                        val currentAlbum = albums.find { albm -> albm.id == albumId }
-                        if (currentAlbum == null)
-                            albums.add(album)
-                        else {
-                            val i = albums.indexOf(currentAlbum)
-                            albums[i].count++
-                            if (albums[i].timestamp <= thumbnailDate) {
-                                album.count = albums[i].count
-                                albums[i] = album
-                            }
-                        }
+): List<Album> = coroutineScope {
+    val timeStart = System.currentTimeMillis()
+    val albums = ArrayList<Album>()
+    val albumQuery = query.copyAsAlbum()
+    val albumFileQuery = fileQuery.copyAsAlbum()
 
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+    query(
+        mediaQuery = albumQuery,
+        fileQuery = albumFileQuery
+    ).use {
+        with(it) {
+            while (moveToNext()) {
+                runCatching {
+                    val albumId =
+                        getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_ID))
+                    val id = getLong(getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
+                    val label: String? = try {
+                        getString(
+                            getColumnIndexOrThrow(
+                                MediaStore.MediaColumns.BUCKET_DISPLAY_NAME
+                            )
+                        )
+                    } catch (_: Throwable) {
+                        Build.MODEL
+                    }
+                    val thumbnailPath =
+                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
+                    val thumbnailRelativePath =
+                        getString(
+                            getColumnIndexOrThrow(
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                    MediaStore.MediaColumns.RELATIVE_PATH
+                                } else MediaStore.MediaColumns.DATA
+                            )
+                        )
+                    val thumbnailDate =
+                        getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
+                    val mimeType =
+                        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
+                    val contentUri = if (mimeType.contains("image"))
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    else
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                    val album = Album(
+                        id = albumId,
+                        label = label ?: Build.MODEL,
+                        uri = ContentUris.withAppendedId(contentUri, id).toString(),
+                        pathToThumbnail = thumbnailPath,
+                        relativePath = thumbnailRelativePath,
+                        timestamp = thumbnailDate,
+                        count = 1
+                    )
+                    val currentAlbum = albums.find { a -> a.id == albumId }
+                    if (currentAlbum == null)
+                        albums.add(album)
+                    else {
+                        val i = albums.indexOf(currentAlbum)
+                        albums[i] = albums[i].let { a -> a.copy(count = a.count + 1) }
+                        if (albums[i].timestamp <= thumbnailDate) {
+                            albums[i] = album.copy(count = albums[i].count)
+                        }
                     }
                 }
             }
         }
-        return@withContext mediaOrder.sortAlbums(albums).also {
+    }
+
+    mediaOrder.sortAlbums(albums).also {
+        if (BuildConfig.DEBUG) {
             println("Album parsing took: ${System.currentTimeMillis() - timeStart}ms")
         }
     }
-}
-
-fun mediaFromUri(
-    context: Context,
-    uri: Uri
-): Media? {
-    if (uri.path == null) return null
-    val extension = uri.toString().substringAfterLast(".")
-    var mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension).toString()
-    var duration: String? = null
-    try {
-        val retriever = MediaMetadataRetriever().apply {
-            setDataSource(context, uri)
-        }
-        val hasVideo =
-            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
-        val isVideo = "yes" == hasVideo
-        if (isVideo) {
-            duration =
-                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-        }
-        if (mimeType.isEmpty()) {
-            mimeType = if (isVideo) "video/*" else "image/*"
-        }
-    } catch (_: Exception) {
-    }
-    var timestamp = 0L
-    uri.path?.let { File(it) }?.let {
-        timestamp = try {
-            it.lastModified()
-        } catch (_: Exception) {
-            0L
-        }
-    }
-    var formattedDate = ""
-    if (timestamp != 0L) {
-        formattedDate = timestamp.getDate(EXTENDED_DATE_FORMAT)
-    }
-    return Media(
-        id = Random(System.currentTimeMillis()).nextLong(-1000, 25600000),
-        label = uri.toString().substringAfterLast("/"),
-        uri = uri.toString(),
-        path = uri.path.toString(),
-        relativePath = uri.path.toString().substringBeforeLast("/"),
-        albumID = -99L,
-        albumLabel = "",
-        timestamp = timestamp,
-        fullDate = formattedDate,
-        mimeType = mimeType,
-        duration = duration,
-        favorite = 0,
-        trashed = 0
-    )
 }

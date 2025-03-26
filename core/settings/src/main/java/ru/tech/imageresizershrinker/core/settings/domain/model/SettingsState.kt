@@ -17,9 +17,14 @@
 
 package ru.tech.imageresizershrinker.core.settings.domain.model
 
-import android.os.Build
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageScaleMode
 import ru.tech.imageresizershrinker.core.domain.image.model.Preset
+import ru.tech.imageresizershrinker.core.domain.image.model.Preset.Percentage
+import ru.tech.imageresizershrinker.core.domain.image.model.ResizeType
+import ru.tech.imageresizershrinker.core.domain.model.ColorModel
+import ru.tech.imageresizershrinker.core.domain.model.DomainAspectRatio
+import ru.tech.imageresizershrinker.core.domain.model.HashingType
+import ru.tech.imageresizershrinker.core.domain.model.SystemBarsVisibility
 
 data class SettingsState(
     val nightMode: NightMode,
@@ -91,7 +96,28 @@ data class SettingsState(
     val openEditInsteadOfPreview: Boolean,
     val canEnterPresetsByTextField: Boolean,
     val donateDialogOpenCount: Int,
-    val colorBlindType: Int?
+    val colorBlindType: Int?,
+    val favoriteScreenList: List<Int>,
+    val isLinkPreviewEnabled: Boolean,
+    val defaultDrawColor: ColorModel,
+    val defaultDrawPathMode: Int,
+    val addTimestampToFilename: Boolean,
+    val useFormattedFilenameTimestamp: Boolean,
+    val favoriteColors: List<ColorModel>,
+    val defaultResizeType: ResizeType,
+    val systemBarsVisibility: SystemBarsVisibility,
+    val isSystemBarsVisibleBySwipe: Boolean,
+    val isCompactSelectorsLayout: Boolean,
+    val mainScreenTitle: String,
+    val sliderType: SliderType,
+    val isCenterAlignDialogButtons: Boolean,
+    val fastSettingsSide: FastSettingsSide,
+    val settingGroupsInitialVisibility: Map<Int, Boolean>,
+    val hashingTypeForFilename: HashingType?,
+    val customFonts: List<DomainFontFamily.Custom>,
+    val enableToolExitConfirmation: Boolean,
+    val recentColors: List<ColorModel>,
+    val backgroundForNoAlphaImageFormats: ColorModel,
 ) {
 
     companion object {
@@ -104,10 +130,10 @@ data class SettingsState(
                 isAmoledMode = false,
                 appColorTuple = "",
                 borderWidth = -1f,
-                presets = emptyList(),
+                presets = List(6) { Percentage(100 - it * 10) },
                 fabAlignment = 1,
                 selectedEmoji = 0,
-                picturePickerModeInt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) 0 else 1,
+                picturePickerModeInt = 0,
                 clearCacheOnLaunch = false,
                 showUpdateDialogOnStartup = true,
                 groupOptionsByTypes = true,
@@ -119,7 +145,7 @@ data class SettingsState(
                 addSizeInFilename = false,
                 addOriginalFilename = false,
                 randomizeFilename = false,
-                font = DomainFontFamily.Montserrat,
+                font = DomainFontFamily.System,
                 fontScale = 1f,
                 allowCollectCrashlytics = true,
                 allowCollectAnalytics = true,
@@ -166,7 +192,28 @@ data class SettingsState(
                 openEditInsteadOfPreview = false,
                 canEnterPresetsByTextField = false,
                 donateDialogOpenCount = 0,
-                colorBlindType = null
+                colorBlindType = null,
+                favoriteScreenList = emptyList(),
+                isLinkPreviewEnabled = true,
+                defaultDrawColor = ColorModel(-0x1000000),
+                defaultDrawPathMode = 0,
+                addTimestampToFilename = true,
+                useFormattedFilenameTimestamp = true,
+                favoriteColors = emptyList(),
+                defaultResizeType = ResizeType.Explicit,
+                systemBarsVisibility = SystemBarsVisibility.Auto,
+                isSystemBarsVisibleBySwipe = true,
+                isCompactSelectorsLayout = false,
+                mainScreenTitle = "",
+                sliderType = SliderType.Fancy,
+                isCenterAlignDialogButtons = false,
+                fastSettingsSide = FastSettingsSide.CenterEnd,
+                settingGroupsInitialVisibility = emptyMap(),
+                hashingTypeForFilename = null,
+                customFonts = emptyList(),
+                enableToolExitConfirmation = true,
+                recentColors = emptyList(),
+                backgroundForNoAlphaImageFormats = ColorModel(-0x1000000),
             )
         }
     }

@@ -30,14 +30,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ru.tech.imageresizershrinker.core.ui.theme.White
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.advancedShadow
 import ru.tech.imageresizershrinker.feature.media_picker.data.utils.formatMinSec
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.Media
 
@@ -61,7 +57,7 @@ fun MediaVideoDurationHeader(
             modifier = Modifier,
             text = media.duration.formatMinSec(),
             style = MaterialTheme.typography.labelSmall,
-            color = Color.White
+            color = White
         )
         Spacer(modifier = Modifier.size(2.dp))
         Image(
@@ -74,42 +70,8 @@ fun MediaVideoDurationHeader(
                     offsetY = (-2).dp
                 ),
             imageVector = Icons.Rounded.PlayCircle,
-            colorFilter = ColorFilter.tint(color = Color.White),
+            colorFilter = ColorFilter.tint(color = White),
             contentDescription = "Video"
-        )
-    }
-}
-
-fun Modifier.advancedShadow(
-    color: Color = Color.Black,
-    alpha: Float = 1f,
-    cornersRadius: Dp = 0.dp,
-    shadowBlurRadius: Dp = 0.dp,
-    offsetY: Dp = 0.dp,
-    offsetX: Dp = 0.dp
-) = drawBehind {
-
-    val shadowColor = color.copy(alpha = alpha).toArgb()
-    val transparentColor = color.copy(alpha = 0f).toArgb()
-
-    drawIntoCanvas {
-        val paint = Paint()
-        val frameworkPaint = paint.asFrameworkPaint()
-        frameworkPaint.color = transparentColor
-        frameworkPaint.setShadowLayer(
-            shadowBlurRadius.toPx(),
-            offsetX.toPx(),
-            offsetY.toPx(),
-            shadowColor
-        )
-        it.drawRoundRect(
-            0f,
-            0f,
-            this.size.width,
-            this.size.height,
-            cornersRadius.toPx(),
-            cornersRadius.toPx(),
-            paint
         )
     }
 }

@@ -26,19 +26,21 @@ import android.database.MergeCursor
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.FULL_DATE_FORMAT
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.Media
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.MediaOrder
 import ru.tech.imageresizershrinker.feature.media_picker.domain.model.OrderType
+import kotlin.coroutines.CoroutineContext
+import kotlin.io.path.Path
+import kotlin.io.path.extension
 
 private var observerJob: Job? = null
 
@@ -46,19 +48,23 @@ private var observerJob: Job? = null
  * Register an observer class that gets callbacks when data identified by a given content URI
  * changes.
  */
-fun Context.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
+fun Context.contentFlowObserver(
+    uris: Array<Uri>,
+    coroutineContext: CoroutineContext
+) = callbackFlow {
     val observer = object : ContentObserver(null) {
         override fun onChange(selfChange: Boolean) {
             observerJob?.cancel()
-            observerJob = launch(Dispatchers.IO) {
+            observerJob = launch(coroutineContext) {
                 send(false)
             }
         }
     }
-    for (uri in uris)
+    for (uri in uris) {
         contentResolver.registerContentObserver(uri, true, observer)
+    }
     // trigger first.
-    observerJob = launch(Dispatchers.IO) {
+    observerJob = launch(coroutineContext) {
         send(true)
     }
     awaitClose {
@@ -68,25 +74,26 @@ fun Context.contentFlowObserver(uris: Array<Uri>) = callbackFlow {
 
 suspend fun ContentResolver.getMedia(
     mediaQuery: Query = Query.MediaQuery(),
+    fileQuery: Query = Query.MediaQuery(),
     mediaOrder: MediaOrder = MediaOrder.Date(OrderType.Descending)
 ): List<Media> {
-    return withContext(Dispatchers.IO) {
+    return coroutineScope {
         val media = ArrayList<Media>()
-        query(mediaQuery).use { cursor ->
+        query(mediaQuery, fileQuery).use { cursor ->
             while (cursor.moveToNext()) {
                 try {
                     media.add(cursor.getMediaFromCursor())
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     e.printStackTrace()
                 }
             }
         }
-        return@withContext mediaOrder.sortMedia(media)
+
+        mediaOrder.sortMedia(media)
     }
 }
 
 
-@Throws(Exception::class)
 fun Cursor.getMediaFromCursor(): Media {
     val id: Long =
         getLong(getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
@@ -110,33 +117,42 @@ fun Cursor.getMediaFromCursor(): Media {
                 MediaStore.MediaColumns.BUCKET_DISPLAY_NAME
             )
         )
-    } catch (_: Exception) {
+    } catch (_: Throwable) {
         Build.MODEL
     }
     val takenTimestamp: Long? = try {
         getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_TAKEN))
-    } catch (_: Exception) {
+    } catch (_: Throwable) {
         null
     }
     val modifiedTimestamp: Long =
         getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
     val duration: String? = try {
         getString(getColumnIndexOrThrow(MediaStore.MediaColumns.DURATION))
-    } catch (_: Exception) {
+    } catch (_: Throwable) {
         null
     }
-    val mimeType: String =
-        getString(getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
 
     val expiryTimestamp: Long? = try {
         getLong(getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_EXPIRES))
-    } catch (_: Exception) {
+    } catch (_: Throwable) {
         null
     }
-    val contentUri = if (mimeType.contains("image"))
-        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-    else
-        MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+
+    val (mimeType, contentUri) = SUPPORTED_FILES[Path(path).extension]?.let { (mimeType, _) ->
+        Pair(mimeType, MediaStore.Files.getContentUri("external"))
+    } ?: run {
+        val mimeType: String =
+            getString(getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
+
+        val contentUri = if (mimeType.contains("image"))
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        else
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+
+        Pair(mimeType, contentUri)
+    }
+
     val uri = ContentUris.withAppendedId(contentUri, id)
     val formattedDate = modifiedTimestamp.getDate(FULL_DATE_FORMAT)
     return Media(
@@ -158,10 +174,10 @@ fun Cursor.getMediaFromCursor(): Media {
     )
 }
 
-
 suspend fun ContentResolver.query(
-    mediaQuery: Query
-): Cursor = withContext(Dispatchers.IO) {
+    mediaQuery: Query,
+    fileQuery: Query
+): Cursor = coroutineScope {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         MergeCursor(
             arrayOf(
@@ -169,6 +185,12 @@ suspend fun ContentResolver.query(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     mediaQuery.projection,
                     mediaQuery.bundle,
+                    null
+                ),
+                query(
+                    MediaStore.Files.getContentUri("external"),
+                    fileQuery.projection,
+                    fileQuery.bundle,
                     null
                 ),
                 query(
@@ -185,6 +207,13 @@ suspend fun ContentResolver.query(
                 query(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     mediaQuery.projection,
+                    null,
+                    null,
+                    null
+                ),
+                query(
+                    MediaStore.Files.getContentUri("external"),
+                    fileQuery.projection,
                     null,
                     null,
                     null

@@ -39,12 +39,14 @@ import androidx.compose.ui.unit.dp
 import com.smarttoolfactory.colordetector.util.ColorUtil
 import com.smarttoolfactory.colorpicker.selector.SelectorRectSaturationValueHSV
 import com.smarttoolfactory.colorpicker.slider.SliderHueHSV
+import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 
 @Composable
 fun ColorSelection(
     color: Int,
     onColorChange: (Int) -> Unit,
+    infoContainerColor: Color = Color.Unspecified,
 ) {
     val color1 = Color(color)
     val hsv = ColorUtil.colorToHSV(color1)
@@ -56,14 +58,19 @@ fun ColorSelection(
         ColorInfo(
             color = color1.copy(1f).toArgb(),
             onColorChange = onColorChange,
+            infoContainerColor = infoContainerColor
         )
         Spacer(Modifier.height(16.dp))
         SelectorRectSaturationValueHSV(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(4 / 3f)
-                .container(RoundedCornerShape(2.dp), resultPadding = 0.dp)
-                .clip(RoundedCornerShape(3.dp)),
+                .aspectRatio(4 / 2.5f)
+                .container(
+                    shape = RoundedCornerShape(6.dp),
+                    resultPadding = 0.dp,
+                    color = infoContainerColor
+                )
+                .clip(RoundedCornerShape(6.dp)),
             hue = hue,
             saturation = saturation,
             value = value
@@ -88,10 +95,11 @@ fun ColorSelection(
                 .container(
                     shape = CircleShape,
                     resultPadding = 0.dp,
-                    color = Color.Transparent,
-                    composeColorOnTopOfBackground = false,
                     clip = false,
-                    isShadowClip = true
+                    isShadowClip = true,
+                    color = infoContainerColor,
+                    autoShadowElevation = if (LocalSettingsState.current.drawSliderShadows) 1.dp
+                    else 0.dp
                 )
                 .padding(horizontal = 10.dp)
         )

@@ -56,7 +56,7 @@ fun WatermarkingTypeSelector(
         items = WatermarkingType.entries.map { it.translatedName },
         selectedIndex = selectedIndex,
         title = stringResource(id = R.string.watermark_type),
-        indexChanged = {
+        onIndexChange = {
             onValueChange(value.copy(watermarkingType = WatermarkingType.entries[it]))
         },
         inactiveButtonColor = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -68,4 +68,6 @@ private val WatermarkingType.translatedName: String
     get() = when (this) {
         is WatermarkingType.Text -> stringResource(R.string.text)
         is WatermarkingType.Image -> stringResource(R.string.image)
+        is WatermarkingType.Stamp.Text -> stringResource(R.string.stamp)
+        is WatermarkingType.Stamp.Time -> stringResource(R.string.timestamp)
     }

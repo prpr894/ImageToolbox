@@ -19,13 +19,19 @@ package ru.tech.imageresizershrinker.feature.filters.data.model
 
 import android.graphics.Bitmap
 import com.awxkee.aire.Aire
+import com.awxkee.aire.EdgeMode
+import com.awxkee.aire.MorphKernels
+import com.awxkee.aire.MorphOp
+import com.awxkee.aire.MorphOpMode
+import com.awxkee.aire.Scalar
+import com.t8rin.trickle.TrickleUtils.checkHasAlpha
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 
 internal class ErodeFilter(
-    override val value: Float = 5f
-) : Transformation<Bitmap>, Filter.Erode<Bitmap> {
+    override val value: Pair<Float, Boolean> = 25f to true
+) : Transformation<Bitmap>, Filter.Erode {
 
     override val cacheKey: String
         get() = value.hashCode().toString()
@@ -33,9 +39,20 @@ internal class ErodeFilter(
     override suspend fun transform(
         input: Bitmap,
         size: IntegerSize
-    ): Bitmap = Aire.erode(
+    ): Bitmap = Aire.morphology(
         bitmap = input,
-        kernelSize = 2 * value.toInt() + 1
+        kernel = if (value.second) {
+            MorphKernels.circle(value.first.toInt())
+        } else {
+            MorphKernels.box(value.first.toInt())
+        },
+        morphOp = MorphOp.ERODE,
+        morphOpMode = if (input.checkHasAlpha()) MorphOpMode.RGBA
+        else MorphOpMode.RGB,
+        borderMode = EdgeMode.REFLECT_101,
+        kernelHeight = value.first.toInt(),
+        kernelWidth = value.first.toInt(),
+        borderScalar = Scalar.ZEROS
     )
 
 }

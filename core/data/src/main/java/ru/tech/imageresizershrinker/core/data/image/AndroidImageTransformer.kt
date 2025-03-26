@@ -20,12 +20,13 @@ package ru.tech.imageresizershrinker.core.data.image
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import coil.ImageLoader
-import coil.request.ImageRequest
-import coil.size.Size
+import coil3.ImageLoader
+import coil3.request.ImageRequest
+import coil3.request.transformations
+import coil3.size.Size
+import coil3.toBitmap
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.withContext
-import ru.tech.imageresizershrinker.core.data.utils.toBitmap
 import ru.tech.imageresizershrinker.core.data.utils.toCoil
 import ru.tech.imageresizershrinker.core.domain.dispatchers.DispatchersHolder
 import ru.tech.imageresizershrinker.core.domain.image.ImageTransformer
@@ -39,6 +40,7 @@ import ru.tech.imageresizershrinker.core.domain.model.sizeTo
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import javax.inject.Inject
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 
 internal class AndroidImageTransformer @Inject constructor(
@@ -52,6 +54,8 @@ internal class AndroidImageTransformer @Inject constructor(
         transformations: List<Transformation<Bitmap>>,
         originalSize: Boolean
     ): Bitmap? = withContext(defaultDispatcher) {
+        if (transformations.isEmpty()) return@withContext image
+
         val request = ImageRequest
             .Builder(context)
             .data(image)
@@ -65,7 +69,7 @@ internal class AndroidImageTransformer @Inject constructor(
             }
             .build()
 
-        return@withContext imageLoader.execute(request).drawable?.toBitmap()
+        return@withContext imageLoader.execute(request).image?.toBitmap()
     }
 
     override suspend fun transform(
@@ -73,6 +77,8 @@ internal class AndroidImageTransformer @Inject constructor(
         transformations: List<Transformation<Bitmap>>,
         size: IntegerSize
     ): Bitmap? = withContext(defaultDispatcher) {
+        if (transformations.isEmpty()) return@withContext image
+
         val request = ImageRequest
             .Builder(context)
             .data(image)
@@ -84,7 +90,7 @@ internal class AndroidImageTransformer @Inject constructor(
             .size(size.width, size.height)
             .build()
 
-        return@withContext imageLoader.execute(request).drawable?.toBitmap()
+        return@withContext imageLoader.execute(request).image?.toBitmap()
     }
 
     override suspend fun applyPresetBy(
@@ -92,7 +98,7 @@ internal class AndroidImageTransformer @Inject constructor(
         preset: Preset,
         currentInfo: ImageInfo
     ): ImageInfo = withContext(defaultDispatcher) {
-        if (image == null) return@withContext currentInfo
+        if (image == null || preset is Preset.None) return@withContext currentInfo
 
         val size = currentInfo.originalUri?.let {
             imageLoader.execute(
@@ -100,7 +106,7 @@ internal class AndroidImageTransformer @Inject constructor(
                     .data(it)
                     .size(Size.ORIGINAL)
                     .build()
-            ).drawable?.run { intrinsicWidth sizeTo intrinsicHeight }
+            ).image?.run { width sizeTo height }
         } ?: IntegerSize(image.width, image.height)
 
         val rotated = abs(currentInfo.rotationDegrees) % 180 != 0f
@@ -120,16 +126,35 @@ internal class AndroidImageTransformer @Inject constructor(
             }
 
             is Preset.Percentage -> currentInfo.copy(
-                quality = when (val quality = currentInfo.quality) {
-                    is Quality.Base -> quality.copy(qualityValue = preset.value)
-                    is Quality.Jxl -> quality.copy(qualityValue = preset.value)
-                    else -> quality
-                },
                 width = calcWidth().calc(preset.value),
                 height = calcHeight().calc(preset.value),
             )
 
-            is Preset.None -> currentInfo
+            is Preset.AspectRatio -> {
+                val originalWidth = calcWidth().toFloat()
+                val originalHeight = calcHeight().toFloat()
+
+                val newWidth: Float
+                val newHeight: Float
+
+                val condition = if (preset.isFit) preset.ratio > originalWidth / originalHeight
+                else preset.ratio < originalWidth / originalHeight
+
+                if (condition) {
+                    newWidth = originalHeight * preset.ratio
+                    newHeight = originalHeight
+                } else {
+                    newWidth = originalWidth
+                    newHeight = originalWidth / preset.ratio
+                }
+
+                currentInfo.copy(
+                    width = newWidth.roundToInt(),
+                    height = newHeight.roundToInt()
+                )
+            }
+
+            Preset.None -> currentInfo
         }
     }
 
@@ -147,6 +172,8 @@ internal class AndroidImageTransformer @Inject constructor(
         image: Bitmap,
         degrees: Float
     ): Bitmap = withContext(defaultDispatcher) {
+        if (degrees == 0f) return@withContext image
+
         if (degrees % 90 == 0f) {
             val matrix = Matrix().apply { postRotate(degrees) }
             Bitmap.createBitmap(image, 0, 0, image.width, image.height, matrix, true)

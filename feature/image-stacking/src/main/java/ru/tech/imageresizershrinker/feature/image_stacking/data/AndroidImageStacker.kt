@@ -23,14 +23,18 @@ import android.graphics.Paint
 import android.graphics.PorterDuffXfermode
 import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.withContext
+import ru.tech.imageresizershrinker.core.data.image.utils.drawBitmap
 import ru.tech.imageresizershrinker.core.data.image.utils.toPorterDuffMode
 import ru.tech.imageresizershrinker.core.data.utils.getSuitableConfig
 import ru.tech.imageresizershrinker.core.domain.dispatchers.DispatchersHolder
 import ru.tech.imageresizershrinker.core.domain.image.ImageGetter
 import ru.tech.imageresizershrinker.core.domain.image.ImagePreviewCreator
+import ru.tech.imageresizershrinker.core.domain.image.ImageScaler
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageFormat
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageInfo
 import ru.tech.imageresizershrinker.core.domain.image.model.Quality
+import ru.tech.imageresizershrinker.core.domain.image.model.ResizeAnchor
+import ru.tech.imageresizershrinker.core.domain.image.model.ResizeType
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.feature.image_stacking.domain.ImageStacker
 import ru.tech.imageresizershrinker.feature.image_stacking.domain.StackImage
@@ -40,13 +44,14 @@ import javax.inject.Inject
 internal class AndroidImageStacker @Inject constructor(
     private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
     private val imagePreviewCreator: ImagePreviewCreator<Bitmap>,
+    private val imageScaler: ImageScaler<Bitmap>,
     dispatchersHolder: DispatchersHolder
 ) : DispatchersHolder by dispatchersHolder, ImageStacker<Bitmap> {
 
     override suspend fun stackImages(
         stackImages: List<StackImage>,
         stackingParams: StackingParams,
-        onError: (Throwable) -> Unit,
+        onFailure: (Throwable) -> Unit,
         onProgress: (Int) -> Unit
     ): Bitmap? = withContext(defaultDispatcher) {
         val resultSize = stackingParams.size
@@ -58,7 +63,7 @@ internal class AndroidImageStacker @Inject constructor(
             } ?: IntegerSize(0, 0)
 
         if (resultSize.width <= 0 || resultSize.height <= 0) {
-            onError(IllegalArgumentException("Width and height must be > 0"))
+            onFailure(IllegalArgumentException("Width and height must be > 0"))
             return@withContext null
         }
 
@@ -72,12 +77,38 @@ internal class AndroidImageStacker @Inject constructor(
         val paint = Paint()
 
         stackImages.forEachIndexed { index, stackImage ->
-            val bitmap = imageGetter.getImage(data = stackImage.uri, size = resultSize)
+            val bitmap = imageGetter.getImage(
+                data = stackImage.uri
+            )?.let { bitmap ->
+                bitmap.setHasAlpha(true)
+
+                val resizeType = when (stackImage.scale) {
+                    StackImage.Scale.None -> null
+                    StackImage.Scale.Fill -> ResizeType.Explicit
+                    StackImage.Scale.Fit -> ResizeType.Flexible(ResizeAnchor.Min)
+                    StackImage.Scale.FitWidth -> ResizeType.Flexible(ResizeAnchor.Width)
+                    StackImage.Scale.FitHeight -> ResizeType.Flexible(ResizeAnchor.Height)
+                    StackImage.Scale.Crop -> ResizeType.CenterCrop(0x00000000)
+                }
+
+                resizeType?.let {
+                    imageScaler.scaleImage(
+                        image = bitmap,
+                        width = resultSize.width,
+                        height = resultSize.height,
+                        resizeType = resizeType
+                    )
+                } ?: bitmap
+            }
             paint.alpha = (stackImage.alpha * 255).toInt()
             paint.xfermode = PorterDuffXfermode(stackImage.blendingMode.toPorterDuffMode())
 
             bitmap?.let {
-                canvas.drawBitmap(it, 0f, 0f, paint)
+                canvas.drawBitmap(
+                    bitmap = it,
+                    position = stackImage.position,
+                    paint = paint
+                )
             }
 
             onProgress(index + 1)
@@ -97,7 +128,7 @@ internal class AndroidImageStacker @Inject constructor(
             stackImages = stackImages,
             stackingParams = stackingParams,
             onProgress = {},
-            onError = {}
+            onFailure = {}
         )?.let { image ->
             val imageSize = IntegerSize(
                 width = image.width,

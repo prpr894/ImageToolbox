@@ -17,17 +17,25 @@
 
 package ru.tech.imageresizershrinker.core.domain
 
-const val APP_LINK = "https://github.com/T8RIN/ImageResizer"
+const val APP_LINK = "https://github.com/T8RIN/ImageToolbox"
 const val WEBLATE_LINK = "https://hosted.weblate.org/engage/image-resizer/"
-const val ISSUE_TRACKER = "https://github.com/T8RIN/ImageResizer/issues"
-const val AUTHOR_AVATAR = "https://avatars.githubusercontent.com/u/52178347?v=4"
+const val ISSUE_TRACKER = "https://github.com/T8RIN/ImageToolbox/issues"
 const val AUTHOR_LINK = "https://github.com/T8RIN"
-const val APP_RELEASES = "https://github.com/T8RIN/ImageResizer/releases"
-const val CHAT_LINK = "https://t.me/t8rin_imagetoolbox"
+const val APP_RELEASES = "https://github.com/T8RIN/ImageToolbox/releases"
 const val AUTHOR_TG = "http://t.me/T8RIN"
+const val TELEGRAM_GROUP_LINK = "https://t.me/t8rin_imagetoolbox"
+const val TELEGRAM_CHANNEL_LINK = "https://t.me/t8rin_imagetoolbox_ci"
+const val PARTNER_FREE_SOFTWARE = "https://t.me/FreeApkexe"
+const val JAVA_FORMAT_SPECIFICATION =
+    "https://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html"
+
 const val BitcoinWallet = "17Pk1RurnkJxLV9V7mc6Y7dLyHFb9rvQDq"
 const val USDTWallet = "TMPAu7a54NvQNEKnNWh3naXu3oYijqP3U7"
 const val TONSpaceWallet = "UQDMePBU-FaxwaIME8p7h2spRITeRxvtCPegtKefeV5v-sN1"
 const val TONWallet = "UQB44LtN0zArKGcWTbNxU7zAkGYunVs1rkn_VsLq71G4bdmK"
-const val FOSS_LINK =
-    "https://f-droid.org/repo/ru.tech.imageresizershrinker/ru/icon_-9n8vowl_QLljJDENvZaSlNplpt8PF-LrCkGnGshnUg=.png"
+
+const val USER_AGENT =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+
+const val GlobalStorageName = "image_resizer"
+const val BackupFileExtension = "imtbx_backup"

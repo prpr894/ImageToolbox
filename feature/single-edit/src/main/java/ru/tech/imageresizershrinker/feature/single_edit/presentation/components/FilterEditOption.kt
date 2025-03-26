@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -40,9 +41,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Colorize
 import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.Done
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
@@ -62,40 +61,45 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import coil3.toBitmap
 import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import ru.tech.imageresizershrinker.core.data.utils.toCoil
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.filters.presentation.model.UiFilter
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.FilterItem
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.FilterReorderSheet
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.FilterTemplateCreationSheetComponent
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.addFilters.AddFiltersSheet
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.addFilters.AddFiltersSheetComponent
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.ui.theme.mixedContainer
-import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.toBitmap
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedFloatingActionButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalScreenSize
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedFloatingActionButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedTopAppBar
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedTopAppBarType
 import ru.tech.imageresizershrinker.core.ui.widget.image.Picture
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.transparencyChecker
-import ru.tech.imageresizershrinker.core.ui.widget.other.EnhancedTopAppBar
-import ru.tech.imageresizershrinker.core.ui.widget.other.EnhancedTopAppBarType
 import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
-import ru.tech.imageresizershrinker.core.ui.widget.other.showError
-import ru.tech.imageresizershrinker.core.ui.widget.text.Marquee
+import ru.tech.imageresizershrinker.core.ui.widget.other.showFailureToast
+import ru.tech.imageresizershrinker.core.ui.widget.saver.ColorSaver
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
-import ru.tech.imageresizershrinker.feature.filters.presentation.components.AddFiltersSheet
-import ru.tech.imageresizershrinker.feature.filters.presentation.components.FilterItem
-import ru.tech.imageresizershrinker.feature.filters.presentation.components.FilterReorderSheet
+import ru.tech.imageresizershrinker.core.ui.widget.text.marquee
+import ru.tech.imageresizershrinker.feature.draw.presentation.components.OpenColorPickerCard
 import ru.tech.imageresizershrinker.feature.pick_color.presentation.components.PickColorFromImageSheet
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterEditOption(
+    addFilterSheetComponent: AddFiltersSheetComponent,
+    filterTemplateCreationSheetComponent: FilterTemplateCreationSheetComponent,
     visible: Boolean,
     onDismiss: () -> Unit,
     useScaffold: Boolean,
@@ -120,7 +124,10 @@ fun FilterEditOption(
         var stateBitmap by remember(bitmap, visible) { mutableStateOf(bitmap) }
 
         var showColorPicker by rememberSaveable { mutableStateOf(false) }
-        var tempColor by rememberSaveable(showColorPicker) { mutableStateOf(Color.Black) }
+        var tempColor by rememberSaveable(
+            showColorPicker,
+            stateSaver = ColorSaver
+        ) { mutableStateOf(Color.Black) }
 
         LaunchedEffect(visible) {
             if (visible && filterList.isEmpty()) {
@@ -132,15 +139,25 @@ fun FilterEditOption(
             showControls = filterList.isNotEmpty(),
             canGoBack = stateBitmap == bitmap,
             visible = visible,
-            modifier = Modifier.heightIn(max = LocalConfiguration.current.screenHeightDp.dp / 1.5f),
+            modifier = Modifier.heightIn(max = LocalScreenSize.current.height / 1.5f),
             onDismiss = onDismiss,
             useScaffold = useScaffold,
             controls = {
                 Column(
-                    Modifier.padding(16.dp),
+                    modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    if (!useScaffold) {
+                        OpenColorPickerCard(
+                            onOpen = {
+                                showColorPicker = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp)
+                        )
+                    }
                     Column(Modifier.container(MaterialTheme.shapes.extraLarge)) {
                         TitleItem(text = stringResource(R.string.filters))
                         Column(
@@ -154,9 +171,9 @@ fun FilterEditOption(
                                     onFilterChange = {
                                         updateFilter(it, index) {
                                             scope.launch {
-                                                toastHostState.showError(
+                                                toastHostState.showFailureToast(
                                                     context = context,
-                                                    error = it
+                                                    throwable = it
                                                 )
                                             }
                                         }
@@ -215,9 +232,6 @@ fun FilterEditOption(
                     )
                 } else {
                     EnhancedIconButton(
-                        containerColor = Color.Transparent,
-                        contentColor = LocalContentColor.current,
-                        enableAutoShadowAndBorder = false,
                         onClick = {
                             showColorPicker = true
                         },
@@ -254,11 +268,10 @@ fun FilterEditOption(
                         }
                     },
                     title = {
-                        Marquee {
-                            Text(
-                                text = stringResource(R.string.filter),
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.filter),
+                            modifier = Modifier.marquee()
+                        )
                     }
                 )
             }
@@ -277,7 +290,7 @@ fun FilterEditOption(
                         }
                     }.value,
                     onSuccess = {
-                        stateBitmap = it.result.drawable.toBitmap()
+                        stateBitmap = it.result.image.toBitmap()
                     },
                     showTransparencyChecker = false,
                     modifier = Modifier
@@ -312,7 +325,9 @@ fun FilterEditOption(
                     scaffoldState.bottomSheetState.expand()
                 }
                 addFilter(it)
-            }
+            },
+            component = addFilterSheetComponent,
+            filterTemplateCreationSheetComponent = filterTemplateCreationSheetComponent
         )
 
         FilterReorderSheet(
@@ -321,7 +336,7 @@ fun FilterEditOption(
             onDismiss = {
                 showReorderSheet = false
             },
-            updateOrder = updateOrder
+            onReorder = updateOrder
         )
 
         PickColorFromImageSheet(

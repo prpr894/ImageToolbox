@@ -22,15 +22,15 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.platform.LocalContext
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
+import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalComponentActivity
 
 
 @Composable
 fun DrawLockScreenOrientation() {
     if (!LocalSettingsState.current.lockDrawOrientation) return
 
-    val activity = LocalContext.current as Activity
+    val activity = LocalComponentActivity.current
     DisposableEffect(activity) {
         val originalOrientation = activity.requestedOrientation
         activity.lockOrientation()
@@ -40,7 +40,21 @@ fun DrawLockScreenOrientation() {
     }
 }
 
-private fun Activity.lockOrientation() {
+@Composable
+fun LockScreenOrientation(
+    mode: Int? = null
+) {
+    val activity = LocalComponentActivity.current
+    DisposableEffect(activity) {
+        val originalOrientation = activity.requestedOrientation
+        activity.lockOrientation(mode)
+        onDispose {
+            activity.requestedOrientation = originalOrientation
+        }
+    }
+}
+
+private fun Activity.lockOrientation(mode: Int? = null) {
     val display = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
         display
     } else {
@@ -68,5 +82,5 @@ private fun Activity.lockOrientation() {
 
         else -> 0
     }
-    requestedOrientation = orientation
+    requestedOrientation = mode ?: orientation
 }

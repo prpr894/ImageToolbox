@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.smarttoolfactory.colordetector.util.ColorUtil.roundToTwoDigits
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.Cube
-import ru.tech.imageresizershrinker.core.ui.widget.controls.EnhancedSliderItem
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedSliderItem
 
 @Composable
 fun PixelSizeSelector(
@@ -50,6 +50,9 @@ fun PixelSizeSelector(
             ),
         icon = Icons.Rounded.Cube,
         valueRange = 10f..75f,
+        internalStateTransformation = {
+            it.roundToTwoDigits()
+        },
         onValueChange = {
             onValueChange(it.roundToTwoDigits())
         },

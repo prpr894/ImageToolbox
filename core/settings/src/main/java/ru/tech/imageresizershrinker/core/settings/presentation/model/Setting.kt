@@ -21,7 +21,7 @@ import ru.tech.imageresizershrinker.core.resources.R
 
 sealed class Setting(
     val title: Int,
-    val subtitle: Int?
+    val subtitle: Int?,
 ) {
     data object AddFileSize : Setting(
         title = R.string.add_file_size,
@@ -179,8 +179,8 @@ sealed class Setting(
     )
 
     data object GroupOptions : Setting(
-        title = R.string.group_options_by_type,
-        subtitle = R.string.group_options_by_type_sub
+        title = R.string.group_tools_by_type,
+        subtitle = R.string.group_tools_by_type_sub
     )
 
     data object HelpTranslate : Setting(
@@ -253,7 +253,7 @@ sealed class Setting(
         subtitle = R.string.check_source_code_sub
     )
 
-    data object Telegram : Setting(
+    data object TelegramGroup : Setting(
         title = R.string.tg_chat,
         subtitle = R.string.tg_chat_sub
     )
@@ -284,7 +284,7 @@ sealed class Setting(
     )
 
     data object DefaultScaleMode : Setting(
-        title = R.string.default_value,
+        title = R.string.scale_mode,
         subtitle = null
     )
 
@@ -299,8 +299,8 @@ sealed class Setting(
     )
 
     data object ExifWidgetInitialState : Setting(
-        title = R.string.force_exif_widget_inital_value,
-        subtitle = R.string.force_exif_widget_inital_value_sub
+        title = R.string.force_exif_widget_initial_value,
+        subtitle = R.string.force_exif_widget_initial_value_sub
     )
 
     data object BrightnessEnforcement : Setting(
@@ -391,5 +391,105 @@ sealed class Setting(
     data object ColorBlindScheme : Setting(
         title = R.string.color_blind_scheme,
         subtitle = R.string.color_blind_scheme_sub
+    )
+
+    data object EnableLinksPreview : Setting(
+        title = R.string.links_preview,
+        subtitle = R.string.links_preview_sub
+    )
+
+    data object DefaultDrawColor : Setting(
+        title = R.string.default_draw_color,
+        subtitle = null
+    )
+
+    data object DefaultDrawPathMode : Setting(
+        title = R.string.default_draw_path_mode,
+        subtitle = null
+    )
+
+    data object AddTimestampToFilename : Setting(
+        title = R.string.add_timestamp,
+        subtitle = R.string.add_timestamp_sub
+    )
+
+    data object UseFormattedFilenameTimestamp : Setting(
+        title = R.string.formatted_timestamp,
+        subtitle = R.string.formatted_timestamp_sub
+    )
+
+    data object OneTimeSaveLocation : Setting(
+        title = R.string.one_time_save_location,
+        subtitle = R.string.one_time_save_location_sub
+    )
+
+    data object TelegramChannel : Setting(
+        title = R.string.ci_channel,
+        subtitle = R.string.ci_channel_sub
+    )
+
+    data object FreeSoftwarePartner : Setting(
+        title = R.string.free_software_partner,
+        subtitle = R.string.free_software_partner_sub
+    )
+
+    data object DefaultResizeType : Setting(
+        title = R.string.resize_type,
+        subtitle = null
+    )
+
+    data object SystemBarsVisibility : Setting(
+        title = R.string.system_bars_visibility,
+        subtitle = null
+    )
+
+    data object ShowSystemBarsBySwipe : Setting(
+        title = R.string.show_system_bars_by_swipe,
+        subtitle = R.string.show_system_bars_by_swipe_sub
+    )
+
+    data object UseCompactSelectors : Setting(
+        title = R.string.compact_selectors,
+        subtitle = R.string.compact_selectors_sub
+    )
+
+    data object MainScreenTitle : Setting(
+        title = R.string.main_screen_title,
+        subtitle = null
+    )
+
+    data object SliderType : Setting(
+        title = R.string.slider_type,
+        subtitle = null
+    )
+
+    data object CenterAlignDialogButtons : Setting(
+        title = R.string.center_align_dialog_buttons,
+        subtitle = R.string.center_align_dialog_buttons_sub
+    )
+
+    data object OpenSourceLicenses : Setting(
+        title = R.string.open_source_licenses,
+        subtitle = R.string.open_source_licenses_sub
+    )
+
+    data object FastSettingsSide : Setting(
+        title = R.string.fast_settings_side,
+        subtitle = R.string.fast_settings_side_sub
+    )
+
+    data object ChecksumAsFilename : Setting(
+        title = R.string.checksum_as_filename,
+        subtitle = R.string.checksum_as_filename_sub
+    )
+
+    data object EnableToolExitConfirmation : Setting(
+        title = R.string.tool_exit_confirmation,
+        subtitle = R.string.tool_exit_confirmation_sub
+    )
+
+    data object SendLogs : Setting(
+        title = R.string.send_logs,
+        subtitle = R.string.send_logs_sub
     )
 }

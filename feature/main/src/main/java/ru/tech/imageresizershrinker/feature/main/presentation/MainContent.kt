@@ -17,7 +17,6 @@
 
 package ru.tech.imageresizershrinker.feature.main.presentation
 
-import android.net.Uri
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -43,7 +42,6 @@ import androidx.compose.material.icons.rounded.FileDownloadOff
 import androidx.compose.material3.DrawerDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.rememberDrawerState
@@ -59,8 +57,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
@@ -68,6 +66,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.idapgroup.snowfall.snowfall
 import com.idapgroup.snowfall.types.FlakeType
 import kotlinx.coroutines.delay
@@ -75,36 +74,23 @@ import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
-import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils.isInstalledFromPlayStore
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ProvidesValue
 import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
 import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalWindowSizeClass
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.withModifier
 import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
 import ru.tech.imageresizershrinker.feature.main.presentation.components.MainContentImpl
 import ru.tech.imageresizershrinker.feature.main.presentation.components.MainDrawerContent
+import ru.tech.imageresizershrinker.feature.main.presentation.screenLogic.MainComponent
 import ru.tech.imageresizershrinker.feature.settings.presentation.SettingsContent
 
 @Composable
 fun MainContent(
-    onTryGetUpdate: (
-        newRequest: Boolean,
-        installedFromMarket: Boolean,
-        onNoUpdates: () -> Unit
-    ) -> Unit,
-    onNavigateToSettings: () -> Boolean,
-    onNavigateToScreenWithPopUpTo: (Screen) -> Unit,
-    onNavigateToEasterEgg: () -> Unit,
-    updateAvailable: Boolean,
-    updateUris: (List<Uri>) -> Unit
+    component: MainComponent
 ) {
-    fun tryGetUpdate(
-        newRequest: Boolean,
-        installedFromMarket: Boolean,
-        onNoUpdates: () -> Unit
-    ) = onTryGetUpdate(newRequest, installedFromMarket, onNoUpdates)
+    val isUpdateAvailable by component.isUpdateAvailable.subscribeAsState()
 
     val settingsState = LocalSettingsState.current
     val isGrid = LocalWindowSizeClass.current.widthSizeClass != WindowWidthSizeClass.Compact
@@ -124,48 +110,37 @@ fun MainContent(
                 layoutDirection = layoutDirection,
                 settingsBlockContent = {
                     SettingsContent(
-                        onTryGetUpdate = ::tryGetUpdate,
-                        updateAvailable = updateAvailable,
-                        isStandaloneScreen = false,
-                        onNavigateToEasterEgg = onNavigateToEasterEgg,
-                        onNavigateToSettings = onNavigateToSettings
-                    ) { showSettingsSearch, onCloseSearch ->
-                        AnimatedContent(
-                            targetState = !isSheetSlideable to showSettingsSearch,
-                            transitionSpec = { fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut() }
-                        ) { (expanded, searching) ->
-                            if (searching) {
-                                EnhancedIconButton(
-                                    containerColor = Color.Transparent,
-                                    contentColor = LocalContentColor.current,
-                                    enableAutoShadowAndBorder = false,
-                                    onClick = onCloseSearch
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                        contentDescription = stringResource(R.string.exit)
-                                    )
-                                }
-                            } else if (expanded) {
-                                EnhancedIconButton(
-                                    containerColor = Color.Transparent,
-                                    contentColor = LocalContentColor.current,
-                                    enableAutoShadowAndBorder = false,
-                                    onClick = {
-                                        sheetExpanded = !sheetExpanded
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Rounded.MenuOpen,
-                                        contentDescription = "Expand",
-                                        modifier = Modifier.rotate(
-                                            animateFloatAsState(if (!sheetExpanded) 0f else 180f).value
+                        component = component.settingsComponent,
+                        appBarNavigationIcon = { showSettingsSearch, onCloseSearch ->
+                            AnimatedContent(
+                                targetState = !isSheetSlideable to showSettingsSearch,
+                                transitionSpec = { fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut() }
+                            ) { (expanded, searching) ->
+                                if (searching) {
+                                    EnhancedIconButton(onClick = onCloseSearch) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                            contentDescription = stringResource(R.string.exit)
                                         )
-                                    )
+                                    }
+                                } else if (expanded) {
+                                    EnhancedIconButton(
+                                        onClick = {
+                                            sheetExpanded = !sheetExpanded
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Rounded.MenuOpen,
+                                            contentDescription = "Expand",
+                                            modifier = Modifier.rotate(
+                                                animateFloatAsState(if (!sheetExpanded) 0f else 180f).value
+                                            )
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
+                    )
                 }
             )
         }
@@ -173,42 +148,45 @@ fun MainContent(
 
     var showSnowfall by rememberSaveable { mutableStateOf(false) }
 
-    val content = @Composable {
-        val context = LocalContext.current
-        val toastHost = LocalToastHostState.current
-        val scope = rememberCoroutineScope()
-        MainContentImpl(
-            layoutDirection = layoutDirection,
-            isSheetSlideable = isSheetSlideable,
-            sideSheetState = sideSheetState,
-            sheetExpanded = sheetExpanded,
-            isGrid = isGrid,
-            onShowSnowfall = {
-                showSnowfall = true
-            },
-            onGetClipList = updateUris,
-            onTryGetUpdate = {
-                tryGetUpdate(
-                    newRequest = true,
-                    installedFromMarket = context.isInstalledFromPlayStore(),
-                    onNoUpdates = {
-                        scope.launch {
-                            toastHost.showToast(
-                                icon = Icons.Rounded.FileDownloadOff,
-                                message = context.getString(R.string.no_updates)
-                            )
+    val content = remember {
+        movableContentOf {
+            val context = LocalContext.current
+            val toastHost = LocalToastHostState.current
+            val scope = rememberCoroutineScope()
+            MainContentImpl(
+                layoutDirection = layoutDirection,
+                isSheetSlideable = isSheetSlideable,
+                sideSheetState = sideSheetState,
+                sheetExpanded = sheetExpanded,
+                isGrid = isGrid,
+                onShowSnowfall = {
+                    showSnowfall = true
+                },
+                onGetClipList = component::parseClipList,
+                onTryGetUpdate = {
+                    component.tryGetUpdate(
+                        isNewRequest = true,
+                        onNoUpdates = {
+                            scope.launch {
+                                toastHost.showToast(
+                                    icon = Icons.Rounded.FileDownloadOff,
+                                    message = context.getString(R.string.no_updates)
+                                )
+                            }
                         }
-                    }
-                )
-            },
-            updateAvailable = updateAvailable,
-            onNavigateToSettings = { onNavigateToSettings() },
-            onNavigateToScreenWithPopUpTo = onNavigateToScreenWithPopUpTo
-        )
+                    )
+                },
+                isUpdateAvailable = isUpdateAvailable,
+                onNavigate = component.onNavigate,
+                onToggleFavorite = component::toggleFavoriteScreen
+            )
+        }
     }
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .clipToBounds()
     ) {
         if (settingsState.useFullscreenSettings) {
             content()
@@ -257,10 +235,6 @@ fun MainContent(
             }
         }
 
-        val snowFallList = Screen.entries.mapNotNull { screen ->
-            screen.icon?.let { rememberVectorPainter(image = it) }
-        }
-        val color = MaterialTheme.colorScheme.onSecondaryContainer.copy(0.5f)
         AnimatedVisibility(
             visible = showSnowfall,
             modifier = Modifier
@@ -268,6 +242,10 @@ fun MainContent(
             enter = fadeIn(tween(1000)) + slideInVertically(tween(1000)) { -it / 4 },
             exit = fadeOut(tween(1000)) + slideOutVertically(tween(1000)) { it / 4 }
         ) {
+            val snowFallList = Screen.entries.mapNotNull { screen ->
+                screen.icon?.let { rememberVectorPainter(image = it) }
+            }
+            val color = MaterialTheme.colorScheme.onSecondaryContainer.copy(0.5f)
             Box(
                 modifier = Modifier
                     .fillMaxSize()

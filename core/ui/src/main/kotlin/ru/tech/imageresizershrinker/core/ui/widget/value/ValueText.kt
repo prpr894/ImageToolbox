@@ -22,17 +22,28 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.tech.imageresizershrinker.core.domain.utils.trimTrailingZero
+import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalContainerColor
+import ru.tech.imageresizershrinker.core.ui.utils.provider.ProvideContainerDefaults
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.shapeByInteraction
+import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 
 @Composable
 fun ValueText(
@@ -43,20 +54,52 @@ fun ValueText(
     value: Number,
     enabled: Boolean = true,
     valueSuffix: String = "",
-    onClick: () -> Unit
+    customText: String? = null,
+    onClick: () -> Unit,
+    backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer.copy(
+        0.25f
+    )
 ) {
-    AnimatedContent(
-        targetState = value,
-        transitionSpec = { fadeIn(tween(100)) togetherWith fadeOut(tween(100)) }
+    val text by remember(customText, value, valueSuffix) {
+        derivedStateOf {
+            customText ?: "${value.toString().trimTrailingZero()}$valueSuffix"
+        }
+    }
+    val interactionSource = remember { MutableInteractionSource() }
+
+    val shape = shapeByInteraction(
+        shape = ButtonDefaults.shape,
+        pressedShape = ButtonDefaults.pressedShape,
+        interactionSource = interactionSource
+    )
+    ProvideContainerDefaults(
+        color = LocalContainerColor.current
     ) {
-        Text(
-            text = "${it.toString().trimTrailingZero()}$valueSuffix",
-            color = LocalContentColor.current.copy(0.5f),
+        AnimatedContent(
+            targetState = text,
+            transitionSpec = { fadeIn(tween(100)) togetherWith fadeOut(tween(100)) },
             modifier = modifier
-                .clip(CircleShape)
-                .clickable(enabled = enabled, onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            lineHeight = 18.sp
-        )
+                .container(
+                    shape = shape,
+                    color = backgroundColor,
+                    resultPadding = 0.dp,
+                    autoShadowElevation = if (enabled) 0.7.dp else 0.dp
+                )
+        ) {
+            AutoSizeText(
+                text = it,
+                color = LocalContentColor.current.copy(0.5f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .hapticsClickable(
+                        enabled = enabled,
+                        onClick = onClick,
+                        interactionSource = interactionSource,
+                        indication = LocalIndication.current
+                    )
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                lineHeight = 18.sp
+            )
+        }
     }
 }

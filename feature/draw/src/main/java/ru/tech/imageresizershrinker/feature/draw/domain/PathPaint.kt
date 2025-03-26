@@ -18,6 +18,7 @@
 package ru.tech.imageresizershrinker.feature.draw.domain
 
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
+import ru.tech.imageresizershrinker.core.domain.model.Pt
 
 interface PathPaint<Path, Color> {
     operator fun component1() = path
@@ -28,6 +29,7 @@ interface PathPaint<Path, Color> {
     operator fun component6() = drawMode
     operator fun component7() = canvasSize
     operator fun component8() = drawPathMode
+    operator fun component9() = drawLineStyle
 
 
     val path: Path
@@ -38,4 +40,5 @@ interface PathPaint<Path, Color> {
     val drawMode: DrawMode
     val canvasSize: IntegerSize
     val drawPathMode: DrawPathMode
+    val drawLineStyle: DrawLineStyle
 }

@@ -32,6 +32,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.exifinterface.media.ExifInterface
+import ru.tech.imageresizershrinker.core.data.utils.safeConfig
+import ru.tech.imageresizershrinker.core.data.utils.toSoftware
 import ru.tech.imageresizershrinker.core.domain.image.ImageGetter
 import ru.tech.imageresizershrinker.core.domain.image.ImageTransformer
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
@@ -49,14 +51,14 @@ internal class AndroidFilterMaskApplier @Inject constructor(
 ) : FilterMaskApplier<Bitmap, Path, Color> {
 
     override suspend fun filterByMask(
-        filterMask: FilterMask<Bitmap, Path, Color>,
+        filterMask: FilterMask<Path, Color>,
         imageUri: String,
     ): Bitmap? = imageGetter.getImage(uri = imageUri)?.let {
         filterByMask(filterMask = filterMask, image = it.image)
     }
 
     override suspend fun filterByMask(
-        filterMask: FilterMask<Bitmap, Path, Color>,
+        filterMask: FilterMask<Path, Color>,
         image: Bitmap,
     ): Bitmap? {
         if (filterMask.filters.isEmpty()) return image
@@ -72,7 +74,7 @@ internal class AndroidFilterMaskApplier @Inject constructor(
         )
         return filteredBitmap?.let {
             image.let { bitmap ->
-                if (filterMask.filters.any { it is Filter.RemoveColor<*, *> }) {
+                if (filterMask.filters.any { it is Filter.RemoveColor }) {
                     bitmap.clipBitmap(
                         pathPaints = filterMask.maskPaints,
                         inverse = !filterMask.isInverseFillType
@@ -86,7 +88,7 @@ internal class AndroidFilterMaskApplier @Inject constructor(
         pathPaints: List<PathPaint<Path, Color>>,
         inverse: Boolean,
     ): Bitmap {
-        val bitmap = Bitmap.createBitmap(this.width, this.height, this.config)
+        val bitmap = Bitmap.createBitmap(this.width, this.height, this.safeConfig)
             .apply { setHasAlpha(true) }
         val canvasSize = bitmap.run { IntegerSize(width, height) }
         Canvas(bitmap).apply {
@@ -154,10 +156,11 @@ internal class AndroidFilterMaskApplier @Inject constructor(
 
     private fun Bitmap.overlay(overlay: Bitmap): Bitmap {
         val image = this
-        val finalBitmap = Bitmap.createBitmap(image.width, image.height, image.config)
+        val finalBitmap =
+            Bitmap.createBitmap(image.width, image.height, image.safeConfig.toSoftware())
         val canvas = Canvas(finalBitmap)
         canvas.drawBitmap(image, Matrix(), null)
-        canvas.drawBitmap(overlay, 0f, 0f, null)
+        canvas.drawBitmap(overlay.toSoftware(), 0f, 0f, null)
         return finalBitmap
     }
 
@@ -179,16 +182,16 @@ internal class AndroidFilterMaskApplier @Inject constructor(
     }
 
     override suspend fun filterByMasks(
-        filterMasks: List<FilterMask<Bitmap, Path, Color>>,
+        filterMasks: List<FilterMask<Path, Color>>,
         imageUri: String,
     ): Bitmap? = imageGetter.getImage(uri = imageUri)?.let {
         filterByMasks(filterMasks, it.image)
     }
 
     override suspend fun filterByMasks(
-        filterMasks: List<FilterMask<Bitmap, Path, Color>>,
+        filterMasks: List<FilterMask<Path, Color>>,
         image: Bitmap,
-    ): Bitmap? = filterMasks.fold<FilterMask<Bitmap, Path, Color>, Bitmap?>(
+    ): Bitmap? = filterMasks.fold<FilterMask<Path, Color>, Bitmap?>(
         initial = image,
         operation = { bmp, mask ->
             bmp?.let {

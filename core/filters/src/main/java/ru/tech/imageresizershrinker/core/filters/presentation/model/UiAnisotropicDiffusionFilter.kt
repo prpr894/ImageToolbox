@@ -17,13 +17,12 @@
 
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
-import android.graphics.Bitmap
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.FilterParam
 import ru.tech.imageresizershrinker.core.resources.R
 
 class UiAnisotropicDiffusionFilter(
-    override val value: Triple<Int, Float, Float> = Triple(20, 0.1f, 0.01f)
+    override val value: Triple<Int, Float, Float> = Triple(20, 0.6f, 0.5f)
 ) : UiFilter<Triple<Int, Float, Float>>(
     title = R.string.anisotropic_diffusion,
     value = value,
@@ -44,4 +43,4 @@ class UiAnisotropicDiffusionFilter(
             roundTo = 2
         )
     )
-), Filter.AnisotropicDiffusion<Bitmap>
+), Filter.AnisotropicDiffusion

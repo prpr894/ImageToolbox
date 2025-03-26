@@ -25,11 +25,10 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Compare
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 
 @Composable
 fun CompareButton(
@@ -42,9 +41,6 @@ fun CompareButton(
         exit = fadeOut() + scaleOut()
     ) {
         EnhancedIconButton(
-            containerColor = Color.Transparent,
-            contentColor = LocalContentColor.current,
-            enableAutoShadowAndBorder = false,
             onClick = onClick
         ) {
             Icon(

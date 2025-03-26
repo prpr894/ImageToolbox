@@ -27,6 +27,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -46,7 +47,6 @@ import androidx.compose.material.icons.automirrored.rounded.Redo
 import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.material.icons.rounded.Done
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -68,26 +68,31 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import ru.tech.imageresizershrinker.core.domain.model.pt
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSimpleSettingInteractor
+import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSimpleSettingsInteractor
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
 import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.PanModeButton
+import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.HelperGridParamsSelector
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedTopAppBar
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedTopAppBarType
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.HelperGridParams
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
+import ru.tech.imageresizershrinker.core.ui.widget.other.BoxAnimatedVisibility
 import ru.tech.imageresizershrinker.core.ui.widget.other.DrawLockScreenOrientation
-import ru.tech.imageresizershrinker.core.ui.widget.other.EnhancedTopAppBar
-import ru.tech.imageresizershrinker.core.ui.widget.other.EnhancedTopAppBarType
-import ru.tech.imageresizershrinker.core.ui.widget.other.Loading
+import ru.tech.imageresizershrinker.core.ui.widget.other.LoadingIndicator
 import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
-import ru.tech.imageresizershrinker.core.ui.widget.other.showError
+import ru.tech.imageresizershrinker.core.ui.widget.other.showFailureToast
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwitch
-import ru.tech.imageresizershrinker.core.ui.widget.text.Marquee
-import ru.tech.imageresizershrinker.feature.draw.domain.pt
+import ru.tech.imageresizershrinker.core.ui.widget.saver.PtSaver
+import ru.tech.imageresizershrinker.core.ui.widget.text.marquee
+import ru.tech.imageresizershrinker.feature.draw.domain.DrawPathMode
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.BrushSoftnessSelector
+import ru.tech.imageresizershrinker.feature.draw.presentation.components.DrawPathModeSelector
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.LineWidthSelector
-import ru.tech.imageresizershrinker.feature.draw.presentation.components.PtSaver
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.UiPathPaint
 import ru.tech.imageresizershrinker.feature.erase_background.domain.AutoBackgroundRemover
 import ru.tech.imageresizershrinker.feature.erase_background.presentation.components.AutoEraseBackgroundCard
@@ -96,9 +101,7 @@ import ru.tech.imageresizershrinker.feature.erase_background.presentation.compon
 import ru.tech.imageresizershrinker.feature.erase_background.presentation.components.RecoverModeButton
 import ru.tech.imageresizershrinker.feature.erase_background.presentation.components.RecoverModeCard
 import ru.tech.imageresizershrinker.feature.erase_background.presentation.components.TrimImageToggle
-import ru.tech.imageresizershrinker.feature.erase_background.presentation.components.UseLassoSelector
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EraseBackgroundEditOption(
     visible: Boolean,
@@ -112,8 +115,12 @@ fun EraseBackgroundEditOption(
     paths: List<UiPathPaint>,
     lastPaths: List<UiPathPaint>,
     undonePaths: List<UiPathPaint>,
+    drawPathMode: DrawPathMode,
+    onUpdateDrawPathMode: (DrawPathMode) -> Unit,
     addPath: (UiPathPaint) -> Unit,
-    autoBackgroundRemover: AutoBackgroundRemover<Bitmap>
+    autoBackgroundRemover: AutoBackgroundRemover<Bitmap>,
+    helperGridParams: HelperGridParams,
+    onUpdateHelperGridParams: (HelperGridParams) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val confettiHostState = LocalConfettiHostState.current
@@ -145,9 +152,7 @@ fun EraseBackgroundEditOption(
         var brushSoftness by rememberSaveable(stateSaver = PtSaver) {
             mutableStateOf(0.pt)
         }
-        var useLasso by rememberSaveable {
-            mutableStateOf(false)
-        }
+
         var originalImagePreviewAlpha by rememberSaveable {
             mutableFloatStateOf(0.2f)
         }
@@ -214,96 +219,122 @@ fun EraseBackgroundEditOption(
             onDismiss = onDismiss,
             useScaffold = useScaffold,
             controls = { scaffoldState ->
-                if (!useScaffold) secondaryControls()
-                Spacer(modifier = Modifier.height(8.dp))
-                RecoverModeCard(
-                    selected = isRecoveryOn,
-                    enabled = !panEnabled,
-                    onClick = { isRecoveryOn = !isRecoveryOn }
-                )
-                AutoEraseBackgroundCard(
-                    onClick = {
-                        scope.launch {
-                            scaffoldState?.bottomSheetState?.partialExpand()
-                        }
-                        loading = true
-                        autoBackgroundRemover.removeBackgroundFromImage(
-                            image = erasedBitmap,
-                            onSuccess = {
-                                loading = false
-                                bitmapState = it
-                                clearErasing(false)
-                                autoErased = true
-                                showConfetti()
-                            },
-                            onFailure = {
-                                loading = false
-                                scope.launch {
-                                    toastHostState.showError(context, it)
-                                }
-                            }
-                        )
-                    },
-                    onReset = {
-                        bitmapState = bitmap
-                        autoErased = true
-                    }
-                )
-                OriginalImagePreviewAlphaSelector(
-                    value = originalImagePreviewAlpha,
-                    onValueChange = {
-                        originalImagePreviewAlpha = it
-                    },
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
-                )
-                UseLassoSelector(
-                    value = useLasso,
-                    onValueChange = {
-                        useLasso = it
-                    },
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
-                )
-                LineWidthSelector(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
-                    value = strokeWidth.value,
-                    onValueChange = { strokeWidth = it.pt }
-                )
-                BrushSoftnessSelector(
-                    modifier = Modifier
-                        .padding(top = 8.dp, end = 16.dp, start = 16.dp),
-                    value = brushSoftness.value,
-                    onValueChange = { brushSoftness = it.pt }
-                )
-                TrimImageToggle(
-                    checked = trimImage,
-                    onCheckedChange = { trimImage = it },
-                    modifier = Modifier.padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 8.dp,
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (!useScaffold) secondaryControls()
+                    Spacer(modifier = Modifier.height(8.dp))
+                    RecoverModeCard(
+                        selected = isRecoveryOn,
+                        enabled = !panEnabled,
+                        onClick = { isRecoveryOn = !isRecoveryOn }
                     )
-                )
-                val settingsInteractor = LocalSimpleSettingInteractor.current
-                PreferenceRowSwitch(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
+                    AutoEraseBackgroundCard(
+                        onClick = {
+                            scope.launch {
+                                scaffoldState?.bottomSheetState?.partialExpand()
+                            }
+                            loading = true
+                            autoBackgroundRemover.removeBackgroundFromImage(
+                                image = erasedBitmap,
+                                onSuccess = {
+                                    loading = false
+                                    bitmapState = it
+                                    clearErasing(false)
+                                    autoErased = true
+                                    showConfetti()
+                                },
+                                onFailure = {
+                                    loading = false
+                                    scope.launch {
+                                        toastHostState.showFailureToast(context, it)
+                                    }
+                                }
+                            )
+                        },
+                        onReset = {
+                            bitmapState = bitmap
+                            autoErased = true
+                        }
+                    )
+                    OriginalImagePreviewAlphaSelector(
+                        value = originalImagePreviewAlpha,
+                        onValueChange = {
+                            originalImagePreviewAlpha = it
+                        },
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
+                    )
+                    DrawPathModeSelector(
+                        modifier = Modifier.padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = 8.dp
+                        ),
+                        value = drawPathMode,
+                        onValueChange = onUpdateDrawPathMode,
+                        values = remember {
+                            listOf(
+                                DrawPathMode.Free,
+                                DrawPathMode.Line,
+                                DrawPathMode.Lasso,
+                                DrawPathMode.Rect(),
+                                DrawPathMode.Oval
+                            )
+                        }
+                    )
+                    BoxAnimatedVisibility(drawPathMode.isStroke) {
+                        LineWidthSelector(
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                            value = strokeWidth.value,
+                            onValueChange = { strokeWidth = it.pt }
+                        )
+                    }
+                    BrushSoftnessSelector(
+                        modifier = Modifier
+                            .padding(top = 8.dp, end = 16.dp, start = 16.dp),
+                        value = brushSoftness.value,
+                        onValueChange = { brushSoftness = it.pt }
+                    )
+                    TrimImageToggle(
+                        checked = trimImage,
+                        onCheckedChange = { trimImage = it },
+                        modifier = Modifier.padding(
                             start = 16.dp,
                             end = 16.dp,
                             top = 8.dp,
-                            bottom = 16.dp
-                        ),
-                    shape = RoundedCornerShape(24.dp),
-                    title = stringResource(R.string.magnifier),
-                    subtitle = stringResource(R.string.magnifier_sub),
-                    checked = settingsState.magnifierEnabled,
-                    onClick = {
-                        scope.launch {
-                            settingsInteractor.toggleMagnifierEnabled()
-                        }
-                    },
-                    startIcon = Icons.Outlined.ZoomIn
-                )
+                        )
+                    )
+                    HelperGridParamsSelector(
+                        value = helperGridParams,
+                        onValueChange = onUpdateHelperGridParams,
+                        modifier = Modifier.padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = 8.dp,
+                        )
+                    )
+                    val settingsInteractor = LocalSimpleSettingsInteractor.current
+                    PreferenceRowSwitch(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                start = 16.dp,
+                                end = 16.dp,
+                                top = 8.dp,
+                                bottom = 16.dp
+                            ),
+                        shape = RoundedCornerShape(24.dp),
+                        title = stringResource(R.string.magnifier),
+                        subtitle = stringResource(R.string.magnifier_sub),
+                        checked = settingsState.magnifierEnabled,
+                        onClick = {
+                            scope.launch {
+                                settingsInteractor.toggleMagnifierEnabled()
+                            }
+                        },
+                        startIcon = Icons.Outlined.ZoomIn
+                    )
+                }
             },
             fabButtons = null,
             actions = {
@@ -344,11 +375,10 @@ fun EraseBackgroundEditOption(
                         }
                     },
                     title = {
-                        Marquee {
-                            Text(
-                                text = stringResource(R.string.erase_background),
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.erase_background),
+                            modifier = Modifier.marquee()
+                        )
                     }
                 )
             }
@@ -383,9 +413,10 @@ fun EraseBackgroundEditOption(
                             .aspectRatio(aspectRatio, !useScaffold)
                             .fillMaxSize(),
                         panEnabled = panEnabled,
-                        useLasso = useLasso,
+                        drawPathMode = drawPathMode,
                         originalImagePreviewAlpha = originalImagePreviewAlpha,
-                        onErased = { erasedBitmap = it }
+                        onErased = { erasedBitmap = it },
+                        helperGridParams = helperGridParams
                     )
                 }
 
@@ -401,7 +432,7 @@ fun EraseBackgroundEditOption(
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.scrim.copy(0.5f))
                     ) {
-                        Loading()
+                        LoadingIndicator()
                     }
                 }
             }

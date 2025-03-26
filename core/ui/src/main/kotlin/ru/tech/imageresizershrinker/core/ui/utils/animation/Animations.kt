@@ -18,6 +18,9 @@
 package ru.tech.imageresizershrinker.core.ui.utils.animation
 
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,45 +28,45 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalConfiguration
-import dev.olshevski.navigation.reimagined.NavAction
-import dev.olshevski.navigation.reimagined.NavTransitionSpec
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
+import com.arkivanov.decompose.extensions.compose.stack.animation.StackAnimation
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.plus
+import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.androidPredictiveBackAnimatable
+import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
+import com.arkivanov.decompose.extensions.compose.stack.animation.scale
+import com.arkivanov.decompose.extensions.compose.stack.animation.slide
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.essenty.backhandler.BackHandler
+import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
 
 fun fancySlideTransition(
     isForward: Boolean,
-    screenWidthDp: Int
+    screenWidthPx: Int,
+    duration: Int = 600
 ): ContentTransform = if (isForward) {
     slideInHorizontally(
-        animationSpec = tween(600, easing = FancyTransitionEasing),
-        initialOffsetX = { screenWidthDp }) + fadeIn(
+        animationSpec = tween(duration, easing = FancyTransitionEasing),
+        initialOffsetX = { screenWidthPx }) + fadeIn(
         tween(300, 100)
     ) togetherWith slideOutHorizontally(
-        animationSpec = tween(600, easing = FancyTransitionEasing),
-        targetOffsetX = { -screenWidthDp }) + fadeOut(
+        animationSpec = tween(duration, easing = FancyTransitionEasing),
+        targetOffsetX = { -screenWidthPx }) + fadeOut(
         tween(300, 100)
     )
 } else {
     slideInHorizontally(
         animationSpec = tween(600, easing = FancyTransitionEasing),
-        initialOffsetX = { -screenWidthDp }) + fadeIn(
+        initialOffsetX = { -screenWidthPx }) + fadeIn(
         tween(300, 100)
     ) togetherWith slideOutHorizontally(
         animationSpec = tween(600, easing = FancyTransitionEasing),
-        targetOffsetX = { screenWidthDp }) + fadeOut(
+        targetOffsetX = { screenWidthPx }) + fadeOut(
         tween(300, 100)
     )
 }
-
-val NavigationTransition: NavTransitionSpec<Any>
-    @Composable
-    get() = LocalConfiguration.current.screenWidthDp.let { screenWidth ->
-        NavTransitionSpec { action, _, _ ->
-            fancySlideTransition(
-                isForward = action != NavAction.Pop,
-                screenWidthDp = screenWidth
-            )
-        }
-    }
 
 val PageOpenTransition = slideInHorizontally(
     openCloseTransitionSpec()
@@ -77,11 +80,6 @@ val PageCloseTransition = slideOutHorizontally(
     openCloseTransitionSpec(500)
 )
 
-val ModalSheetAnimationSpec = tween<Float>(
-    durationMillis = 600,
-    easing = FancyTransitionEasing
-)
-
 private fun <T> openCloseTransitionSpec(
     duration: Int = 500,
     delay: Int = 0
@@ -90,3 +88,52 @@ private fun <T> openCloseTransitionSpec(
     delayMillis = delay,
     easing = TransitionEasing
 )
+
+fun <NavigationChild : Any> toolboxPredictiveBackAnimation(
+    backHandler: BackHandler,
+    onBack: () -> Unit
+): StackAnimation<Screen, NavigationChild>? = predictiveBackAnimation(
+    backHandler = backHandler,
+    onBack = onBack,
+    fallbackAnimation = stackAnimation(
+        fade(
+            tween(
+                durationMillis = 300,
+                easing = AlphaEasing
+            )
+        ) + slide(
+            tween(
+                durationMillis = 400,
+                easing = FancyTransitionEasing
+            )
+        ) + scale(
+            tween(
+                durationMillis = 500,
+                easing = PointToPointEasing
+            )
+        )
+    ),
+    selector = { backEvent, _, _ -> androidPredictiveBackAnimatable(backEvent) },
+)
+
+@Composable
+fun animateFloatingRangeAsState(
+    range: ClosedFloatingPointRange<Float>,
+    animationSpec: AnimationSpec<Float> = spring()
+): State<ClosedFloatingPointRange<Float>> {
+    val start = animateFloatAsState(
+        targetValue = range.start,
+        animationSpec = animationSpec
+    )
+
+    val end = animateFloatAsState(
+        targetValue = range.endInclusive,
+        animationSpec = animationSpec
+    )
+
+    return remember(start, end) {
+        derivedStateOf {
+            start.value..end.value
+        }
+    }
+}

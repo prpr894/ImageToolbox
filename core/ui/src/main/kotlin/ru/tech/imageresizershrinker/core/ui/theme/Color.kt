@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
@@ -87,6 +88,11 @@ fun Color.inverse(
 ): Color = if (darkMode) blend(Color.White, fraction(true))
 else blend(Color.Black, fraction(false))
 
+fun Color.inverseByLuma(
+    fraction: (Boolean) -> Float = { 0.5f },
+): Color = if (luminance() < 0.3f) blend(Color.White, fraction(true))
+else blend(Color.Black, fraction(false))
+
 @Composable
 fun Color.inverse(
     fraction: (Boolean) -> Float = { 0.5f },
@@ -116,7 +122,7 @@ inline val Green: Color
     @Composable get() = Color(0xFFBADB94).harmonizeWithPrimary(0.2f)
 
 inline val Red: Color
-    @Composable get() = Color(0xFFDB9494).harmonizeWithPrimary(0.2f)
+    @Composable get() = Color(0xFFE06565).harmonizeWithPrimary(0.2f)
 
 inline val Blue: Color
     @Composable get() = Color(0xFF0088CC).harmonizeWithPrimary(0.2f)

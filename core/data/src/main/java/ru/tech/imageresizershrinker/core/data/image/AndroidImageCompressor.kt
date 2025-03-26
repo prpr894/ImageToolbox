@@ -23,13 +23,15 @@ import android.content.Context
 import android.graphics.Bitmap
 import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
+import com.t8rin.trickle.Trickle
 import dagger.Lazy
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
-import ru.tech.imageresizershrinker.core.data.image.utils.SimpleCompressor
+import kotlinx.coroutines.yield
+import ru.tech.imageresizershrinker.core.data.image.utils.ImageCompressorBackend
 import ru.tech.imageresizershrinker.core.data.utils.fileSize
 import ru.tech.imageresizershrinker.core.data.utils.toSoftware
 import ru.tech.imageresizershrinker.core.domain.dispatchers.DispatchersHolder
@@ -41,8 +43,10 @@ import ru.tech.imageresizershrinker.core.domain.image.ShareProvider
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageFormat
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageInfo
 import ru.tech.imageresizershrinker.core.domain.image.model.Quality
+import ru.tech.imageresizershrinker.core.domain.image.model.alphaContainedEntries
 import ru.tech.imageresizershrinker.core.domain.model.sizeTo
 import ru.tech.imageresizershrinker.core.settings.domain.SettingsProvider
+import ru.tech.imageresizershrinker.core.settings.domain.model.SettingsState
 import javax.inject.Inject
 
 internal class AndroidImageCompressor @Inject constructor(
@@ -55,13 +59,14 @@ internal class AndroidImageCompressor @Inject constructor(
     dispatchersHolder: DispatchersHolder
 ) : DispatchersHolder by dispatchersHolder, ImageCompressor<Bitmap> {
 
-    private var overwriteFiles: Boolean = false
+    private var settingsState: SettingsState = SettingsState.Default
+    private val overwriteFiles: Boolean get() = settingsState.overwriteFiles
 
     init {
         settingsProvider
             .getSettingsStateFlow()
             .onEach {
-                overwriteFiles = it.overwriteFiles
+                settingsState = it
             }
             .launchIn(CoroutineScope(defaultDispatcher))
     }
@@ -71,13 +76,25 @@ internal class AndroidImageCompressor @Inject constructor(
         imageFormat: ImageFormat,
         quality: Quality
     ): ByteArray = withContext(encodingDispatcher) {
-        SimpleCompressor
-            .getInstance(
+        val transformedImage = image.toSoftware().let {
+            if (imageFormat !in ImageFormat.alphaContainedEntries) {
+                withContext(defaultDispatcher) {
+                    Trickle.drawColorBehind(
+                        color = settingsState.backgroundForNoAlphaImageFormats.colorInt,
+                        input = it
+                    )
+                }
+            } else it
+        }
+
+        ImageCompressorBackend.Factory()
+            .create(
                 imageFormat = imageFormat,
-                context = context
+                context = context,
+                imageScaler = imageScaler
             )
             .compress(
-                image = image.toSoftware(),
+                image = transformedImage,
                 quality = quality.coerceIn(imageFormat)
             )
     }
@@ -125,6 +142,7 @@ internal class AndroidImageCompressor @Inject constructor(
             ImageFormat[extension]
         } else imageInfo.imageFormat
 
+        yield()
         compress(
             image = currentImage,
             imageFormat = imageFormat,
@@ -152,7 +170,7 @@ internal class AndroidImageCompressor @Inject constructor(
                 byteArray = it,
                 filename = "temp.${newInfo.imageFormat.extension}"
             )?.toUri()
-                ?.fileSize(context)?.toLong() ?: it.size.toLong()
+                ?.fileSize(context) ?: it.size.toLong()
         }
     }
 

@@ -22,6 +22,9 @@ import android.graphics.Bitmap
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Matrix
+import android.graphics.Typeface
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -29,27 +32,42 @@ import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StampedPathEffectStyle
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.addOutline
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.applyCanvas
 import androidx.exifinterface.media.ExifInterface
 import dagger.hilt.android.qualifiers.ApplicationContext
+import ru.tech.imageresizershrinker.core.data.utils.density
+import ru.tech.imageresizershrinker.core.data.utils.safeConfig
+import ru.tech.imageresizershrinker.core.data.utils.toSoftware
 import ru.tech.imageresizershrinker.core.domain.image.ImageGetter
 import ru.tech.imageresizershrinker.core.domain.image.ImageTransformer
+import ru.tech.imageresizershrinker.core.domain.model.ImageModel
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
+import ru.tech.imageresizershrinker.core.domain.model.max
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.filters.domain.FilterProvider
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
+import ru.tech.imageresizershrinker.core.filters.domain.model.createFilter
+import ru.tech.imageresizershrinker.core.resources.shapes.MaterialStarShape
+import ru.tech.imageresizershrinker.core.settings.domain.model.FontType
+import ru.tech.imageresizershrinker.core.ui.utils.helper.toImageModel
 import ru.tech.imageresizershrinker.feature.draw.data.utils.drawRepeatedBitmapOnPath
 import ru.tech.imageresizershrinker.feature.draw.data.utils.drawRepeatedTextOnPath
 import ru.tech.imageresizershrinker.feature.draw.domain.DrawBehavior
+import ru.tech.imageresizershrinker.feature.draw.domain.DrawLineStyle
 import ru.tech.imageresizershrinker.feature.draw.domain.DrawMode
-import ru.tech.imageresizershrinker.feature.draw.domain.DrawPathMode
 import ru.tech.imageresizershrinker.feature.draw.domain.ImageDrawApplier
 import ru.tech.imageresizershrinker.feature.draw.domain.PathPaint
 import javax.inject.Inject
@@ -96,7 +114,7 @@ internal class AndroidImageDrawApplier @Inject constructor(
             else -> null
         }
 
-        val drawImage = image?.let { image.copy(image.config, true) }
+        val drawImage = image?.let { image.copy(image.safeConfig, true) }
 
         drawImage?.let { bitmap ->
             val canvas = Canvas(bitmap)
@@ -107,7 +125,7 @@ internal class AndroidImageDrawApplier @Inject constructor(
             canvas.apply {
                 (drawBehavior as? DrawBehavior.Background)?.apply { drawColor(color) }
 
-                pathPaints.forEach { (nonScaledPath, nonScaledStroke, radius, drawColor, isErasing, drawMode, size, drawPathMode) ->
+                pathPaints.forEach { (nonScaledPath, nonScaledStroke, radius, drawColor, isErasing, drawMode, size, drawPathMode, drawLineStyle) ->
                     val stroke = nonScaledStroke.toPx(canvasSize)
                     val path = nonScaledPath.scaleToFitCanvas(
                         currentSize = canvasSize,
@@ -117,34 +135,92 @@ internal class AndroidImageDrawApplier @Inject constructor(
                     val isFilled = drawPathMode.isFilled
 
                     if (drawMode is DrawMode.PathEffect && !isErasing) {
+                        val paint = Paint().apply {
+                            if (isFilled) {
+                                style = PaintingStyle.Fill
+                            } else {
+                                style = PaintingStyle.Stroke
+                                this.strokeWidth = stroke
+                                if (isSharpEdge) {
+                                    strokeCap = StrokeCap.Square
+                                } else {
+                                    strokeCap = StrokeCap.Round
+                                    strokeJoin = StrokeJoin.Round
+                                }
+                            }
+
+                            color = Color.Transparent
+                            blendMode = BlendMode.Clear
+                        }
+
                         val shaderSource = imageTransformer.transform(
                             image = image.overlay(bitmap),
-                            transformations = transformationsForMode(drawMode)
+                            transformations = transformationsForMode(
+                                canvasSize = canvasSize,
+                                drawMode = drawMode
+                            )
                         )?.asImageBitmap()?.clipBitmap(
                             path = path,
-                            paint = Paint().apply {
-                                if (isFilled) {
-                                    style = PaintingStyle.Fill
-                                } else {
-                                    style = PaintingStyle.Stroke
-                                    this.strokeWidth = stroke
-                                    if (isSharpEdge) {
-                                        strokeCap = StrokeCap.Square
-                                    } else {
-                                        strokeCap = StrokeCap.Round
-                                        strokeJoin = StrokeJoin.Round
-                                    }
-                                }
-
-                                color = Color.Transparent
-                                blendMode = BlendMode.Clear
-                            }
+                            paint = paint
                         )
                         if (shaderSource != null) {
                             drawBitmap(
                                 shaderSource.asAndroidBitmap(),
                                 0f,
                                 0f,
+                                NativePaint()
+                            )
+                        }
+                    } else if (drawMode is DrawMode.SpotHeal && !isErasing) {
+                        val paint = Paint().apply {
+                            if (isFilled) {
+                                style = PaintingStyle.Fill
+                            } else {
+                                style = PaintingStyle.Stroke
+                                this.strokeWidth = stroke
+                                if (isSharpEdge) {
+                                    strokeCap = StrokeCap.Square
+                                } else {
+                                    strokeCap = StrokeCap.Round
+                                    strokeJoin = StrokeJoin.Round
+                                }
+                            }
+
+                            color = Color.White
+                        }
+
+                        val filter = filterProvider.filterToTransformation(
+                            createFilter<Triple<ImageModel, Float, Int>, Filter.SpotHeal>(
+                                Triple(
+                                    first = Bitmap.createBitmap(
+                                        canvasSize.width,
+                                        canvasSize.height,
+                                        Bitmap.Config.ARGB_8888
+                                    ).applyCanvas {
+                                        drawColor(Color.Black.toArgb())
+                                        drawPath(
+                                            path.asAndroidPath(),
+                                            paint.asFrameworkPaint()
+                                        )
+                                    }.toImageModel(),
+                                    second = 3f,
+                                    third = 1
+                                )
+                            )
+                        )
+
+                        imageTransformer.transform(
+                            image = image.overlay(bitmap),
+                            transformations = listOf(filter)
+                        )?.let {
+                            drawBitmap(
+                                it.asImageBitmap().clipBitmap(
+                                    path = path,
+                                    paint = paint.apply {
+                                        blendMode = BlendMode.Clear
+                                    }
+                                ).asAndroidBitmap(),
+                                0f, 0f,
                                 NativePaint()
                             )
                         }
@@ -158,6 +234,10 @@ internal class AndroidImageDrawApplier @Inject constructor(
                                 strokeJoin = StrokeJoin.Round
                             } else {
                                 if (drawMode !is DrawMode.Text) {
+                                    pathEffect = drawLineStyle.asPathEffect(
+                                        canvasSize = canvasSize,
+                                        strokeWidth = stroke
+                                    )
                                     if (isFilled) {
                                         style = PaintingStyle.Fill
                                     } else {
@@ -195,8 +275,14 @@ internal class AndroidImageDrawApplier @Inject constructor(
                             if (drawMode is DrawMode.Text && !isErasing) {
                                 isAntiAlias = true
                                 textSize = stroke
-                                if (drawMode.font != 0) {
-                                    typeface = ResourcesCompat.getFont(context, drawMode.font)
+                                if (drawMode.font != null) {
+                                    typeface = when (drawMode.font) {
+                                        is FontType.File -> Typeface.createFromFile(drawMode.font.path)
+                                        is FontType.Resource -> ResourcesCompat.getFont(
+                                            context,
+                                            drawMode.font.resId
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -248,7 +334,7 @@ internal class AndroidImageDrawApplier @Inject constructor(
         image: Bitmap?,
         shaderSourceUri: String
     ): Bitmap? {
-        val drawImage = image?.let { it.copy(it.config, true) }
+        val drawImage = image?.let { it.copy(it.safeConfig, true) }
 
         drawImage?.let {
             val canvas = Canvas(it)
@@ -270,21 +356,27 @@ internal class AndroidImageDrawApplier @Inject constructor(
                         currentSize = canvasSize,
                         oldSize = size
                     )
-                    this.drawPath(
+
+                    drawPath(
                         path.asAndroidPath(),
                         Paint().apply {
-                            style = if (mode is DrawPathMode.Lasso) {
-                                PaintingStyle.Fill
-                            } else PaintingStyle.Stroke
+                            if (mode.isFilled) {
+                                style = PaintingStyle.Fill
+                            } else {
+                                style = PaintingStyle.Stroke
+                                this.strokeWidth = stroke.toPx(canvasSize)
+                                if (mode.isSharpEdge) {
+                                    strokeCap = StrokeCap.Square
+                                } else {
+                                    strokeCap = StrokeCap.Round
+                                    strokeJoin = StrokeJoin.Round
+                                }
+                            }
                             if (isRecoveryOn) {
                                 shader = recoveryShader
                             } else {
                                 blendMode = BlendMode.Clear
                             }
-                            strokeCap = StrokeCap.Round
-                            this.strokeWidth = stroke.toPx(canvasSize)
-                            strokeJoin = StrokeJoin.Round
-
                         }.asFrameworkPaint().apply {
                             if (radius.value > 0f) {
                                 maskFilter =
@@ -304,41 +396,119 @@ internal class AndroidImageDrawApplier @Inject constructor(
     }
 
     private fun transformationsForMode(
+        canvasSize: IntegerSize,
         drawMode: DrawMode
     ): List<Transformation<Bitmap>> = when (drawMode) {
         is DrawMode.PathEffect.PrivacyBlur -> {
             listOf(
-                object : Filter.StackBlur<Bitmap> {
-                    override val value: Pair<Float, Int>
-                        get() = when {
-                            drawMode.blurRadius < 10 -> 0.8f
-                            drawMode.blurRadius < 20 -> 0.5f
-                            else -> 0.3f
-                        } to drawMode.blurRadius
-                }
+                createFilter<Float, Filter.NativeStackBlur>(
+                    drawMode.blurRadius.toFloat() / 1000 * max(canvasSize)
+                )
             )
         }
 
         is DrawMode.PathEffect.Pixelation -> {
             listOf(
-                object : Filter.StackBlur<Bitmap> {
-                    override val value: Pair<Float, Int>
-                        get() = when {
-                            drawMode.pixelSize < 10 -> 0.8f
-                            drawMode.pixelSize < 20 -> 0.5f
-                            else -> 0.3f
-                        } to 20
-                },
-                object : Filter.Pixelation<Bitmap> {
-                    override val value: Float
-                        get() = drawMode.pixelSize
-                }
+                createFilter<Float, Filter.NativeStackBlur>(
+                    20.toFloat() / 1000 * max(canvasSize)
+                ),
+                createFilter<Float, Filter.Pixelation>(
+                    drawMode.pixelSize / 1000 * max(canvasSize)
+                )
             )
         }
+
+        is DrawMode.PathEffect.Custom -> drawMode.filter?.let {
+            listOf(it)
+        } ?: emptyList()
 
         else -> emptyList()
     }.map {
         filterProvider.filterToTransformation(it)
+    }
+
+    private fun DrawLineStyle.asPathEffect(
+        canvasSize: IntegerSize,
+        strokeWidth: Float
+    ): PathEffect? = when (this) {
+        is DrawLineStyle.Dashed -> {
+            PathEffect.dashPathEffect(
+                intervals = floatArrayOf(
+                    size.toPx(canvasSize),
+                    gap.toPx(canvasSize) + strokeWidth
+                ),
+                phase = 0f
+            )
+        }
+
+        DrawLineStyle.DotDashed -> {
+            val dashOnInterval1 = strokeWidth * 4
+            val dashOffInterval1 = strokeWidth * 2
+            val dashOnInterval2 = strokeWidth / 4
+            val dashOffInterval2 = strokeWidth * 2
+
+            PathEffect.dashPathEffect(
+                intervals = floatArrayOf(
+                    dashOnInterval1,
+                    dashOffInterval1,
+                    dashOnInterval2,
+                    dashOffInterval2
+                ),
+                phase = 0f
+            )
+        }
+
+        is DrawLineStyle.Stamped<*> -> {
+            fun Shape.toPath(): Path = Path().apply {
+                addOutline(
+                    createOutline(
+                        size = Size(strokeWidth, strokeWidth),
+                        layoutDirection = LayoutDirection.Ltr,
+                        density = context.density
+                    )
+                )
+            }
+
+            val path: Path? = when (shape) {
+                is Shape -> shape.toPath()
+                is android.graphics.Path -> shape.asComposePath()
+                is Path -> shape
+                null -> MaterialStarShape.toPath()
+                else -> null
+            }
+
+            path?.let {
+                PathEffect.stampedPathEffect(
+                    shape = it,
+                    advance = spacing.toPx(canvasSize) + strokeWidth,
+                    phase = 0f,
+                    style = StampedPathEffectStyle.Morph
+                )
+            }
+        }
+
+        is DrawLineStyle.ZigZag -> {
+            val zigZagPath = Path().apply {
+                val zigZagLineWidth = strokeWidth / heightRatio
+                val shapeVerticalOffset = (strokeWidth / 2) / 2
+                val shapeHorizontalOffset = (strokeWidth / 2) / 2
+                moveTo(0f, 0f)
+                lineTo(strokeWidth / 2, strokeWidth / 2)
+                lineTo(strokeWidth, 0f)
+                lineTo(strokeWidth, 0f + zigZagLineWidth)
+                lineTo(strokeWidth / 2, strokeWidth / 2 + zigZagLineWidth)
+                lineTo(0f, 0f + zigZagLineWidth)
+                translate(Offset(-shapeHorizontalOffset, -shapeVerticalOffset))
+            }
+            PathEffect.stampedPathEffect(
+                shape = zigZagPath,
+                advance = strokeWidth,
+                phase = 0f,
+                style = StampedPathEffectStyle.Morph
+            )
+        }
+
+        DrawLineStyle.None -> null
     }
 
     private fun ImageBitmap.clipBitmap(
@@ -360,10 +530,11 @@ internal class AndroidImageDrawApplier @Inject constructor(
 
     private fun Bitmap.overlay(overlay: Bitmap): Bitmap {
         val image = this
-        val finalBitmap = Bitmap.createBitmap(image.width, image.height, image.config)
+        val config = safeConfig.toSoftware()
+        val finalBitmap = Bitmap.createBitmap(image.width, image.height, config)
         val canvas = Canvas(finalBitmap)
         canvas.drawBitmap(image, Matrix(), null)
-        canvas.drawBitmap(overlay, 0f, 0f, null)
+        canvas.drawBitmap(overlay.toSoftware(), 0f, 0f, null)
         return finalBitmap
     }
 

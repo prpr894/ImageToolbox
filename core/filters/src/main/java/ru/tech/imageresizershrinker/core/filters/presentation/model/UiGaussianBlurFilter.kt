@@ -18,7 +18,6 @@
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
 
-import android.graphics.Bitmap
 import ru.tech.imageresizershrinker.core.filters.domain.model.BlurEdgeMode
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.FilterParam
@@ -26,7 +25,11 @@ import ru.tech.imageresizershrinker.core.resources.R
 
 
 class UiGaussianBlurFilter(
-    override val value: Triple<Float, Float, BlurEdgeMode> = Triple(25f, 10f, BlurEdgeMode.Clamp),
+    override val value: Triple<Float, Float, BlurEdgeMode> = Triple(
+        25f,
+        10f,
+        BlurEdgeMode.Reflect101
+    ),
 ) : UiFilter<Triple<Float, Float, BlurEdgeMode>>(
     title = R.string.gaussian_blur,
     value = value,
@@ -41,8 +44,8 @@ class UiGaussianBlurFilter(
             valueRange = 1f..100f
         ),
         FilterParam(
-            title = R.string.egde_mode,
+            title = R.string.edge_mode,
             valueRange = 0f..0f
         )
     )
-), Filter.GaussianBlur<Bitmap>
+), Filter.GaussianBlur

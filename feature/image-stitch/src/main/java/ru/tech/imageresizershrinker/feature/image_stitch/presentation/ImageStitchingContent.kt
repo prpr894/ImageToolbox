@@ -18,7 +18,6 @@
 package ru.tech.imageresizershrinker.feature.image_stitch.presentation
 
 import android.net.Uri
-import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -29,143 +28,90 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.t8rin.dynamic.theme.LocalDynamicThemeState
-import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
-import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.Picker
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.Picker
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.rememberImagePicker
 import ru.tech.imageresizershrinker.core.ui.utils.helper.asClip
 import ru.tech.imageresizershrinker.core.ui.utils.helper.isPortraitOrientationAsState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.localImagePickerMode
-import ru.tech.imageresizershrinker.core.ui.utils.helper.parseSaveResult
-import ru.tech.imageresizershrinker.core.ui.utils.helper.rememberImagePicker
-import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
+import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalComponentActivity
+import ru.tech.imageresizershrinker.core.ui.utils.provider.rememberLocalEssentials
 import ru.tech.imageresizershrinker.core.ui.widget.AdaptiveLayoutScreen
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.BottomButtonsBlock
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ShareButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ZoomButton
 import ru.tech.imageresizershrinker.core.ui.widget.controls.ImageReorderCarousel
 import ru.tech.imageresizershrinker.core.ui.widget.controls.ScaleSmallImagesToLargeToggle
-import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.BackgroundColorSelector
+import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.ColorRowSelector
 import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.ImageFormatSelector
 import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.QualitySelector
 import ru.tech.imageresizershrinker.core.ui.widget.dialogs.ExitWithoutSavingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.LoadingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.OneTimeImagePickingDialog
 import ru.tech.imageresizershrinker.core.ui.widget.dialogs.OneTimeSaveLocationSelectionDialog
 import ru.tech.imageresizershrinker.core.ui.widget.image.AutoFilePicker
 import ru.tech.imageresizershrinker.core.ui.widget.image.ImageContainer
 import ru.tech.imageresizershrinker.core.ui.widget.image.ImageNotPickedWidget
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
-import ru.tech.imageresizershrinker.core.ui.widget.other.LoadingDialog
-import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
 import ru.tech.imageresizershrinker.core.ui.widget.other.TopAppBarEmoji
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.ProcessImagesPreferenceSheet
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.ZoomModalSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.TopAppBarTitle
+import ru.tech.imageresizershrinker.core.ui.widget.utils.AutoContentBasedColors
 import ru.tech.imageresizershrinker.feature.image_stitch.presentation.components.ImageFadingEdgesSelector
 import ru.tech.imageresizershrinker.feature.image_stitch.presentation.components.ImageScaleSelector
 import ru.tech.imageresizershrinker.feature.image_stitch.presentation.components.SpacingSelector
+import ru.tech.imageresizershrinker.feature.image_stitch.presentation.components.StitchAlignmentSelector
 import ru.tech.imageresizershrinker.feature.image_stitch.presentation.components.StitchModeSelector
-import ru.tech.imageresizershrinker.feature.image_stitch.presentation.viewModel.ImageStitchingViewModel
+import ru.tech.imageresizershrinker.feature.image_stitch.presentation.screenLogic.ImageStitchingComponent
 import kotlin.math.roundToLong
 
 @Composable
 fun ImageStitchingContent(
-    uriState: List<Uri>?,
-    onGoBack: () -> Unit,
-    onNavigate: (Screen) -> Unit,
-    viewModel: ImageStitchingViewModel = hiltViewModel()
+    component: ImageStitchingComponent
 ) {
-    val settingsState = LocalSettingsState.current
+    val context = LocalComponentActivity.current
 
-    val context = LocalContext.current as ComponentActivity
-    val toastHostState = LocalToastHostState.current
-    val themeState = LocalDynamicThemeState.current
-    val allowChangeColor = settingsState.allowChangeColorByImage
+    val essentials = rememberLocalEssentials()
+    val showConfetti: () -> Unit = essentials::showConfetti
 
-    val scope = rememberCoroutineScope()
-    val confettiHostState = LocalConfettiHostState.current
-    val showConfetti: () -> Unit = {
-        scope.launch {
-            confettiHostState.showConfetti()
-        }
-    }
+    AutoContentBasedColors(component.previewBitmap)
 
-    LaunchedEffect(uriState) {
-        uriState?.takeIf { it.isNotEmpty() }?.let { uris ->
-            viewModel.updateUris(uris)
-        }
-    }
+    val imagePicker = rememberImagePicker(onSuccess = component::updateUris)
 
-    LaunchedEffect(viewModel.previewBitmap) {
-        viewModel.previewBitmap?.let {
-            if (allowChangeColor) {
-                themeState.updateColorByImage(it)
-            }
-        }
-    }
+    val addImagesImagePicker = rememberImagePicker(onSuccess = component::addUrisToEnd)
 
-    val pickImageLauncher =
-        rememberImagePicker(
-            mode = localImagePickerMode(Picker.Multiple)
-        ) { list ->
-            list.takeIf { it.isNotEmpty() }?.let { uris ->
-                viewModel.updateUris(uris)
-            }
-        }
+    val addImages = addImagesImagePicker::pickImage
 
-    val addImagesLauncher =
-        rememberImagePicker(
-            mode = localImagePickerMode(Picker.Multiple)
-        ) { list ->
-            list.takeIf { it.isNotEmpty() }?.let { uris ->
-                viewModel.addUrisToEnd(uris)
-            }
-        }
-
-    val addImages = {
-        addImagesLauncher.pickImage()
-    }
-
-    val pickImage = pickImageLauncher::pickImage
+    val pickImage = imagePicker::pickImage
 
     AutoFilePicker(
         onAutoPick = pickImage,
-        isPickedAlready = !uriState.isNullOrEmpty()
+        isPickedAlready = !component.initialUris.isNullOrEmpty()
     )
 
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
 
     val onBack = {
-        if (viewModel.haveChanges) showExitDialog = true
-        else onGoBack()
+        if (component.haveChanges) showExitDialog = true
+        else component.onGoBack()
     }
 
     val saveBitmaps: (oneTimeSaveLocationUri: String?) -> Unit = {
-        viewModel.saveBitmaps(it) { saveResult ->
-            context.parseSaveResult(
-                saveResult = saveResult,
-                onSuccess = showConfetti,
-                toastHostState = toastHostState,
-                scope = scope
-            )
-        }
+        component.saveBitmaps(
+            oneTimeSaveLocationUri = it,
+            onComplete = essentials::parseSaveResult
+        )
     }
 
     val isPortrait by isPortraitOrientationAsState()
@@ -173,7 +119,7 @@ fun ImageStitchingContent(
     var showZoomSheet by rememberSaveable { mutableStateOf(false) }
 
     ZoomModalSheet(
-        data = viewModel.previewBitmap,
+        data = component.previewBitmap,
         visible = showZoomSheet,
         onDismiss = {
             showZoomSheet = false
@@ -181,13 +127,14 @@ fun ImageStitchingContent(
     )
 
     AdaptiveLayoutScreen(
+        shouldDisableBackHandler = !component.haveChanges,
         title = {
             TopAppBarTitle(
                 title = stringResource(R.string.image_stitching),
-                input = viewModel.uris,
-                isLoading = viewModel.isImageLoading,
-                size = viewModel
-                    .imageByteSize?.times(viewModel.imageScale)?.roundToLong(),
+                input = component.uris,
+                isLoading = component.isImageLoading,
+                size = component
+                    .imageByteSize?.times(component.imageScale)?.roundToLong(),
                 updateOnSizeChange = false
             )
         },
@@ -197,18 +144,18 @@ fun ImageStitchingContent(
                 mutableStateOf(listOf<Uri>())
             }
             ShareButton(
-                enabled = viewModel.previewBitmap != null,
+                enabled = component.previewBitmap != null,
                 onShare = {
-                    viewModel.shareBitmap(showConfetti)
+                    component.shareBitmap(showConfetti)
                 },
                 onCopy = { manager ->
-                    viewModel.cacheCurrentImage { uri ->
-                        manager.setClip(uri.asClip(context))
+                    component.cacheCurrentImage { uri ->
+                        manager.copyToClipboard(uri.asClip(context))
                         showConfetti()
                     }
                 },
                 onEdit = {
-                    viewModel.cacheCurrentImage {
+                    component.cacheCurrentImage {
                         editSheetData = listOf(it)
                     }
                 }
@@ -217,35 +164,27 @@ fun ImageStitchingContent(
                 uris = editSheetData,
                 visible = editSheetData.isNotEmpty(),
                 onDismiss = {
-                    if (!it) {
-                        editSheetData = emptyList()
-                    }
+                    editSheetData = emptyList()
                 },
-                onNavigate = { screen ->
-                    scope.launch {
-                        editSheetData = emptyList()
-                        delay(200)
-                        onNavigate(screen)
-                    }
-                }
+                onNavigate = component.onNavigate
             )
             ZoomButton(
                 onClick = { showZoomSheet = true },
-                visible = viewModel.previewBitmap != null,
+                visible = component.previewBitmap != null,
             )
         },
         imagePreview = {
             ImageContainer(
                 imageInside = isPortrait,
                 showOriginal = false,
-                previewBitmap = viewModel.previewBitmap,
+                previewBitmap = component.previewBitmap,
                 originalBitmap = null,
-                isLoading = viewModel.isImageLoading,
+                isLoading = component.isImageLoading,
                 shouldShowPreview = true
             )
         },
         topAppBarPersistentActions = {
-            if (viewModel.uris.isNullOrEmpty()) {
+            if (component.uris.isNullOrEmpty()) {
                 TopAppBarEmoji()
             }
         },
@@ -255,59 +194,67 @@ fun ImageStitchingContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 ImageReorderCarousel(
-                    images = viewModel.uris,
-                    onReorder = viewModel::updateUris,
+                    images = component.uris,
+                    onReorder = component::updateUris,
                     onNeedToAddImage = addImages,
-                    onNeedToRemoveImageAt = viewModel::removeImageAt
+                    onNeedToRemoveImageAt = component::removeImageAt
                 )
                 ImageScaleSelector(
                     modifier = Modifier.padding(top = 8.dp),
-                    value = viewModel.imageScale,
-                    onValueChange = viewModel::updateImageScale,
-                    approximateImageSize = viewModel.imageSize
+                    value = component.imageScale,
+                    onValueChange = component::updateImageScale,
+                    approximateImageSize = component.imageSize
                 )
                 StitchModeSelector(
-                    value = viewModel.combiningParams.stitchMode,
-                    onValueChange = viewModel::setStitchMode
+                    value = component.combiningParams.stitchMode,
+                    onValueChange = component::setStitchMode
                 )
                 SpacingSelector(
-                    value = viewModel.combiningParams.spacing,
-                    onValueChange = viewModel::updateImageSpacing
+                    value = component.combiningParams.spacing,
+                    onValueChange = component::updateImageSpacing
                 )
                 AnimatedVisibility(
-                    visible = viewModel.combiningParams.spacing < 0,
+                    visible = component.combiningParams.spacing < 0,
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically()
                 ) {
                     ImageFadingEdgesSelector(
-                        value = viewModel.combiningParams.fadingEdgesMode,
-                        onValueChange = viewModel::setFadingEdgesMode
+                        value = component.combiningParams.fadingEdgesMode,
+                        onValueChange = component::setFadingEdgesMode
                     )
                 }
                 ScaleSmallImagesToLargeToggle(
-                    checked = viewModel.combiningParams.scaleSmallImagesToLarge,
-                    onCheckedChange = viewModel::toggleScaleSmallImagesToLarge
+                    checked = component.combiningParams.scaleSmallImagesToLarge,
+                    onCheckedChange = component::toggleScaleSmallImagesToLarge
                 )
-                BackgroundColorSelector(
-                    value = Color(viewModel.combiningParams.backgroundColor),
-                    onColorChange = {
-                        viewModel.updateBackgroundSelector(it.toArgb())
+                AnimatedVisibility(
+                    visible = !component.combiningParams.scaleSmallImagesToLarge,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    StitchAlignmentSelector(
+                        value = component.combiningParams.alignment,
+                        onValueChange = component::setStitchAlignment
+                    )
+                }
+                ColorRowSelector(
+                    value = Color(component.combiningParams.backgroundColor),
+                    onValueChange = {
+                        component.updateBackgroundSelector(it.toArgb())
                     },
                     modifier = Modifier.container(
-                        shape = RoundedCornerShape(
-                            24.dp
-                        )
+                        shape = RoundedCornerShape(24.dp)
                     )
                 )
                 QualitySelector(
-                    imageFormat = viewModel.imageInfo.imageFormat,
-                    enabled = !viewModel.uris.isNullOrEmpty(),
-                    quality = viewModel.imageInfo.quality,
-                    onQualityChange = viewModel::setQuality
+                    imageFormat = component.imageInfo.imageFormat,
+                    enabled = !component.uris.isNullOrEmpty(),
+                    quality = component.imageInfo.quality,
+                    onQualityChange = component::setQuality
                 )
                 ImageFormatSelector(
-                    value = viewModel.imageInfo.imageFormat,
-                    onValueChange = viewModel::setImageFormat
+                    value = component.imageInfo.imageFormat,
+                    onValueChange = component::setImageFormat
                 )
             }
         },
@@ -315,9 +262,12 @@ fun ImageStitchingContent(
             var showFolderSelectionDialog by rememberSaveable {
                 mutableStateOf(false)
             }
+            var showOneTimeImagePickingDialog by rememberSaveable {
+                mutableStateOf(false)
+            }
             BottomButtonsBlock(
-                isPrimaryButtonVisible = viewModel.previewBitmap != null,
-                targetState = (viewModel.uris.isNullOrEmpty()) to isPortrait,
+                isPrimaryButtonVisible = component.previewBitmap != null,
+                targetState = (component.uris.isNullOrEmpty()) to isPortrait,
                 onSecondaryButtonClick = pickImage,
                 onPrimaryButtonClick = {
                     saveBitmaps(null)
@@ -327,34 +277,42 @@ fun ImageStitchingContent(
                 },
                 actions = {
                     if (isPortrait) actions()
+                },
+                onSecondaryButtonLongClick = {
+                    showOneTimeImagePickingDialog = true
                 }
             )
-            if (showFolderSelectionDialog) {
-                OneTimeSaveLocationSelectionDialog(
-                    onDismiss = { showFolderSelectionDialog = false },
-                    onSaveRequest = saveBitmaps
-                )
-            }
+            OneTimeSaveLocationSelectionDialog(
+                visible = showFolderSelectionDialog,
+                onDismiss = { showFolderSelectionDialog = false },
+                onSaveRequest = saveBitmaps,
+                formatForFilenameSelection = component.getFormatForFilenameSelection()
+            )
+            OneTimeImagePickingDialog(
+                onDismiss = { showOneTimeImagePickingDialog = false },
+                picker = Picker.Multiple,
+                imagePicker = imagePicker,
+                visible = showOneTimeImagePickingDialog
+            )
         },
         noDataControls = {
-            if (!viewModel.isImageLoading) {
+            if (!component.isImageLoading) {
                 ImageNotPickedWidget(onPickImage = pickImage)
             }
         },
-        canShowScreenData = !viewModel.uris.isNullOrEmpty(),
+        canShowScreenData = !component.uris.isNullOrEmpty(),
         isPortrait = isPortrait
     )
 
-    if (viewModel.isSaving) {
-        LoadingDialog(
-            done = viewModel.done,
-            left = viewModel.uris?.size ?: 1,
-            onCancelLoading = viewModel::cancelSaving
-        )
-    }
+    LoadingDialog(
+        visible = component.isSaving,
+        done = component.done,
+        left = component.uris?.size ?: 1,
+        onCancelLoading = component::cancelSaving
+    )
 
     ExitWithoutSavingDialog(
-        onExit = onGoBack,
+        onExit = component.onGoBack,
         onDismiss = { showExitDialog = false },
         visible = showExitDialog
     )

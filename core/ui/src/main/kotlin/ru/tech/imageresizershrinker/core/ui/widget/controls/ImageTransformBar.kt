@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,7 +36,6 @@ import androidx.compose.material.icons.automirrored.filled.RotateLeft
 import androidx.compose.material.icons.automirrored.filled.RotateRight
 import androidx.compose.material.icons.filled.Flip
 import androidx.compose.material.icons.rounded.AutoFixHigh
-import androidx.compose.material.icons.rounded.Draw
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -47,13 +47,15 @@ import androidx.compose.ui.unit.dp
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageFormat
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.CropSmall
+import ru.tech.imageresizershrinker.core.resources.icons.Curve
+import ru.tech.imageresizershrinker.core.resources.icons.Draw
+import ru.tech.imageresizershrinker.core.resources.icons.Eraser
 import ru.tech.imageresizershrinker.core.resources.icons.Exif
-import ru.tech.imageresizershrinker.core.resources.icons.Transparency
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.theme.mixedContainer
 import ru.tech.imageresizershrinker.core.ui.theme.onMixedContainer
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 
 @Composable
@@ -63,7 +65,8 @@ fun ImageTransformBar(
     onRotateLeft: () -> Unit,
     onFlip: () -> Unit,
     onRotateRight: () -> Unit,
-    trailingContent: @Composable () -> Unit = {}
+    canRotate: Boolean = true,
+    leadingContent: @Composable RowScope.() -> Unit = {},
 ) {
     val shape = RoundedCornerShape(
         animateIntAsState(if (imageFormat?.canWriteExif == false) 20 else 50).value
@@ -110,11 +113,12 @@ fun ImageTransformBar(
                 }
             }
 
-            trailingContent()
+            leadingContent()
 
             EnhancedIconButton(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                onClick = onRotateLeft
+                onClick = onRotateLeft,
+                enabled = canRotate
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.RotateLeft,
@@ -134,7 +138,8 @@ fun ImageTransformBar(
 
             EnhancedIconButton(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                onClick = onRotateRight
+                onClick = onRotateRight,
+                enabled = canRotate
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.RotateRight,
@@ -151,7 +156,8 @@ fun ImageExtraTransformBar(
     onCrop: () -> Unit,
     onFilter: () -> Unit,
     onDraw: () -> Unit,
-    onEraseBackground: () -> Unit
+    onEraseBackground: () -> Unit,
+    onApplyCurves: () -> Unit
 ) {
     if (LocalSettingsState.current.generatePreviews) {
 
@@ -164,6 +170,17 @@ fun ImageExtraTransformBar(
                 Icon(
                     imageVector = Icons.Rounded.CropSmall,
                     contentDescription = stringResource(R.string.crop)
+                )
+            }
+
+            EnhancedIconButton(
+                containerColor = MaterialTheme.colorScheme.mixedContainer.copy(0.6f),
+                contentColor = MaterialTheme.colorScheme.onMixedContainer,
+                onClick = onApplyCurves
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Curve,
+                    contentDescription = stringResource(R.string.tone_curves)
                 )
             }
 
@@ -195,7 +212,7 @@ fun ImageExtraTransformBar(
                 onClick = onEraseBackground
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Transparency,
+                    imageVector = Icons.Rounded.Eraser,
                     contentDescription = stringResource(R.string.erase_background)
                 )
             }

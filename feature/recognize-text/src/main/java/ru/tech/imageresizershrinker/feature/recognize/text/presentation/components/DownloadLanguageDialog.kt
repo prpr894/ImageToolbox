@@ -17,18 +17,12 @@
 
 package ru.tech.imageresizershrinker.feature.recognize.text.presentation.components
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.os.Build
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,10 +35,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ru.tech.imageresizershrinker.core.resources.R
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.modifier.alertDialogBorder
-import ru.tech.imageresizershrinker.core.ui.widget.other.Loading
+import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils.isNetworkAvailable
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.BasicEnhancedAlertDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedAlertDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.other.LoadingIndicator
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 
 @Composable
@@ -61,82 +59,69 @@ fun DownloadLanguageDialog(
         mutableStateOf(false)
     }
 
-    if (!downloadStarted) {
-        AlertDialog(
-            modifier = Modifier.alertDialogBorder(),
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Download,
-                    contentDescription = null
+    EnhancedAlertDialog(
+        visible = !downloadStarted,
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.Download,
+                contentDescription = null
+            )
+        },
+        title = { Text(stringResource(id = R.string.no_data)) },
+        text = {
+            Text(
+                stringResource(
+                    id = R.string.download_description,
+                    downloadDialogData.firstOrNull()?.type?.displayName ?: "",
+                    downloadDialogData.joinToString(separator = ", ") { it.localizedName }
                 )
-            },
-            title = { Text(stringResource(id = R.string.no_data)) },
-            text = {
-                Text(
-                    stringResource(
-                        id = R.string.download_description,
-                        downloadDialogData.firstOrNull()?.type?.displayName ?: "",
-                        downloadDialogData.joinToString(separator = ", ") { it.localizedName }
-                    )
-                )
-            },
-            onDismissRequest = {},
-            confirmButton = {
-                EnhancedButton(
-                    onClick = {
-                        if (context.isNetworkAvailable()) {
-                            downloadDialogData.let { downloadData ->
-                                onDownloadRequest(downloadData)
-                                downloadStarted = true
-                            }
-                        } else onNoConnection()
-                    }
-                ) {
-                    Text(stringResource(R.string.download))
+            )
+        },
+        onDismissRequest = {},
+        confirmButton = {
+            EnhancedButton(
+                onClick = {
+                    if (context.isNetworkAvailable()) {
+                        downloadDialogData.let { downloadData ->
+                            onDownloadRequest(downloadData)
+                            downloadStarted = true
+                        }
+                    } else onNoConnection()
                 }
-            },
-            dismissButton = {
-                EnhancedButton(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    onClick = onDismiss
-                ) {
-                    Text(stringResource(R.string.close))
-                }
-            }
-        )
-    } else {
-        BasicAlertDialog(onDismissRequest = {}) {
-            Box(
-                Modifier.fillMaxSize()
             ) {
-                Loading(downloadProgress / 100) {
-                    AutoSizeText(
-                        text = dataRemaining,
-                        maxLines = 1,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.width(it * 0.8f),
-                        textAlign = TextAlign.Center
-                    )
-                }
+                Text(stringResource(R.string.download))
+            }
+        },
+        dismissButton = {
+            EnhancedButton(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                onClick = onDismiss
+            ) {
+                Text(stringResource(R.string.close))
             }
         }
-    }
-}
+    )
 
-private fun Context.isNetworkAvailable(): Boolean {
-    val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        val nw = connectivityManager.activeNetwork ?: return false
-        val actNw = connectivityManager.getNetworkCapabilities(nw) ?: return false
-        return when {
-            actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-            actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-            actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
-            actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> true
-            else -> false
+    BasicEnhancedAlertDialog(
+        onDismissRequest = {},
+        visible = downloadStarted,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        LoadingIndicator(
+            progress = downloadProgress / 100,
+            loaderSize = 64.dp
+        ) {
+            AutoSizeText(
+                text = dataRemaining,
+                maxLines = 1,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.width(it * 0.8f),
+                textAlign = TextAlign.Center,
+                style = LocalTextStyle.current.copy(
+                    fontSize = 12.sp,
+                    lineHeight = 12.sp
+                )
+            )
         }
-    } else {
-        @Suppress("DEPRECATION")
-        return connectivityManager.activeNetworkInfo?.isConnected ?: false
     }
 }

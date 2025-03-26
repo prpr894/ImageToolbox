@@ -19,23 +19,33 @@ package ru.tech.imageresizershrinker.core.data.di
 
 import android.content.Context
 import android.os.Build
-import coil.Coil
-import coil.ComponentRegistry
-import coil.ImageLoader
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
-import coil.decode.SvgDecoder
-import coil.imageLoader
-import coil.util.DebugLogger
-import coil.util.Logger
+import coil3.ComponentRegistry
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import coil3.gif.AnimatedImageDecoder
+import coil3.gif.GifDecoder
+import coil3.imageLoader
+import coil3.request.allowHardware
+import coil3.request.maxBitmapSize
+import coil3.size.Size
+import coil3.svg.SvgDecoder
+import coil3.util.Logger
 import com.awxkee.jxlcoder.coil.AnimatedJxlDecoder
+import com.gemalto.jp2.coil.Jpeg2000Decoder
 import com.github.awxkee.avifcoil.decoder.HeifDecoder
+import com.t8rin.awebp.coil.AnimatedWebPDecoder
+import com.t8rin.djvu_coder.coil.DjvuDecoder
+import com.t8rin.psd.coil.PsdDecoder
+import com.t8rin.qoi_coder.coil.QoiDecoder
+import com.t8rin.tiff.TiffDecoder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import oupson.apng.coil.AnimatedPngDecoder
+import ru.tech.imageresizershrinker.core.data.coil.Base64Fetcher
+import ru.tech.imageresizershrinker.core.data.coil.CoilLogger
 import ru.tech.imageresizershrinker.core.data.coil.TimeMeasureInterceptor
 import ru.tech.imageresizershrinker.core.domain.dispatchers.DispatchersHolder
 import ru.tech.imageresizershrinker.core.resources.BuildConfig
@@ -52,34 +62,39 @@ internal object ImageLoaderModule {
         dispatchersHolder: DispatchersHolder
     ): ImageLoader = context.imageLoader.newBuilder()
         .components(componentRegistry)
-        .decoderDispatcher(dispatchersHolder.decodingDispatcher)
-        .fetcherDispatcher(dispatchersHolder.ioDispatcher)
-        .transformationDispatcher(dispatchersHolder.defaultDispatcher)
+        .coroutineContext(dispatchersHolder.defaultDispatcher)
+        .decoderCoroutineContext(dispatchersHolder.decodingDispatcher)
+        .fetcherCoroutineContext(dispatchersHolder.ioDispatcher)
         .allowHardware(false)
+        .maxBitmapSize(Size.ORIGINAL)
         .logger(logger)
         .build()
-        .also(Coil::setImageLoader)
+        .also(SingletonImageLoader::setUnsafe)
 
     @Provides
-    fun provideCoilLogger(): Logger? = if (BuildConfig.DEBUG) DebugLogger()
-    else null
+    fun provideCoilLogger(): Logger = CoilLogger()
 
     @Provides
-    fun provideComponentRegistry(
-        @ApplicationContext context: Context,
-        interceptor: TimeMeasureInterceptor
-    ): ComponentRegistry = ComponentRegistry.Builder()
+    fun provideComponentRegistry(): ComponentRegistry = ComponentRegistry.Builder()
         .apply {
-            add(AnimatedPngDecoder.Factory(context))
-            add(
-                if (Build.VERSION.SDK_INT >= 28) ImageDecoderDecoder.Factory()
-                else GifDecoder.Factory()
-            )
+            add(AnimatedPngDecoder.Factory())
+            if (Build.VERSION.SDK_INT >= 28) add(AnimatedImageDecoder.Factory())
+            else {
+                add(GifDecoder.Factory())
+                add(AnimatedWebPDecoder.Factory())
+            }
             add(SvgDecoder.Factory())
-            if (Build.VERSION.SDK_INT >= 24) add(HeifDecoder.Factory(context))
-            add(AnimatedJxlDecoder.Factory(context))
-
-            if (BuildConfig.DEBUG) add(interceptor)
+            if (Build.VERSION.SDK_INT >= 24) {
+                add(HeifDecoder.Factory())
+            }
+            add(AnimatedJxlDecoder.Factory())
+            add(Jpeg2000Decoder.Factory())
+            add(TiffDecoder.Factory())
+            add(QoiDecoder.Factory())
+            add(PsdDecoder.Factory())
+            add(DjvuDecoder.Factory())
+            add(Base64Fetcher.Factory())
+            if (BuildConfig.DEBUG) add(TimeMeasureInterceptor)
         }
         .build()
 

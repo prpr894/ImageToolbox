@@ -17,8 +17,13 @@
 
 package ru.tech.imageresizershrinker.feature.single_edit.presentation.components
 
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,15 +48,15 @@ import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -59,23 +64,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalScreenSize
 import ru.tech.imageresizershrinker.core.ui.utils.provider.ProvideContainerDefaults
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.ExitBackHandler
 import ru.tech.imageresizershrinker.core.ui.widget.dialogs.ExitWithoutSavingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedBottomSheetDefaults
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.drawHorizontalStroke
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.onSwipeDown
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.toShape
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.withLayoutCorners
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FullscreenEditOption(
     visible: Boolean,
@@ -91,29 +101,66 @@ fun FullscreenEditOption(
     scaffoldState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     content: @Composable () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
+    rememberCoroutineScope()
 
-    var showExitDialog by remember(visible) { mutableStateOf(false) }
-    val internalOnDismiss = {
-        if (!canGoBack) showExitDialog = true
-        else onDismiss()
+    var predictiveBackProgress by remember {
+        mutableFloatStateOf(0f)
     }
-    val direction = LocalLayoutDirection.current
-    val focus = LocalFocusManager.current
+
+    LaunchedEffect(predictiveBackProgress, visible) {
+        if (!visible && predictiveBackProgress != 0f) {
+            delay(600)
+            predictiveBackProgress = 0f
+        }
+    }
+
     AnimatedVisibility(
-        visible = visible
+        visible = visible,
+        modifier = Modifier.fillMaxSize(),
+        enter = fadeIn(tween(600)),
+        exit = fadeOut(tween(600))
     ) {
-        Surface(Modifier.fillMaxSize()) {
+        var showExitDialog by remember(visible) { mutableStateOf(false) }
+        val internalOnDismiss = {
+            if (!canGoBack) showExitDialog = true
+            else onDismiss()
+        }
+        val direction = LocalLayoutDirection.current
+        val focus = LocalFocusManager.current
+
+
+        val animatedPredictiveBackProgress by animateFloatAsState(predictiveBackProgress)
+        val scale = (1f - animatedPredictiveBackProgress * 1.5f).coerceAtLeast(0.75f)
+
+
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.scrim.copy(0.5f * scale))
+        )
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .withLayoutCorners { corners ->
+                    graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        shape = corners.toShape(animatedPredictiveBackProgress)
+                        clip = true
+                    }
+                }
+        ) {
             Column {
                 if (useScaffold) {
-                    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+                    val screenHeight = LocalScreenSize.current.height
+                    val sheetSwipeEnabled =
+                        scaffoldState.bottomSheetState.currentValue == SheetValue.PartiallyExpanded
+                                && !scaffoldState.bottomSheetState.isAnimationRunning
+
                     BottomSheetScaffold(
                         topBar = {
                             topAppBar {
                                 EnhancedIconButton(
-                                    containerColor = Color.Transparent,
-                                    contentColor = LocalContentColor.current,
-                                    enableAutoShadowAndBorder = false,
                                     onClick = internalOnDismiss
                                 ) {
                                     Icon(
@@ -128,6 +175,7 @@ fun FullscreenEditOption(
                             .calculateBottomPadding(),
                         sheetDragHandle = null,
                         sheetShape = RectangleShape,
+                        sheetSwipeEnabled = sheetSwipeEnabled,
                         sheetContent = {
                             Column(
                                 modifier
@@ -136,46 +184,52 @@ fun FullscreenEditOption(
                                         detectTapGestures { focus.clearFocus() }
                                     }
                             ) {
-                                BottomAppBar(
-                                    modifier = Modifier.drawHorizontalStroke(true),
-                                    actions = {
-                                        actions()
-                                        if (showControls) {
-                                            EnhancedIconButton(
-                                                containerColor = Color.Transparent,
-                                                contentColor = LocalContentColor.current,
-                                                enableAutoShadowAndBorder = false,
-                                                onClick = {
-                                                    scope.launch {
-                                                        if (scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded) {
-                                                            scaffoldState.bottomSheetState.partialExpand()
-                                                        } else {
-                                                            scaffoldState.bottomSheetState.expand()
-                                                        }
-                                                    }
-                                                }
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Rounded.Tune,
-                                                    contentDescription = stringResource(R.string.properties)
-                                                )
-                                            }
-                                        }
-                                    },
-                                    floatingActionButton = {
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(
-                                                8.dp,
-                                                Alignment.CenterHorizontally
-                                            ),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            if (fabButtons != null) {
-                                                fabButtons()
-                                            }
+                                val scope = rememberCoroutineScope()
+                                Box(
+                                    modifier = Modifier.onSwipeDown(!sheetSwipeEnabled) {
+                                        scope.launch {
+                                            scaffoldState.bottomSheetState.partialExpand()
                                         }
                                     }
-                                )
+                                ) {
+                                    BottomAppBar(
+                                        modifier = Modifier.drawHorizontalStroke(true),
+                                        actions = {
+                                            actions()
+                                            if (showControls) {
+                                                EnhancedIconButton(
+                                                    onClick = {
+                                                        scope.launch {
+                                                            if (scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded) {
+                                                                scaffoldState.bottomSheetState.partialExpand()
+                                                            } else {
+                                                                scaffoldState.bottomSheetState.expand()
+                                                            }
+                                                        }
+                                                    }
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.Tune,
+                                                        contentDescription = stringResource(R.string.properties)
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        floatingActionButton = {
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(
+                                                    8.dp,
+                                                    Alignment.CenterHorizontally
+                                                ),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                if (fabButtons != null) {
+                                                    fabButtons()
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
                                 if (showControls) {
                                     Column(
                                         modifier = Modifier
@@ -184,7 +238,7 @@ fun FullscreenEditOption(
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         ProvideContainerDefaults(
-                                            color = MaterialTheme.colorScheme.surfaceContainerLowest
+                                            color = EnhancedBottomSheetDefaults.contentContainerColor
                                         ) {
                                             controls(scaffoldState)
                                         }
@@ -201,9 +255,6 @@ fun FullscreenEditOption(
                 } else {
                     topAppBar {
                         EnhancedIconButton(
-                            containerColor = Color.Transparent,
-                            contentColor = LocalContentColor.current,
-                            enableAutoShadowAndBorder = false,
                             onClick = internalOnDismiss
                         ) {
                             Icon(
@@ -283,7 +334,24 @@ fun FullscreenEditOption(
             }
         }
         if (visible) {
-            BackHandler { internalOnDismiss() }
+            if (canGoBack) {
+                PredictiveBackHandler { progress ->
+                    try {
+                        progress.collect { event ->
+                            if (event.progress <= 0.05f) {
+                                predictiveBackProgress = 0f
+                            }
+                            predictiveBackProgress = event.progress
+                        }
+                        internalOnDismiss()
+                    } catch (_: Throwable) {
+                        predictiveBackProgress = 0f
+                    }
+                }
+            } else {
+                ExitBackHandler(onBack = internalOnDismiss)
+            }
+
             ExitWithoutSavingDialog(
                 onExit = onDismiss,
                 onDismiss = { showExitDialog = false },

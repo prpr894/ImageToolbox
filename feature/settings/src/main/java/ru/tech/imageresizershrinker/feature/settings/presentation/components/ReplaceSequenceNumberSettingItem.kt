@@ -32,16 +32,18 @@ import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwit
 
 @Composable
 fun ReplaceSequenceNumberSettingItem(
-    onClick: (Boolean) -> Unit,
+    onClick: () -> Unit,
     shape: Shape = ContainerShapeDefaults.centerShape,
-    modifier: Modifier = Modifier.padding(start = 8.dp, end = 8.dp)
+    modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
     val settingsState = LocalSettingsState.current
     PreferenceRowSwitch(
         shape = shape,
         modifier = modifier,
-        onClick = onClick,
-        enabled = !settingsState.randomizeFilename && !settingsState.overwriteFiles,
+        onClick = {
+            onClick()
+        },
+        enabled = !settingsState.randomizeFilename && !settingsState.overwriteFiles && settingsState.hashingTypeForFilename == null,
         title = stringResource(R.string.replace_sequence_number),
         subtitle = stringResource(R.string.replace_sequence_number_sub),
         checked = settingsState.addSequenceNumber,

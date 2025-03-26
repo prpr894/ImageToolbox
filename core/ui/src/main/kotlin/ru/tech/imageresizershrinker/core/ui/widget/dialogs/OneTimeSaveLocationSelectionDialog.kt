@@ -23,7 +23,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Box
@@ -35,18 +34,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CreateNewFolder
+import androidx.compose.material.icons.outlined.DriveFileRenameOutline
 import androidx.compose.material.icons.outlined.SaveAs
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.RadioButtonChecked
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,25 +56,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import kotlinx.coroutines.launch
+import ru.tech.imageresizershrinker.core.domain.image.model.ImageFormat
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.settings.domain.model.OneTimeSaveLocation
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSimpleSettingInteractor
+import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSimpleSettingsInteractor
 import ru.tech.imageresizershrinker.core.ui.theme.takeColorFromScheme
 import ru.tech.imageresizershrinker.core.ui.utils.helper.toUiPath
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedAlertDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
-import ru.tech.imageresizershrinker.core.ui.widget.modifier.alertDialogBorder
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.fadingEdges
 import ru.tech.imageresizershrinker.core.ui.widget.other.RevealDirection
@@ -85,34 +79,40 @@ import ru.tech.imageresizershrinker.core.ui.widget.other.RevealValue
 import ru.tech.imageresizershrinker.core.ui.widget.other.SwipeToReveal
 import ru.tech.imageresizershrinker.core.ui.widget.other.rememberRevealState
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItem
+import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItemDefaults
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterialApi::class)
+
 @Composable
 fun OneTimeSaveLocationSelectionDialog(
+    visible: Boolean,
     onDismiss: () -> Unit,
-    onSaveRequest: (String?) -> Unit
+    onSaveRequest: ((String?) -> Unit)?,
+    formatForFilenameSelection: ImageFormat? = null
 ) {
     val settingsState = LocalSettingsState.current
-    var tempSelectedSaveFolderUri by rememberSaveable {
+    var tempSelectedSaveFolderUri by rememberSaveable(visible) {
         mutableStateOf(settingsState.saveFolderUri?.toString())
     }
-    var selectedSaveFolderUri by rememberSaveable {
+    var selectedSaveFolderUri by rememberSaveable(visible) {
         mutableStateOf(settingsState.saveFolderUri?.toString())
     }
-    AlertDialog(
+    EnhancedAlertDialog(
+        visible = visible,
         onDismissRequest = onDismiss,
         confirmButton = {
-            EnhancedButton(
-                onClick = {
-                    onDismiss()
-                    onSaveRequest(selectedSaveFolderUri)
-                },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Text(text = stringResource(id = R.string.save))
+            onSaveRequest?.let {
+                EnhancedButton(
+                    onClick = {
+                        onDismiss()
+                        onSaveRequest(selectedSaveFolderUri)
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Text(text = stringResource(id = R.string.save))
+                }
             }
         },
         dismissButton = {
@@ -204,7 +204,7 @@ fun OneTimeSaveLocationSelectionDialog(
                         size = data.size + 1,
                         forceDefault = isDragged
                     )
-                    val settingsInteractor = LocalSimpleSettingInteractor.current
+                    val settingsInteractor = LocalSimpleSettingsInteractor.current
                     val canDeleteItem by remember(item, settingsState) {
                         derivedStateOf {
                             item != null && item in settingsState.oneTimeSaveLocations
@@ -223,7 +223,7 @@ fun OneTimeSaveLocationSelectionDialog(
                                         autoShadowElevation = 0.dp,
                                         resultPadding = 0.dp
                                     )
-                                    .clickable {
+                                    .hapticsClickable {
                                         scope.launch {
                                             state.animateTo(RevealValue.Default)
                                         }
@@ -249,17 +249,11 @@ fun OneTimeSaveLocationSelectionDialog(
                         },
                         directions = setOf(RevealDirection.EndToStart),
                         swipeableContent = {
-                            val haptics = LocalHapticFeedback.current
                             PreferenceItem(
                                 title = title,
                                 subtitle = subtitle,
                                 shape = shape,
-                                titleFontStyle = LocalTextStyle.current.copy(
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    lineHeight = 16.sp,
-                                    textAlign = TextAlign.Start
-                                ),
+                                titleFontStyle = PreferenceItemDefaults.TitleFontStyleSmall,
                                 onClick = {
                                     if (item != null) {
                                         tempSelectedSaveFolderUri = item.uri
@@ -268,9 +262,6 @@ fun OneTimeSaveLocationSelectionDialog(
                                 },
                                 onLongClick = if (item != null) {
                                     {
-                                        haptics.performHapticFeedback(
-                                            HapticFeedbackType.LongPress
-                                        )
                                         scope.launch {
                                             state.animateTo(RevealValue.FullyRevealedStart)
                                         }
@@ -320,12 +311,7 @@ fun OneTimeSaveLocationSelectionDialog(
                     title = stringResource(id = R.string.add_new_folder),
                     startIcon = Icons.Outlined.CreateNewFolder,
                     shape = ContainerShapeDefaults.bottomShape,
-                    titleFontStyle = LocalTextStyle.current.copy(
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        lineHeight = 16.sp,
-                        textAlign = TextAlign.Start
-                    ),
+                    titleFontStyle = PreferenceItemDefaults.TitleFontStyleSmall,
                     onClick = {
                         launcher.launch(currentFolderUri)
                     },
@@ -334,8 +320,34 @@ fun OneTimeSaveLocationSelectionDialog(
                         .padding(horizontal = 4.dp, vertical = 2.dp),
                     color = MaterialTheme.colorScheme.surfaceContainer
                 )
+
+                if (formatForFilenameSelection != null) {
+                    val createLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.CreateDocument(formatForFilenameSelection.mimeType),
+                        onResult = { uri ->
+                            uri?.let {
+                                onSaveRequest?.invoke(it.toString())
+                                onDismiss()
+                            }
+                        }
+                    )
+                    val imageString = stringResource(R.string.image)
+                    PreferenceItem(
+                        title = stringResource(id = R.string.custom_filename),
+                        subtitle = stringResource(id = R.string.custom_filename_sub),
+                        startIcon = Icons.Outlined.DriveFileRenameOutline,
+                        shape = ContainerShapeDefaults.defaultShape,
+                        titleFontStyle = PreferenceItemDefaults.TitleFontStyleSmall,
+                        onClick = {
+                            createLauncher.launch("$imageString.${formatForFilenameSelection.extension}")
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp, vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainer
+                    )
+                }
             }
-        },
-        modifier = Modifier.alertDialogBorder()
+        }
     )
 }

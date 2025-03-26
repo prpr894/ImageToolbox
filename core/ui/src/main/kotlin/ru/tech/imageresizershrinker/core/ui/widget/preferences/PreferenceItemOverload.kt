@@ -22,13 +22,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,7 +36,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
@@ -47,22 +44,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.shapes.IconShapeContainer
-import ru.tech.imageresizershrinker.core.ui.shapes.IconShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.utils.provider.ProvideContainerDefaults
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsCombinedClickable
+import ru.tech.imageresizershrinker.core.ui.widget.icon_shape.IconShapeContainer
+import ru.tech.imageresizershrinker.core.ui.widget.icon_shape.IconShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.shapeByInteraction
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 fun PreferenceItemOverload(
     onClick: (() -> Unit)? = null,
@@ -73,7 +73,9 @@ fun PreferenceItemOverload(
     autoShadowElevation: Dp = 1.dp,
     startIcon: (@Composable () -> Unit)? = null,
     endIcon: (@Composable () -> Unit)? = null,
+    badge: (@Composable RowScope.() -> Unit)? = null,
     shape: Shape = RoundedCornerShape(16.dp),
+    pressedShape: Shape = RoundedCornerShape(6.dp),
     color: Color = Color.Unspecified,
     contentColor: Color = contentColorFor(backgroundColor = color),
     overrideIconShapeContentColor: Boolean = false,
@@ -81,16 +83,12 @@ fun PreferenceItemOverload(
     modifier: Modifier = Modifier
         .fillMaxWidth()
         .padding(horizontal = 12.dp),
-    titleFontStyle: TextStyle = LocalTextStyle.current.copy(
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Medium,
-        lineHeight = 18.sp
-    ),
+    titleFontStyle: TextStyle = PreferenceItemDefaults.TitleFontStyle,
     onDisabledClick: (() -> Unit)? = null,
     drawStartIconContainer: Boolean = true,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    bottomContent: (@Composable () -> Unit)? = null
 ) {
-    val haptics = LocalHapticFeedback.current
     CompositionLocalProvider(
         LocalSettingsState provides LocalSettingsState.current.let {
             if (!enabled) it.copy(
@@ -102,48 +100,19 @@ fun PreferenceItemOverload(
             ) else it
         }
     ) {
-        Card(
+        val animatedShape = shapeByInteraction(
             shape = shape,
+            pressedShape = pressedShape,
+            interactionSource = interactionSource
+        )
+        Card(
+            shape = animatedShape,
             modifier = modifier
                 .container(
-                    shape = shape,
+                    shape = animatedShape,
                     resultPadding = 0.dp,
                     color = color,
                     autoShadowElevation = autoShadowElevation
-                )
-                .then(
-                    onClick
-                        ?.let {
-                            if (enabled) {
-                                Modifier.combinedClickable(
-                                    interactionSource = interactionSource,
-                                    indication = LocalIndication.current,
-                                    onClick = {
-                                        haptics.performHapticFeedback(
-                                            HapticFeedbackType.LongPress
-                                        )
-                                        onClick()
-                                    },
-                                    onLongClick = onLongClick?.let {
-                                        {
-                                            haptics.performHapticFeedback(
-                                                HapticFeedbackType.LongPress
-                                            )
-                                            onLongClick()
-                                        }
-                                    }
-                                )
-                            } else {
-                                if (onDisabledClick != null) {
-                                    Modifier.clickable {
-                                        haptics.performHapticFeedback(
-                                            HapticFeedbackType.LongPress
-                                        )
-                                        onDisabledClick()
-                                    }
-                                } else Modifier
-                            }
-                        } ?: Modifier
                 )
                 .alpha(animateFloatAsState(targetValue = if (enabled) 1f else 0.5f).value),
             colors = CardDefaults.cardColors(
@@ -152,7 +121,26 @@ fun PreferenceItemOverload(
             )
         ) {
             Row(
-                modifier = resultModifier,
+                modifier = Modifier
+                    .clip(animatedShape)
+                    .then(
+                        onClick
+                            ?.let {
+                                if (enabled) {
+                                    Modifier.hapticsCombinedClickable(
+                                        interactionSource = interactionSource,
+                                        indication = LocalIndication.current,
+                                        onClick = onClick,
+                                        onLongClick = onLongClick
+                                    )
+                                } else {
+                                    if (onDisabledClick != null) {
+                                        Modifier.hapticsClickable(onClick = onDisabledClick)
+                                    } else Modifier
+                                }
+                            } ?: Modifier
+                    )
+                    .then(resultModifier),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 startIcon?.let {
@@ -176,15 +164,18 @@ fun PreferenceItemOverload(
                         .weight(1f)
                         .padding(end = 16.dp)
                 ) {
-                    AnimatedContent(
-                        targetState = title,
-                        transitionSpec = { fadeIn() togetherWith fadeOut() }
-                    ) { title ->
-                        Text(
-                            text = title,
-                            style = titleFontStyle,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                    Row {
+                        AnimatedContent(
+                            targetState = title,
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            modifier = Modifier.weight(1f, fill = badge == null)
+                        ) { title ->
+                            Text(
+                                text = title,
+                                style = titleFontStyle
+                            )
+                        }
+                        badge?.invoke(this)
                     }
                     AnimatedContent(
                         targetState = subtitle,
@@ -196,6 +187,7 @@ fun PreferenceItemOverload(
                                 Text(
                                     text = sub,
                                     fontSize = 12.sp,
+                                    textAlign = TextAlign.Start,
                                     fontWeight = FontWeight.Normal,
                                     lineHeight = 14.sp,
                                     color = LocalContentColor.current.copy(alpha = 0.5f)
@@ -208,6 +200,7 @@ fun PreferenceItemOverload(
                     endIcon?.invoke()
                 }
             }
+            bottomContent?.invoke()
         }
     }
 }

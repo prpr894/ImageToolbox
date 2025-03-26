@@ -25,22 +25,28 @@ sealed class Preset {
 
     data class Percentage(val value: Int) : Preset()
 
+    data class AspectRatio(
+        val ratio: Float,
+        val isFit: Boolean
+    ) : Preset()
+
     fun isTelegram(): Boolean = this is Telegram
 
     fun value(): Int? = (this as? Percentage)?.value
 
     fun isEmpty(): Boolean = this is None
 
+    fun isAspectRatio(): Boolean = this is AspectRatio
+
     companion object {
         val Original by lazy {
             Percentage(100)
         }
 
-        fun createListFromInts(presets: String?): List<Preset> {
-            return ((presets?.split("*")?.map {
+        fun createListFromInts(presets: String?): List<Preset>? {
+            return presets?.split("*")?.map {
                 it.toInt()
-            } ?: List(6) { 100 - it * 10 })).toSortedSet().reversed().toList()
-                .map { Percentage(it) }
+            }?.map { Percentage(it) }
         }
     }
 }

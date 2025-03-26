@@ -20,11 +20,8 @@ package ru.tech.imageresizershrinker.feature.filters.presentation.components
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,18 +31,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material.icons.rounded.RemoveCircleOutline
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,24 +50,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ru.tech.imageresizershrinker.core.filters.presentation.model.toUiFilter
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.AddFilterButton
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.FilterItem
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.addFilters.AddFiltersSheet
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.EditAlt
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
-import ru.tech.imageresizershrinker.core.ui.widget.modifier.alertDialogBorder
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedAlertDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.other.ExpandableItem
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
+import ru.tech.imageresizershrinker.feature.filters.presentation.components.addEditMaskSheet.AddEditMaskSheet
+import ru.tech.imageresizershrinker.feature.filters.presentation.components.addEditMaskSheet.AddMaskSheetComponent
 
 @Composable
 fun MaskItem(
+    addMaskSheetComponent: AddMaskSheetComponent?,
     mask: UiFilterMask,
     modifier: Modifier = Modifier,
     titleText: String,
@@ -83,7 +85,8 @@ fun MaskItem(
     onLongPress: (() -> Unit)? = null,
     onRemove: () -> Unit,
     imageUri: Uri? = null,
-    previousMasks: List<UiFilterMask> = emptyList()
+    previousMasks: List<UiFilterMask> = emptyList(),
+    shape: Shape = MaterialTheme.shapes.extraLarge
 ) {
     var showMaskRemoveDialog by rememberSaveable { mutableStateOf(false) }
     var showAddFilterSheet by rememberSaveable { mutableStateOf(false) }
@@ -92,7 +95,10 @@ fun MaskItem(
     Box {
         Row(
             modifier = modifier
-                .container(color = backgroundColor, shape = MaterialTheme.shapes.extraLarge)
+                .container(
+                    color = backgroundColor,
+                    shape = shape
+                )
                 .animateContentSize()
                 .then(
                     onLongPress?.let {
@@ -147,12 +153,7 @@ fun MaskItem(
                         )
                         Spacer(Modifier.weight(1f))
                         EnhancedIconButton(
-                            containerColor = Color.Transparent,
-                            contentColor = LocalContentColor.current,
-                            enableAutoShadowAndBorder = false,
-                            onClick = {
-                                showMaskRemoveDialog = true
-                            }
+                            onClick = { showMaskRemoveDialog = true }
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.RemoveCircleOutline,
@@ -160,9 +161,6 @@ fun MaskItem(
                             )
                         }
                         EnhancedIconButton(
-                            containerColor = Color.Transparent,
-                            contentColor = LocalContentColor.current,
-                            enableAutoShadowAndBorder = false,
                             onClick = { showEditMaskSheet = true }
                         ) {
                             Icon(
@@ -171,67 +169,56 @@ fun MaskItem(
                             )
                         }
                     }
-                    if (showMaskRemoveDialog) {
-                        AlertDialog(
-                            modifier = Modifier.alertDialogBorder(),
-                            onDismissRequest = { showMaskRemoveDialog = false },
-                            confirmButton = {
-                                EnhancedButton(
-                                    onClick = { showMaskRemoveDialog = false }
-                                ) {
-                                    Text(stringResource(R.string.cancel))
-                                }
-                            },
-                            dismissButton = {
-                                EnhancedButton(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                    onClick = {
-                                        showMaskRemoveDialog = false
-                                        onRemove()
-                                    }
-                                ) {
-                                    Text(stringResource(R.string.delete))
-                                }
-                            },
-                            title = {
-                                Text(stringResource(R.string.delete_mask))
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Delete,
-                                    contentDescription = stringResource(R.string.delete)
-                                )
-                            },
-                            text = {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    PathPaintPreview(
-                                        pathPaints = mask.maskPaints,
-                                        modifier = Modifier.sizeIn(
-                                            maxHeight = 80.dp,
-                                            maxWidth = 80.dp
-                                        )
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(stringResource(R.string.delete_mask_warn))
-                                }
+                    EnhancedAlertDialog(
+                        visible = showMaskRemoveDialog,
+                        onDismissRequest = { showMaskRemoveDialog = false },
+                        confirmButton = {
+                            EnhancedButton(
+                                onClick = { showMaskRemoveDialog = false }
+                            ) {
+                                Text(stringResource(R.string.cancel))
                             }
-                        )
-                    }
+                        },
+                        dismissButton = {
+                            EnhancedButton(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                onClick = {
+                                    showMaskRemoveDialog = false
+                                    onRemove()
+                                }
+                            ) {
+                                Text(stringResource(R.string.delete))
+                            }
+                        },
+                        title = {
+                            Text(stringResource(R.string.delete_mask))
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = stringResource(R.string.delete)
+                            )
+                        },
+                        text = {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                PathPaintPreview(
+                                    pathPaints = mask.maskPaints,
+                                    modifier = Modifier.sizeIn(
+                                        maxHeight = 80.dp,
+                                        maxWidth = 80.dp
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(stringResource(R.string.delete_mask_warn))
+                            }
+                        }
+                    )
                 }
 
                 AnimatedVisibility(mask.filters.isNotEmpty()) {
-                    val interactionSource = remember {
-                        MutableInteractionSource()
-                    }
-                    val pressed by interactionSource.collectIsPressedAsState()
-
-                    val cornerSize by animateDpAsState(
-                        if (pressed) 8.dp
-                        else 20.dp
-                    )
                     ExpandableItem(
                         modifier = Modifier.padding(8.dp),
                         visibleContent = {
@@ -244,9 +231,14 @@ fun MaskItem(
                                 modifier = Modifier.padding(horizontal = 8.dp)
                             ) {
                                 mask.filters.forEachIndexed { index, filter ->
+                                    val uiFilter by remember(filter) {
+                                        derivedStateOf {
+                                            filter.toUiFilter()
+                                        }
+                                    }
                                     FilterItem(
                                         backgroundColor = MaterialTheme.colorScheme.surface,
-                                        filter = filter.toUiFilter(),
+                                        filter = uiFilter,
                                         showDragHandle = false,
                                         onRemove = {
                                             onMaskChange(
@@ -258,8 +250,7 @@ fun MaskItem(
                                                 mask.copy(
                                                     filters = mask.filters.toMutableList()
                                                         .apply {
-                                                            this[index] =
-                                                                filter.toUiFilter().copy(value)
+                                                            this[index] = uiFilter.copy(value)
                                                         }
                                                 )
                                             )
@@ -273,46 +264,52 @@ fun MaskItem(
                                     }
                                 )
                             }
-                        },
-                        interactionSource = interactionSource,
-                        shape = RoundedCornerShape(cornerSize)
+                        }
                     )
                 }
             }
         }
         if (previewOnly) {
-            Surface(color = Color.Transparent, modifier = Modifier.matchParentSize()) {}
+            Surface(
+                color = Color.Transparent,
+                modifier = modifier.matchParentSize()
+            ) {}
         }
     }
 
-    AddFiltersSheet(
-        visible = showAddFilterSheet,
-        onVisibleChange = { showAddFilterSheet = it },
-        previewBitmap = null,
-        onFilterPicked = { filter ->
-            onMaskChange(
-                mask.copy(
-                    filters = mask.filters + filter.newInstance()
+    addMaskSheetComponent?.let {
+        AddFiltersSheet(
+            visible = showAddFilterSheet,
+            onVisibleChange = { showAddFilterSheet = it },
+            previewBitmap = null,
+            onFilterPicked = { filter ->
+                onMaskChange(
+                    mask.copy(
+                        filters = mask.filters + filter.newInstance()
+                    )
                 )
-            )
-        },
-        onFilterPickedWithParams = { filter ->
-            onMaskChange(
-                mask.copy(
-                    filters = mask.filters + filter
+            },
+            onFilterPickedWithParams = { filter ->
+                onMaskChange(
+                    mask.copy(
+                        filters = mask.filters + filter
+                    )
                 )
-            )
-        }
-    )
+            },
+            component = addMaskSheetComponent.addFiltersSheetComponent,
+            filterTemplateCreationSheetComponent = addMaskSheetComponent.filterTemplateCreationSheetComponent
+        )
 
-    AddEditMaskSheet(
-        mask = mask,
-        visible = showEditMaskSheet,
-        targetBitmapUri = imageUri,
-        masks = previousMasks,
-        onDismiss = {
-            showEditMaskSheet = false
-        },
-        onMaskPicked = onMaskChange
-    )
+        AddEditMaskSheet(
+            mask = mask,
+            visible = showEditMaskSheet,
+            targetBitmapUri = imageUri,
+            masks = previousMasks,
+            onDismiss = {
+                showEditMaskSheet = false
+            },
+            onMaskPicked = onMaskChange,
+            component = addMaskSheetComponent
+        )
+    }
 }

@@ -17,6 +17,7 @@
 
 package ru.tech.imageresizershrinker.core.ui.widget.sheets
 
+import android.content.res.Resources
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -50,14 +51,17 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import coil.transform.Transformation
+import coil3.asDrawable
+import coil3.transform.Transformation
 import com.smarttoolfactory.colordetector.util.ColorUtil.roundToTwoDigits
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.safeAspectRatio
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalSheetDragHandle
 import ru.tech.imageresizershrinker.core.ui.widget.image.Picture
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.transparencyChecker
@@ -105,7 +109,8 @@ fun ZoomModalSheet(
                         model = data,
                         contentDescription = null,
                         onSuccess = {
-                            aspectRatio = it.result.drawable.safeAspectRatio
+                            aspectRatio =
+                                it.result.image.asDrawable(Resources.getSystem()).safeAspectRatio
                         },
                         contentScale = ContentScale.FillBounds,
                         showTransparencyChecker = false,
@@ -129,7 +134,7 @@ fun ZoomModalSheet(
                     Text(
                         text = stringResource(R.string.zoom) + " ${zoomLevel.roundToTwoDigits()}x",
                         modifier = Modifier
-                            .background(Color.Black.copy(0.4f), CircleShape)
+                            .background(MaterialTheme.colorScheme.scrim.copy(0.4f), CircleShape)
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                         color = Color.White
                     )
@@ -153,14 +158,14 @@ fun ZoomModalSheet(
     }
 
     if (data != null) {
-        SimpleSheet(
+        EnhancedModalBottomSheet(
             sheetContent = sheetContent,
             visible = visible,
             onDismiss = {
                 if (!it) onDismiss()
             },
             dragHandle = {
-                SimpleDragHandle(
+                EnhancedModalSheetDragHandle(
                     color = Color.Transparent,
                     drawStroke = false
                 )

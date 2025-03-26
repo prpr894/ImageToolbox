@@ -32,9 +32,9 @@ import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwit
 
 @Composable
 fun AnalyticsSettingItem(
-    onClick: (Boolean) -> Unit,
+    onClick: () -> Unit,
     shape: Shape = ContainerShapeDefaults.bottomShape,
-    modifier: Modifier = Modifier.padding(start = 8.dp, end = 8.dp)
+    modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
     val settingsState = LocalSettingsState.current
     PreferenceRowSwitch(
@@ -44,6 +44,8 @@ fun AnalyticsSettingItem(
         subtitle = stringResource(id = R.string.analytics_sub),
         startIcon = Icons.Rounded.Analytics,
         checked = settingsState.allowCollectAnalytics,
-        onClick = onClick
+        onClick = {
+            onClick()
+        }
     )
 }

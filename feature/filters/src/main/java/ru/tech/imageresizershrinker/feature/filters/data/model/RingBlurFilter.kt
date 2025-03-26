@@ -20,13 +20,17 @@ package ru.tech.imageresizershrinker.feature.filters.data.model
 import android.graphics.Bitmap
 import com.awxkee.aire.Aire
 import com.awxkee.aire.ConvolveKernels
+import com.awxkee.aire.EdgeMode
+import com.awxkee.aire.KernelShape
+import com.awxkee.aire.MorphOpMode
+import com.awxkee.aire.Scalar
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 
 internal class RingBlurFilter(
     override val value: Float = 25f,
-) : Transformation<Bitmap>, Filter.RingBlur<Bitmap> {
+) : Transformation<Bitmap>, Filter.RingBlur {
 
     override val cacheKey: String
         get() = (value).hashCode().toString()
@@ -36,7 +40,11 @@ internal class RingBlurFilter(
         size: IntegerSize
     ): Bitmap = Aire.convolve2D(
         bitmap = input,
-        kernel = ConvolveKernels.ring(value.toInt())
+        kernel = ConvolveKernels.ring(value.toInt()),
+        kernelShape = KernelShape(value.toInt(), value.toInt()),
+        edgeMode = EdgeMode.REFLECT_101,
+        scalar = Scalar.ZEROS,
+        mode = MorphOpMode.RGBA
     )
 
 }

@@ -18,14 +18,15 @@
 package ru.tech.imageresizershrinker.feature.filters.data.model
 
 import android.graphics.Bitmap
+import com.t8rin.trickle.DitheringType
+import com.t8rin.trickle.Trickle
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
-import ru.tech.imageresizershrinker.feature.filters.data.utils.DitherTool
 
 internal class JarvisJudiceNinkeDitheringFilter(
     override val value: Pair<Float, Boolean> = 200f to false,
-) : Filter.JarvisJudiceNinkeDithering<Bitmap>, Transformation<Bitmap> {
+) : Transformation<Bitmap>, Filter.JarvisJudiceNinkeDithering {
 
     override val cacheKey: String
         get() = value.hashCode().toString()
@@ -33,12 +34,11 @@ internal class JarvisJudiceNinkeDitheringFilter(
     override suspend fun transform(
         input: Bitmap,
         size: IntegerSize
-    ): Bitmap = DitherTool(
+    ): Bitmap = Trickle.dithering(
+        input = input,
+        type = DitheringType.JarvisJudiceNinke,
         threshold = value.first.toInt(),
         isGrayScale = value.second
-    ).dither(
-        type = DitherTool.Type.JarvisJudiceNinke,
-        src = input
     )
 
 }

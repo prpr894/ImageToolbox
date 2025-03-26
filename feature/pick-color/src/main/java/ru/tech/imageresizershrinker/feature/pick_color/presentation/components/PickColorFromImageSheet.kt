@@ -21,7 +21,6 @@ import android.graphics.Bitmap
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -64,12 +63,13 @@ import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils.copyToClipboard
 import ru.tech.imageresizershrinker.core.ui.utils.helper.toHex
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.PanModeButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalSheetDragHandle
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.shimmer
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.transparencyChecker
 import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleDragHandle
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 
 @Composable
 fun PickColorFromImageSheet(
@@ -86,7 +86,7 @@ fun PickColorFromImageSheet(
 
     var panEnabled by rememberSaveable { mutableStateOf(false) }
 
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         sheetContent = {
             Column(
                 modifier = Modifier.navigationBarsPadding()
@@ -160,11 +160,8 @@ fun PickColorFromImageSheet(
                                         shape = RoundedCornerShape(11.dp)
                                     )
                                     .clip(RoundedCornerShape(12.dp))
-                                    .clickable {
-                                        context.copyToClipboard(
-                                            context.getString(R.string.color),
-                                            color.toHex()
-                                        )
+                                    .hapticsClickable {
+                                        context.copyToClipboard(color.toHex())
                                         scope.launch {
                                             toastHostState.showToast(
                                                 icon = Icons.Rounded.ContentPaste,
@@ -193,11 +190,8 @@ fun PickColorFromImageSheet(
                             Text(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
-                                    .clickable {
-                                        context.copyToClipboard(
-                                            context.getString(R.string.color),
-                                            color.toHex()
-                                        )
+                                    .hapticsClickable {
+                                        context.copyToClipboard(color.toHex())
                                         scope.launch {
                                             toastHostState.showToast(
                                                 icon = Icons.Rounded.ContentPaste,
@@ -231,7 +225,7 @@ fun PickColorFromImageSheet(
             }
         },
         dragHandle = {
-            SimpleDragHandle(
+            EnhancedModalSheetDragHandle(
                 color = Color.Transparent,
                 drawStroke = false
             )

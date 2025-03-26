@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -47,13 +46,13 @@ import androidx.compose.ui.unit.dp
 import com.t8rin.dynamic.theme.ColorTuple
 import com.t8rin.dynamic.theme.ColorTupleItem
 import com.t8rin.dynamic.theme.PaletteStyle
-import com.t8rin.dynamic.theme.rememberAppColorTuple
 import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.MiniEdit
 import ru.tech.imageresizershrinker.core.resources.icons.Theme
+import ru.tech.imageresizershrinker.core.resources.shapes.MaterialStarShape
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.shapes.MaterialStarShape
+import ru.tech.imageresizershrinker.core.settings.presentation.provider.rememberAppColorTuple
 import ru.tech.imageresizershrinker.core.ui.theme.inverse
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
 import ru.tech.imageresizershrinker.core.ui.widget.color_picker.AvailableColorTuplesSheet
@@ -63,17 +62,16 @@ import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRow
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ColorSchemeSettingItem(
-    toggleInvertColors: () -> Unit,
-    setThemeStyle: (Int) -> Unit,
-    updateThemeContrast: (Float) -> Unit,
-    updateColorTuple: (ColorTuple) -> Unit,
-    updateColorTuples: (List<ColorTuple>) -> Unit,
+    onToggleInvertColors: () -> Unit,
+    onSetThemeStyle: (Int) -> Unit,
+    onUpdateThemeContrast: (Float) -> Unit,
+    onUpdateColorTuple: (ColorTuple) -> Unit,
+    onUpdateColorTuples: (List<ColorTuple>) -> Unit,
     onToggleUseEmojiAsPrimaryColor: () -> Unit,
     shape: Shape = ContainerShapeDefaults.topShape,
-    modifier: Modifier = Modifier.padding(start = 8.dp, end = 8.dp),
+    modifier: Modifier = Modifier.padding(horizontal = 8.dp),
 ) {
     val toastHostState = LocalToastHostState.current
     val context = LocalContext.current
@@ -101,7 +99,19 @@ fun ColorSchemeSettingItem(
             }
         },
         endContent = {
-            ColorTupleItem(
+            val colorTuple by remember(
+                settingsState.themeStyle,
+                settingsState.appColorTuple
+            ) {
+                derivedStateOf {
+                    if (settingsState.themeStyle == PaletteStyle.TonalSpot) {
+                        settingsState.appColorTuple
+                    } else settingsState.appColorTuple.run {
+                        copy(secondary = primary, tertiary = primary)
+                    }
+                }
+            }
+            Box(
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .size(72.dp)
@@ -115,42 +125,35 @@ fun ColorSchemeSettingItem(
                         ),
                         resultPadding = 5.dp
                     )
-                    .clip(CircleShape),
-                colorTuple = remember(
-                    settingsState.themeStyle,
-                    settingsState.appColorTuple
-                ) {
-                    derivedStateOf {
-                        if (settingsState.themeStyle == PaletteStyle.TonalSpot) {
-                            settingsState.appColorTuple
-                        } else settingsState.appColorTuple.run {
-                            copy(secondary = primary, tertiary = primary)
-                        }
-                    }
-                }.value,
-                backgroundColor = Color.Transparent
             ) {
-                Box(
+                ColorTupleItem(
                     modifier = Modifier
-                        .size(28.dp)
-                        .background(
-                            color = animateColorAsState(
-                                settingsState.appColorTuple.primary.inverse(
-                                    fraction = {
-                                        if (it) 0.8f
-                                        else 0.5f
-                                    },
-                                    darkMode = settingsState.appColorTuple.primary.luminance() < 0.3f
-                                )
-                            ).value,
-                            shape = CircleShape
-                        )
-                )
-                Icon(
-                    imageVector = Icons.Rounded.MiniEdit,
-                    contentDescription = stringResource(R.string.edit),
-                    tint = settingsState.appColorTuple.primary
-                )
+                        .clip(CircleShape),
+                    colorTuple = colorTuple,
+                    backgroundColor = Color.Transparent
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .background(
+                                color = animateColorAsState(
+                                    settingsState.appColorTuple.primary.inverse(
+                                        fraction = {
+                                            if (it) 0.8f
+                                            else 0.5f
+                                        },
+                                        darkMode = settingsState.appColorTuple.primary.luminance() < 0.3f
+                                    )
+                                ).value,
+                                shape = CircleShape
+                            )
+                    )
+                    Icon(
+                        imageVector = Icons.Rounded.MiniEdit,
+                        contentDescription = stringResource(R.string.edit),
+                        tint = settingsState.appColorTuple.primary
+                    )
+                }
             }
         }
     )
@@ -158,18 +161,14 @@ fun ColorSchemeSettingItem(
     AvailableColorTuplesSheet(
         visible = showPickColorSheet,
         colorTupleList = settingsState.colorTupleList,
-        currentColorTuple = rememberAppColorTuple(
-            defaultColorTuple = settingsState.appColorTuple,
-            dynamicColor = settingsState.isDynamicColors,
-            darkTheme = settingsState.isNightMode
-        ),
-        onToggleInvertColors = toggleInvertColors,
-        onThemeStyleSelected = { setThemeStyle(it.ordinal) },
-        updateThemeContrast = updateThemeContrast,
-        openColorPicker = {
+        currentColorTuple = rememberAppColorTuple(),
+        onToggleInvertColors = onToggleInvertColors,
+        onThemeStyleSelected = { onSetThemeStyle(it.ordinal) },
+        onUpdateThemeContrast = onUpdateThemeContrast,
+        onOpenColorPicker = {
             showColorPicker = true
         },
-        colorPicker = { onUpdateColorTuples ->
+        colorPicker = {
             ColorTuplePicker(
                 visible = showColorPicker,
                 colorTuple = settingsState.appColorTuple,
@@ -177,18 +176,16 @@ fun ColorSchemeSettingItem(
                     showColorPicker = false
                 },
                 onColorChange = {
-                    updateColorTuple(it)
+                    onUpdateColorTuple(it)
                     onUpdateColorTuples(settingsState.colorTupleList + it)
                 }
             )
         },
-        onUpdateColorTuples = {
-            updateColorTuples(it)
-        },
+        onUpdateColorTuples = onUpdateColorTuples,
         onToggleUseEmojiAsPrimaryColor = onToggleUseEmojiAsPrimaryColor,
         onDismiss = {
             showPickColorSheet = false
         },
-        onPickTheme = { updateColorTuple(it) }
+        onPickTheme = onUpdateColorTuple
     )
 }

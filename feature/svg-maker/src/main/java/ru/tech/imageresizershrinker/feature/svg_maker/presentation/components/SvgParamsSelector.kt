@@ -44,7 +44,6 @@ import androidx.compose.material.icons.rounded.Colorize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,8 +57,8 @@ import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.FreeDraw
 import ru.tech.imageresizershrinker.core.resources.icons.Line
 import ru.tech.imageresizershrinker.core.resources.icons.Resize
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedChip
-import ru.tech.imageresizershrinker.core.ui.widget.controls.EnhancedSliderItem
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedChip
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedSliderItem
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.fadingEdges
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwitch
@@ -99,9 +98,7 @@ fun SvgParamsSelector(
                 modifier = Modifier.padding(bottom = 8.dp)
             ) {
                 val listState = rememberLazyListState()
-                val data = remember {
-                    SvgParams.presets
-                }
+
                 LazyRow(
                     state = listState,
                     modifier = Modifier
@@ -112,7 +109,7 @@ fun SvgParamsSelector(
                     ),
                     contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    items(data) {
+                    items(SvgParams.presets) {
                         val selected = value == it
                         EnhancedChip(
                             selected = selected,

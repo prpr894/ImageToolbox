@@ -24,6 +24,7 @@ interface ImageTextReader<Image> {
         languageCode: String,
         segmentationMode: SegmentationMode,
         ocrEngineMode: OcrEngineMode,
+        parameters: TessParams,
         imageUri: String,
         onProgress: (Int) -> Unit
     ): TextRecognitionResult
@@ -33,6 +34,7 @@ interface ImageTextReader<Image> {
         languageCode: String,
         segmentationMode: SegmentationMode,
         ocrEngineMode: OcrEngineMode,
+        parameters: TessParams,
         image: Image?,
         onProgress: (Int) -> Unit
     ): TextRecognitionResult
@@ -60,5 +62,11 @@ interface ImageTextReader<Image> {
         language: OCRLanguage,
         types: List<RecognitionType>
     )
+
+    suspend fun exportLanguagesToZip(): String?
+
+    suspend fun importLanguagesFromUri(
+        zipUri: String
+    ): Result<Any>
 
 }

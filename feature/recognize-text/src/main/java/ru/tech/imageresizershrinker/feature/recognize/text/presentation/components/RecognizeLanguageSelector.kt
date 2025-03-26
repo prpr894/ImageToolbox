@@ -20,147 +20,58 @@ package ru.tech.imageresizershrinker.feature.recognize.text.presentation.compone
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.rounded.Cancel
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.DownloadDone
-import androidx.compose.material.icons.rounded.DownloadForOffline
-import androidx.compose.material.icons.rounded.MultipleStop
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.SearchOff
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.MiniEdit
-import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.theme.Green
-import ru.tech.imageresizershrinker.core.ui.theme.Red
-import ru.tech.imageresizershrinker.core.ui.theme.mixedContainer
-import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
-import ru.tech.imageresizershrinker.core.ui.utils.helper.ProvidesValue
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
-import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
-import ru.tech.imageresizershrinker.core.ui.widget.modifier.alertDialogBorder
-import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
-import ru.tech.imageresizershrinker.core.ui.widget.other.GradientEdge
-import ru.tech.imageresizershrinker.core.ui.widget.other.Loading
-import ru.tech.imageresizershrinker.core.ui.widget.other.RevealDirection
-import ru.tech.imageresizershrinker.core.ui.widget.other.RevealValue
-import ru.tech.imageresizershrinker.core.ui.widget.other.SwipeToReveal
-import ru.tech.imageresizershrinker.core.ui.widget.other.rememberRevealState
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItem
-import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwitch
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheetDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.text.RoundedTextField
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 import ru.tech.imageresizershrinker.feature.recognize.text.domain.OCRLanguage
 import ru.tech.imageresizershrinker.feature.recognize.text.domain.RecognitionType
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun RecognizeLanguageSelector(
     currentRecognitionType: RecognitionType,
     value: List<OCRLanguage>,
     availableLanguages: List<OCRLanguage>,
     onValueChange: (List<OCRLanguage>, RecognitionType) -> Unit,
-    onDeleteLanguage: (OCRLanguage, List<RecognitionType>) -> Unit
+    onDeleteLanguage: (OCRLanguage, List<RecognitionType>) -> Unit,
+    onImportLanguages: () -> Unit,
+    onExportLanguages: () -> Unit
 ) {
-    val haptics = LocalHapticFeedback.current
-    val settingsState = LocalSettingsState.current
-
-    val downloadedLanguages by remember(availableLanguages) {
-        derivedStateOf {
-            availableLanguages.filter {
-                it.downloaded.isNotEmpty()
-            }.sortedByDescending {
-                it.downloaded.size
-            }
-        }
-    }
-    val notDownloadedLanguages by remember(availableLanguages, value) {
-        derivedStateOf {
-            availableLanguages.filter {
-                it.downloaded.isEmpty()
-            }.sortedByDescending {
-                it in value
-            }
-        }
-    }
-
     var showDetailedLanguageSheet by rememberSaveable {
         mutableStateOf(false)
     }
@@ -178,25 +89,6 @@ fun RecognizeLanguageSelector(
         endIcon = Icons.Rounded.MiniEdit
     )
 
-    var allowMultipleLanguagesSelection by rememberSaveable {
-        mutableStateOf(value.isNotEmpty())
-    }
-
-    val onValueChangeImpl: (Boolean, RecognitionType, OCRLanguage) -> Unit =
-        { selected, type, lang ->
-            if (allowMultipleLanguagesSelection) {
-                if (selected) {
-                    onValueChange(
-                        (value - lang).distinct(),
-                        type
-                    )
-                } else onValueChange(
-                    (value + lang).distinct(),
-                    type
-                )
-            } else onValueChange(listOf(lang), type)
-        }
-
     var deleteDialogData by remember {
         mutableStateOf<OCRLanguage?>(null)
     }
@@ -207,33 +99,8 @@ fun RecognizeLanguageSelector(
     var searchKeyword by rememberSaveable {
         mutableStateOf("")
     }
-    var languagesForSearch by remember {
-        mutableStateOf(
-            downloadedLanguages + notDownloadedLanguages
-        )
-    }
 
-    LaunchedEffect(searchKeyword) {
-        delay(400L) // Debounce calculations
-        if (searchKeyword.isEmpty()) {
-            languagesForSearch = downloadedLanguages + notDownloadedLanguages
-            return@LaunchedEffect
-        }
-
-        languagesForSearch = (downloadedLanguages + notDownloadedLanguages).filter {
-            it.name.contains(
-                other = searchKeyword,
-                ignoreCase = true
-            ).or(
-                it.localizedName.contains(
-                    other = searchKeyword,
-                    ignoreCase = true
-                )
-            )
-        }.sortedBy { it.name }
-    }
-
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         visible = showDetailedLanguageSheet,
         onDismiss = {
             showDetailedLanguageSheet = it
@@ -263,9 +130,6 @@ fun RecognizeLanguageSelector(
                             },
                             startIcon = {
                                 EnhancedIconButton(
-                                    containerColor = Color.Transparent,
-                                    contentColor = LocalContentColor.current,
-                                    enableAutoShadowAndBorder = false,
                                     onClick = {
                                         searchKeyword = ""
                                         isSearching = false
@@ -286,9 +150,6 @@ fun RecognizeLanguageSelector(
                                     exit = fadeOut() + scaleOut()
                                 ) {
                                     EnhancedIconButton(
-                                        containerColor = Color.Transparent,
-                                        contentColor = LocalContentColor.current,
-                                        enableAutoShadowAndBorder = false,
                                         onClick = {
                                             searchKeyword = ""
                                         },
@@ -334,466 +195,26 @@ fun RecognizeLanguageSelector(
                     }
                 }
             }
+        },
+        sheetContent = {
+            RecognizeLanguageSelectorSheetContent(
+                value = value,
+                currentRecognitionType = currentRecognitionType,
+                onValueChange = onValueChange,
+                onImportLanguages = onImportLanguages,
+                onExportLanguages = onExportLanguages,
+                isSearching = isSearching,
+                searchKeyword = searchKeyword,
+                availableLanguages = availableLanguages,
+                onWantDelete = { deleteDialogData = it }
+            )
         }
-    ) {
-        AnimatedContent(targetState = value.isEmpty()) { loading ->
-            if (loading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Loading()
-                }
-            } else {
-                val listState = rememberLazyListState()
-                LaunchedEffect(downloadedLanguages) {
-                    downloadedLanguages.indexOf(value.firstOrNull()).takeIf {
-                        it != -1
-                    }.let {
-                        listState.scrollToItem(it ?: 0)
-                    }
-                }
+    )
 
-                AnimatedContent(
-                    targetState = isSearching to languagesForSearch.isNotEmpty()
-                ) { (searching, haveData) ->
-                    if (searching) {
-                        if (haveData) {
-                            LazyColumn(
-                                contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                itemsIndexed(languagesForSearch) { index, lang ->
-                                    val selected by remember(value, lang) {
-                                        derivedStateOf {
-                                            lang in value
-                                        }
-                                    }
-                                    PreferenceItem(
-                                        title = lang.name,
-                                        subtitle = lang.localizedName.takeIf { it != lang.name },
-                                        onClick = {
-                                            haptics.performHapticFeedback(
-                                                HapticFeedbackType.LongPress
-                                            )
-                                            onValueChangeImpl(
-                                                selected,
-                                                currentRecognitionType,
-                                                lang
-                                            )
-                                        },
-                                        color = animateColorAsState(
-                                            if (selected) {
-                                                MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                                    20.dp
-                                                )
-                                            } else SimpleSheetDefaults.contentContainerColor
-                                        ).value,
-                                        shape = ContainerShapeDefaults.shapeForIndex(
-                                            index = index,
-                                            size = languagesForSearch.size
-                                        ),
-                                        modifier = Modifier
-                                            .animateItem()
-                                            .fillMaxWidth()
-                                    )
-                                }
-                            }
-                        } else {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(0.5f),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Spacer(Modifier.weight(1f))
-                                Text(
-                                    text = stringResource(R.string.nothing_found_by_search),
-                                    fontSize = 18.sp,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(
-                                        start = 24.dp,
-                                        end = 24.dp,
-                                        top = 8.dp,
-                                        bottom = 8.dp
-                                    )
-                                )
-                                Icon(
-                                    imageVector = Icons.Rounded.SearchOff,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .weight(2f)
-                                        .sizeIn(maxHeight = 140.dp, maxWidth = 140.dp)
-                                        .fillMaxSize()
-                                )
-                                Spacer(Modifier.weight(1f))
-                            }
-                        }
-                    } else {
-                        LazyColumn(
-                            state = listState,
-                            contentPadding = PaddingValues(
-                                start = 16.dp,
-                                bottom = 16.dp,
-                                end = 16.dp
-                            ),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            stickyHeader {
-                                val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-                                val density = LocalDensity.current
-                                PreferenceRowSwitch(
-                                    title = stringResource(R.string.allow_multiple_languages),
-                                    color = animateColorAsState(
-                                        if (allowMultipleLanguagesSelection) MaterialTheme.colorScheme.primaryContainer
-                                        else MaterialTheme.colorScheme.surfaceContainer
-                                    ).value,
-                                    modifier = Modifier
-                                        .layout { measurable, constraints ->
-                                            val result = measurable.measure(
-                                                constraints.copy(
-                                                    maxWidth = with(density) {
-                                                        screenWidth.roundToPx()
-                                                    }
-                                                )
-                                            )
-                                            layout(result.measuredWidth, result.measuredHeight) {
-                                                result.place(0, 0)
-                                            }
-                                        }
-                                        .background(SimpleSheetDefaults.containerColor)
-                                        .padding(
-                                            start = 16.dp,
-                                            top = 20.dp,
-                                            bottom = 8.dp,
-                                            end = 16.dp
-                                        ),
-                                    shape = RoundedCornerShape(28.dp),
-                                    checked = allowMultipleLanguagesSelection,
-                                    startIcon = Icons.Rounded.MultipleStop,
-                                    onClick = {
-                                        if (!it) onValueChange(
-                                            value.take(1),
-                                            currentRecognitionType
-                                        )
-                                        allowMultipleLanguagesSelection = it
-                                    }
-                                )
-                                GradientEdge(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(16.dp),
-                                    startColor = SimpleSheetDefaults.containerColor,
-                                    endColor = Color.Transparent
-                                )
-                            }
-                            if (downloadedLanguages.isNotEmpty()) {
-                                item {
-                                    TitleItem(
-                                        icon = Icons.Rounded.DownloadDone,
-                                        text = stringResource(id = R.string.downloaded_languages)
-                                    )
-                                }
-                            }
-                            itemsIndexed(downloadedLanguages) { index, lang ->
-                                val selected by remember(value, lang) {
-                                    derivedStateOf {
-                                        lang in value
-                                    }
-                                }
-                                val scope = rememberCoroutineScope()
-                                val state = rememberRevealState()
-                                val interactionSource = remember {
-                                    MutableInteractionSource()
-                                }
-                                val isDragged by interactionSource.collectIsDraggedAsState()
-                                val shape = ContainerShapeDefaults.shapeForIndex(
-                                    index = index,
-                                    size = downloadedLanguages.size,
-                                    forceDefault = isDragged
-                                )
-                                SwipeToReveal(
-                                    state = state,
-                                    modifier = Modifier.animateItem(),
-                                    revealedContentEnd = {
-                                        Box(
-                                            Modifier
-                                                .fillMaxSize()
-                                                .container(
-                                                    color = MaterialTheme.colorScheme.errorContainer,
-                                                    shape = shape,
-                                                    autoShadowElevation = 0.dp,
-                                                    resultPadding = 0.dp
-                                                )
-                                                .clickable {
-                                                    scope.launch {
-                                                        state.animateTo(RevealValue.Default)
-                                                    }
-                                                    deleteDialogData = lang
-                                                }
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Rounded.DeleteOutline,
-                                                contentDescription = stringResource(R.string.delete),
-                                                modifier = Modifier
-                                                    .padding(16.dp)
-                                                    .padding(end = 8.dp)
-                                                    .align(Alignment.CenterEnd),
-                                                tint = MaterialTheme.colorScheme.onErrorContainer
-                                            )
-                                        }
-                                    },
-                                    directions = setOf(RevealDirection.EndToStart),
-                                    swipeableContent = {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .container(
-                                                    shape = shape,
-                                                    color = animateColorAsState(
-                                                        if (selected) {
-                                                            MaterialTheme
-                                                                .colorScheme
-                                                                .mixedContainer
-                                                                .copy(0.8f)
-                                                        } else SimpleSheetDefaults.contentContainerColor
-                                                    ).value,
-                                                    resultPadding = 0.dp
-                                                )
-                                                .combinedClickable(
-                                                    onLongClick = {
-                                                        haptics.performHapticFeedback(
-                                                            HapticFeedbackType.LongPress
-                                                        )
-                                                        scope.launch {
-                                                            state.animateTo(RevealValue.FullyRevealedStart)
-                                                        }
-                                                    }
-                                                ) {
-                                                    haptics.performHapticFeedback(
-                                                        HapticFeedbackType.LongPress
-                                                    )
-                                                    onValueChangeImpl(
-                                                        selected,
-                                                        currentRecognitionType,
-                                                        lang
-                                                    )
-                                                }
-                                                .padding(16.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            AnimatedVisibility(visible = value.size > 1) {
-                                                LocalMinimumInteractiveComponentSize.ProvidesValue(
-                                                    Dp.Unspecified
-                                                ) {
-                                                    Checkbox(
-                                                        checked = selected,
-                                                        onCheckedChange = {
-                                                            onValueChangeImpl(
-                                                                selected,
-                                                                currentRecognitionType,
-                                                                lang
-                                                            )
-                                                        },
-                                                        modifier = Modifier.padding(end = 8.dp)
-                                                    )
-                                                }
-                                            }
-                                            Column {
-                                                Text(
-                                                    text = lang.name,
-                                                    style = LocalTextStyle.current.copy(
-                                                        fontSize = 16.sp,
-                                                        fontWeight = FontWeight.Medium,
-                                                        lineHeight = 18.sp
-                                                    )
-                                                )
-                                                if (lang.name != lang.localizedName) {
-                                                    Spacer(modifier = Modifier.height(2.dp))
-                                                    Text(
-                                                        text = lang.localizedName,
-                                                        fontSize = 12.sp,
-                                                        fontWeight = FontWeight.Normal,
-                                                        lineHeight = 14.sp,
-                                                        color = LocalContentColor.current.copy(alpha = 0.5f)
-                                                    )
-                                                }
-                                            }
-                                            Spacer(modifier = Modifier.weight(1f))
-                                            Row(
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                                modifier = Modifier.container()
-                                            ) {
-                                                RecognitionType.entries.forEach { type ->
-                                                    Column(
-                                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                                        verticalArrangement = Arrangement.Center,
-                                                        modifier = Modifier
-                                                            .clip(CircleShape)
-                                                            .clickable {
-                                                                haptics.performHapticFeedback(
-                                                                    HapticFeedbackType.LongPress
-                                                                )
-                                                                onValueChange(value, type)
-                                                            }
-                                                    ) {
-                                                        val notDownloaded by remember(
-                                                            type,
-                                                            lang.downloaded
-                                                        ) {
-                                                            derivedStateOf {
-                                                                type !in lang.downloaded
-                                                            }
-                                                        }
-                                                        val displayName by remember(type) {
-                                                            derivedStateOf {
-                                                                type.displayName.first().uppercase()
-                                                            }
-                                                        }
-                                                        val green = Green
-                                                        val red = Red
-                                                        val color by remember(
-                                                            currentRecognitionType,
-                                                            red,
-                                                            green,
-                                                            lang.downloaded
-                                                        ) {
-                                                            derivedStateOf {
-                                                                when (type) {
-                                                                    currentRecognitionType -> if (type in lang.downloaded) {
-                                                                        green
-                                                                    } else red
-
-                                                                    !in lang.downloaded -> red.copy(
-                                                                        0.3f
-                                                                    )
-
-                                                                    else -> green.copy(0.3f)
-                                                                }
-                                                            }
-                                                        }
-                                                        Text(
-                                                            text = displayName,
-                                                            fontSize = 12.sp
-                                                        )
-                                                        Spacer(modifier = Modifier.height(4.dp))
-                                                        Icon(
-                                                            imageVector = if (notDownloaded) {
-                                                                Icons.Rounded.Cancel
-                                                            } else Icons.Rounded.CheckCircle,
-                                                            contentDescription = null,
-                                                            tint = animateColorAsState(color).value,
-                                                            modifier = Modifier
-                                                                .size(28.dp)
-                                                                .border(
-                                                                    width = settingsState.borderWidth,
-                                                                    color = MaterialTheme.colorScheme.outlineVariant(),
-                                                                    shape = CircleShape
-                                                                )
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    },
-                                    interactionSource = interactionSource
-                                )
-                            }
-                            if (notDownloadedLanguages.isNotEmpty()) {
-                                item {
-                                    TitleItem(
-                                        icon = Icons.Rounded.DownloadForOffline,
-                                        text = stringResource(id = R.string.available_languages)
-                                    )
-                                }
-                            }
-                            itemsIndexed(notDownloadedLanguages) { index, lang ->
-                                val selected by remember(value, lang) {
-                                    derivedStateOf {
-                                        lang in value
-                                    }
-                                }
-                                PreferenceItem(
-                                    title = lang.name,
-                                    subtitle = lang.localizedName.takeIf { it != lang.name },
-                                    onClick = {
-                                        haptics.performHapticFeedback(
-                                            HapticFeedbackType.LongPress
-                                        )
-                                        onValueChangeImpl(selected, currentRecognitionType, lang)
-                                    },
-                                    color = animateColorAsState(
-                                        if (selected) {
-                                            MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp)
-                                        } else SimpleSheetDefaults.contentContainerColor
-                                    ).value,
-                                    shape = ContainerShapeDefaults.shapeForIndex(
-                                        index = index,
-                                        size = notDownloadedLanguages.size
-                                    ),
-                                    modifier = Modifier
-                                        .animateItem()
-                                        .fillMaxWidth()
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (deleteDialogData != null) {
-        AlertDialog(
-            modifier = Modifier.alertDialogBorder(),
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.DeleteOutline,
-                    contentDescription = null
-                )
-            },
-            title = { Text(stringResource(id = R.string.delete)) },
-            text = {
-                Text(
-                    stringResource(
-                        id = R.string.delete_language_sub,
-                        deleteDialogData?.name ?: "",
-                        currentRecognitionType.displayName
-                    )
-                )
-            },
-            onDismissRequest = {
-                deleteDialogData = null
-            },
-            confirmButton = {
-                EnhancedButton(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    onClick = {
-                        deleteDialogData?.let {
-                            onDeleteLanguage(it, listOf(currentRecognitionType))
-                        }
-                        deleteDialogData = null
-                    }
-                ) {
-                    Text(stringResource(R.string.current))
-                }
-            },
-            dismissButton = {
-                EnhancedButton(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    onClick = {
-                        deleteDialogData?.let {
-                            onDeleteLanguage(it, RecognitionType.entries)
-                        }
-                        deleteDialogData = null
-                    }
-                ) {
-                    Text(stringResource(R.string.all))
-                }
-            }
-        )
-    }
+    DeleteLanguageDialog(
+        languageToDelete = deleteDialogData,
+        onDismiss = { deleteDialogData = null },
+        onDeleteLanguage = onDeleteLanguage,
+        currentRecognitionType = currentRecognitionType
+    )
 }

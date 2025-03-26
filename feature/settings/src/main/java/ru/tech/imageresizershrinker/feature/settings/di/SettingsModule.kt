@@ -17,22 +17,14 @@
 
 package ru.tech.imageresizershrinker.feature.settings.di
 
-import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import ru.tech.imageresizershrinker.core.settings.domain.SettingsInteractor
 import ru.tech.imageresizershrinker.core.settings.domain.SettingsManager
 import ru.tech.imageresizershrinker.core.settings.domain.SettingsProvider
 import ru.tech.imageresizershrinker.feature.settings.data.AndroidSettingsManager
-import ru.tech.imageresizershrinker.feature.settings.data.BorderWidthMigration
 import javax.inject.Singleton
 
 
@@ -57,18 +49,5 @@ internal interface SettingsModule {
     fun provideSettingsInteractor(
         repository: SettingsManager
     ): SettingsInteractor
-
-    companion object {
-
-        @Singleton
-        @Provides
-        fun provideDataStore(
-            @ApplicationContext context: Context
-        ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
-            produceFile = { context.preferencesDataStoreFile("image_resizer") },
-            migrations = listOf(BorderWidthMigration())
-        )
-
-    }
 
 }

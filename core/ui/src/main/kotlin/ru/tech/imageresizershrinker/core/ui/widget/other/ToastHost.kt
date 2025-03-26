@@ -21,7 +21,9 @@ import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -41,15 +43,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
@@ -66,7 +69,6 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.AccessibilityManager
 import androidx.compose.ui.platform.LocalAccessibilityManager
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -80,12 +82,13 @@ import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.theme.harmonizeWithPrimary
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
+import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalScreenSize
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.autoElevatedBorder
 import kotlin.coroutines.resume
 
 @Composable
 fun ToastHost(
-    hostState: ToastHostState,
+    hostState: ToastHostState = LocalToastHostState.current,
     modifier: Modifier = Modifier.fillMaxSize(),
     alignment: Alignment = Alignment.BottomCenter,
     transitionSpec: AnimatedContentTransitionScope<ToastData?>.() -> ContentTransform = { ToastDefaults.transition },
@@ -127,8 +130,8 @@ fun Toast(
     containerColor: Color = ToastDefaults.color,
     contentColor: Color = ToastDefaults.contentColor,
 ) {
-    val configuration = LocalConfiguration.current
-    val sizeMin = configuration.screenWidthDp.coerceAtMost(configuration.screenHeightDp).dp
+    val screenSize = LocalScreenSize.current
+    val sizeMin = screenSize.width.coerceAtMost(screenSize.height)
 
     Card(
         colors = CardDefaults.cardColors(
@@ -150,7 +153,7 @@ fun Toast(
                 .autoElevatedBorder(
                     color = MaterialTheme.colorScheme
                         .outlineVariant(0.3f, contentColor)
-                        .copy(alpha = 0.95f),
+                        .copy(alpha = 0.92f),
                     shape = shape,
                     autoElevation = animateDpAsState(
                         if (LocalSettingsState.current.drawContainerShadows) 6.dp
@@ -183,6 +186,7 @@ fun Toast(
 }
 
 @Stable
+@Immutable
 open class ToastHostState {
 
     private val mutex = Mutex()
@@ -190,14 +194,12 @@ open class ToastHostState {
     var currentToastData by mutableStateOf<ToastData?>(null)
         private set
 
-    @OptIn(ExperimentalMaterial3Api::class)
     suspend fun showToast(
         message: String,
         icon: ImageVector? = null,
         duration: ToastDuration = ToastDuration.Short
     ) = showToast(ToastVisualsImpl(message, icon, duration))
 
-    @ExperimentalMaterial3Api
     suspend fun showToast(visuals: ToastVisuals) = mutex.withLock {
         try {
             suspendCancellableCoroutine { continuation ->
@@ -261,37 +263,59 @@ open class ToastHostState {
 }
 
 @Stable
+@Immutable
 interface ToastData {
     val visuals: ToastVisuals
     fun dismiss()
 }
 
 @Stable
+@Immutable
 interface ToastVisuals {
     val message: String
     val icon: ImageVector?
     val duration: ToastDuration
 }
 
+@Stable
+@Immutable
 open class ToastDuration(val time: kotlin.Long) {
     object Short : ToastDuration(3500L)
     object Long : ToastDuration(6500L)
 }
 
+@Stable
+@Immutable
 object ToastDefaults {
     val transition: ContentTransform
         get() = fadeIn(tween(300)) + scaleIn(
-            tween(500),
+            animationSpec = spring(
+                dampingRatio = 0.65f,
+                stiffness = Spring.StiffnessMediumLow
+            ),
             transformOrigin = TransformOrigin(0.5f, 1f)
         ) + slideInVertically(
+            spring(
+                stiffness = Spring.StiffnessHigh
+            )
+        ) { it / 2 } togetherWith fadeOut(tween(250)) + slideOutVertically(
             tween(500)
-        ) { it / 2 } togetherWith fadeOut(tween(250)) + slideOutVertically(tween(500)) { it / 2 } + scaleOut(
-            tween(750),
+        ) { it / 2 } + scaleOut(
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            ),
             transformOrigin = TransformOrigin(0.5f, 1f)
         )
-    val contentColor: Color @Composable get() = MaterialTheme.colorScheme.inverseOnSurface.harmonizeWithPrimary()
-    val color: Color @Composable get() = MaterialTheme.colorScheme.inverseSurface.harmonizeWithPrimary()
-    val shape: Shape @Composable get() = MaterialTheme.shapes.extraLarge
+    val contentColor: Color
+        @Composable
+        get() = MaterialTheme.colorScheme.inverseOnSurface.harmonizeWithPrimary()
+
+    val color: Color
+        @Composable
+        get() = MaterialTheme.colorScheme.inverseSurface.harmonizeWithPrimary()
+
+    val shape: Shape = RoundedCornerShape(26.dp)
 }
 
 private fun ToastDuration.toMillis(
@@ -310,13 +334,13 @@ fun rememberToastHostState() = remember { ToastHostState() }
 
 val LocalToastHostState = compositionLocalOf { ToastHostState() }
 
-suspend fun ToastHostState.showError(
+suspend fun ToastHostState.showFailureToast(
     context: Context,
-    error: Throwable
+    throwable: Throwable
 ) = showToast(
     message = context.getString(
         R.string.smth_went_wrong,
-        error.localizedMessage ?: ""
+        throwable.localizedMessage ?: ""
     ),
     icon = Icons.Rounded.ErrorOutline,
     duration = ToastDuration.Long

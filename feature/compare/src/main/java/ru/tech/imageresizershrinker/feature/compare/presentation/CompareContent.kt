@@ -18,7 +18,6 @@
 package ru.tech.imageresizershrinker.feature.compare.presentation
 
 import android.net.Uri
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,7 +28,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.ErrorOutline
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -37,70 +35,55 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.t8rin.dynamic.theme.LocalDynamicThemeState
 import com.t8rin.dynamic.theme.extractPrimaryColor
-import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.theme.blend
-import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.Picker
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.Picker
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.rememberImagePicker
 import ru.tech.imageresizershrinker.core.ui.utils.helper.asClip
 import ru.tech.imageresizershrinker.core.ui.utils.helper.isPortraitOrientationAsState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.localImagePickerMode
-import ru.tech.imageresizershrinker.core.ui.utils.helper.parseSaveResult
-import ru.tech.imageresizershrinker.core.ui.utils.helper.rememberImagePicker
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedFloatingActionButton
+import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalComponentActivity
+import ru.tech.imageresizershrinker.core.ui.utils.provider.rememberLocalEssentials
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.LoadingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.OneTimeImagePickingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedFloatingActionButton
 import ru.tech.imageresizershrinker.core.ui.widget.image.AutoFilePicker
-import ru.tech.imageresizershrinker.core.ui.widget.other.LoadingDialog
-import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
 import ru.tech.imageresizershrinker.feature.compare.presentation.components.CompareScreenContent
 import ru.tech.imageresizershrinker.feature.compare.presentation.components.CompareScreenTopAppBar
 import ru.tech.imageresizershrinker.feature.compare.presentation.components.CompareShareSheet
 import ru.tech.imageresizershrinker.feature.compare.presentation.components.CompareType
-import ru.tech.imageresizershrinker.feature.compare.presentation.viewModel.CompareViewModel
+import ru.tech.imageresizershrinker.feature.compare.presentation.screenLogic.CompareComponent
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CompareContent(
-    comparableUris: Pair<Uri, Uri>?,
-    onGoBack: () -> Unit,
-    viewModel: CompareViewModel = hiltViewModel()
+    component: CompareComponent
 ) {
     val settingsState = LocalSettingsState.current
 
-    val context = LocalContext.current
-    val toastHostState = LocalToastHostState.current
+    val context = LocalComponentActivity.current
     val themeState = LocalDynamicThemeState.current
     val allowChangeColor = settingsState.allowChangeColorByImage
 
-    val scope = rememberCoroutineScope()
-    val confettiHostState = LocalConfettiHostState.current
-    val showConfetti: () -> Unit = {
-        scope.launch {
-            confettiHostState.showConfetti()
-        }
-    }
+    val essentials = rememberLocalEssentials()
+    val showConfetti: () -> Unit = essentials::showConfetti
 
-    var compareProgress by rememberSaveable { mutableFloatStateOf(50f) }
 
-    LaunchedEffect(viewModel.bitmapData) {
-        viewModel.bitmapData?.let { (b, a) ->
+
+    LaunchedEffect(component.bitmapData) {
+        component.bitmapData?.let { (b, a) ->
             if (allowChangeColor && a != null && b != null) {
                 delay(100L) //delay to perform screen rotation
                 themeState.updateColor(
@@ -111,60 +94,30 @@ fun CompareContent(
         }
     }
 
-    LaunchedEffect(comparableUris) {
-        comparableUris?.let {
-            viewModel.updateUris(
-                onSuccess = {
-                    compareProgress = 50f
-                },
-                uris = it,
-                onError = {
-                    scope.launch {
-                        toastHostState.showToast(
-                            context.getString(R.string.something_went_wrong),
-                            Icons.Rounded.ErrorOutline
-                        )
-                    }
+    val imagePicker = rememberImagePicker { uris: List<Uri> ->
+        if (uris.size != 2) {
+            essentials.showToast(
+                message = context.getString(R.string.pick_two_images),
+                icon = Icons.Rounded.ErrorOutline
+            )
+        } else {
+            component.updateUris(
+                uris = uris[0] to uris[1],
+                onFailure = {
+                    essentials.showToast(
+                        context.getString(R.string.something_went_wrong),
+                        Icons.Rounded.ErrorOutline
+                    )
                 }
             )
         }
     }
 
-    val pickImageLauncher = rememberImagePicker(
-        mode = localImagePickerMode(Picker.Multiple)
-    ) { uris ->
-        uris.takeIf { it.isNotEmpty() }?.let {
-            if (uris.size != 2) {
-                scope.launch {
-                    toastHostState.showToast(
-                        message = context.getString(R.string.pick_two_images),
-                        icon = Icons.Rounded.ErrorOutline
-                    )
-                }
-            } else {
-                viewModel.updateUris(
-                    onSuccess = {
-                        compareProgress = 50f
-                    },
-                    uris = it[0] to it[1],
-                    onError = {
-                        scope.launch {
-                            toastHostState.showToast(
-                                context.getString(R.string.something_went_wrong),
-                                Icons.Rounded.ErrorOutline
-                            )
-                        }
-                    }
-                )
-            }
-        }
-    }
-
-    val pickImage = pickImageLauncher::pickImage
+    val pickImage = imagePicker::pickImage
 
     AutoFilePicker(
         onAutoPick = pickImage,
-        isPickedAlready = comparableUris != null
+        isPickedAlready = component.initialComparableUris != null
     )
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -172,49 +125,60 @@ fun CompareContent(
     val isPortrait by isPortraitOrientationAsState()
 
     var showShareSheet by rememberSaveable { mutableStateOf(false) }
-    Box(
-        Modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+    Box {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+        ) {
             var isLabelsEnabled by rememberSaveable {
                 mutableStateOf(true)
             }
 
             CompareScreenTopAppBar(
-                imageNotPicked = viewModel.bitmapData == null,
+                imageNotPicked = component.bitmapData == null,
                 scrollBehavior = scrollBehavior,
-                onNavigationIconClick = onGoBack,
+                onNavigationIconClick = component.onGoBack,
                 onShareButtonClick = {
                     showShareSheet = true
                 },
-                onSwapImagesClick = viewModel::swap,
-                onRotateImagesClick = viewModel::rotate,
-                isShareButtonVisible = viewModel.compareType == CompareType.Slide,
-                isImagesRotated = viewModel.rotation == 90f,
-                titleWhenBitmapsPicked = stringResource(viewModel.compareType.title),
+                onSwapImagesClick = component::swap,
+                onRotateImagesClick = component::rotate,
+                isShareButtonVisible = component.compareType == CompareType.Slide
+                        || component.compareType == CompareType.PixelByPixel,
+                isImagesRotated = component.rotation == 90f,
+                titleWhenBitmapsPicked = stringResource(component.compareType.title),
                 isLabelsEnabled = isLabelsEnabled,
-                onToggleLabelsEnabled = { isLabelsEnabled = it }
+                onToggleLabelsEnabled = { isLabelsEnabled = it },
+                isLabelsButtonVisible = component.compareType != CompareType.PixelByPixel
             )
 
             CompareScreenContent(
-                bitmapData = viewModel.bitmapData,
-                compareType = viewModel.compareType,
-                onCompareTypeSelected = viewModel::setCompareType,
+                bitmapData = component.bitmapData,
+                compareType = component.compareType,
+                onCompareTypeSelected = component::setCompareType,
                 isPortrait = isPortrait,
-                compareProgress = compareProgress,
-                onCompareProgressChange = {
-                    compareProgress = it
-                },
-                onPickImage = pickImage,
-                isLabelsEnabled = isLabelsEnabled
+                compareProgress = component.compareProgress,
+                onCompareProgressChange = component::setCompareProgress,
+                imagePicker = imagePicker,
+                isLabelsEnabled = isLabelsEnabled,
+                pixelByPixelCompareState = component.pixelByPixelCompareState,
+                onPixelByPixelCompareStateChange = component::updatePixelByPixelCompareState,
+                createPixelByPixelTransformation = component::createPixelByPixelTransformation
             )
         }
 
-        if (viewModel.bitmapData == null) {
+        if (component.bitmapData == null) {
+            var showOneTimeImagePickingDialog by rememberSaveable {
+                mutableStateOf(false)
+            }
             EnhancedFloatingActionButton(
                 onClick = pickImage,
+                onLongClick = {
+                    showOneTimeImagePickingDialog = true
+                },
                 modifier = Modifier
                     .navigationBarsPadding()
                     .padding(16.dp)
@@ -230,13 +194,30 @@ fun CompareContent(
                     Spacer(Modifier.width(16.dp))
                 }
             )
+            OneTimeImagePickingDialog(
+                onDismiss = { showOneTimeImagePickingDialog = false },
+                picker = Picker.Multiple,
+                imagePicker = imagePicker,
+                visible = showOneTimeImagePickingDialog
+            )
         }
     }
 
-    val previewBitmap by remember(viewModel.bitmapData) {
+    val previewBitmap by remember(component.bitmapData) {
         derivedStateOf {
-            viewModel.getOverlappedImage(compareProgress)
+            component.getImagePreview()
         }
+    }
+    val transformations = remember(
+        component.bitmapData,
+        component.compareProgress,
+        component.pixelByPixelCompareState,
+        component.compareType,
+        showShareSheet
+    ) {
+        if (component.compareType == CompareType.PixelByPixel && showShareSheet) {
+            listOf(component.createPixelByPixelTransformation())
+        } else emptyList()
     }
     CompareShareSheet(
         visible = showShareSheet,
@@ -244,41 +225,34 @@ fun CompareContent(
             showShareSheet = it
         },
         onSaveBitmap = { imageFormat, oneTimeSaveLocationUri ->
-            viewModel.saveBitmap(
-                percent = compareProgress,
+            component.saveBitmap(
                 imageFormat = imageFormat,
-                oneTimeSaveLocationUri = oneTimeSaveLocationUri
-            ) { saveResult ->
-                context.parseSaveResult(
-                    saveResult = saveResult,
-                    onSuccess = showConfetti,
-                    toastHostState = toastHostState,
-                    scope = scope
-                )
-            }
+                oneTimeSaveLocationUri = oneTimeSaveLocationUri,
+                onComplete = essentials::parseSaveResult
+            )
             showShareSheet = false
         },
         onShare = { imageFormat ->
-            viewModel.shareBitmap(compareProgress, imageFormat) {
-                showConfetti()
-            }
+            component.shareBitmap(
+                imageFormat = imageFormat,
+                onComplete = showConfetti
+            )
             showShareSheet = false
         },
         onCopy = { imageFormat, manager ->
-            viewModel.cacheCurrentImage(
-                percent = compareProgress,
+            component.cacheCurrentImage(
                 imageFormat = imageFormat
             ) { uri ->
-                manager.setClip(uri.asClip(context))
+                manager.copyToClipboard(uri.asClip(context))
                 showConfetti()
             }
         },
-        previewBitmap = previewBitmap
+        previewData = previewBitmap,
+        transformations = transformations
     )
 
-    if (viewModel.isImageLoading) {
-        LoadingDialog(viewModel::cancelSaving)
-    }
-
-    BackHandler(onBack = onGoBack)
+    LoadingDialog(
+        visible = component.isImageLoading,
+        onCancelLoading = component::cancelSaving
+    )
 }

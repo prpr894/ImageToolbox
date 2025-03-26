@@ -18,7 +18,6 @@
 package ru.tech.imageresizershrinker.feature.resize_convert.presentation
 
 import android.net.Uri
-import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -32,39 +31,30 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.t8rin.dynamic.theme.LocalDynamicThemeState
-import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import ru.tech.imageresizershrinker.core.data.utils.fileSize
+import ru.tech.imageresizershrinker.core.domain.image.model.Preset
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.ImageReset
-import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.Picker
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.Picker
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.rememberImagePicker
 import ru.tech.imageresizershrinker.core.ui.utils.helper.asClip
 import ru.tech.imageresizershrinker.core.ui.utils.helper.isPortraitOrientationAsState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.localImagePickerMode
-import ru.tech.imageresizershrinker.core.ui.utils.helper.parseSaveResults
-import ru.tech.imageresizershrinker.core.ui.utils.helper.rememberImagePicker
-import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
+import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalComponentActivity
+import ru.tech.imageresizershrinker.core.ui.utils.provider.rememberLocalEssentials
 import ru.tech.imageresizershrinker.core.ui.widget.AdaptiveLayoutScreen
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.BottomButtonsBlock
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.CompareButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ShareButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ShowOriginalButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ZoomButton
@@ -77,93 +67,56 @@ import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.PresetSele
 import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.QualitySelector
 import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.ScaleModeSelector
 import ru.tech.imageresizershrinker.core.ui.widget.dialogs.ExitWithoutSavingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.LoadingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.OneTimeImagePickingDialog
 import ru.tech.imageresizershrinker.core.ui.widget.dialogs.OneTimeSaveLocationSelectionDialog
 import ru.tech.imageresizershrinker.core.ui.widget.dialogs.ResetDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.image.AutoFilePicker
 import ru.tech.imageresizershrinker.core.ui.widget.image.ImageContainer
 import ru.tech.imageresizershrinker.core.ui.widget.image.ImageCounter
 import ru.tech.imageresizershrinker.core.ui.widget.image.ImageNotPickedWidget
-import ru.tech.imageresizershrinker.core.ui.widget.other.LoadingDialog
-import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.detectSwipes
 import ru.tech.imageresizershrinker.core.ui.widget.other.TopAppBarEmoji
-import ru.tech.imageresizershrinker.core.ui.widget.other.showError
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.EditExifSheet
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.PickImageFromUrisSheet
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.ProcessImagesPreferenceSheet
 import ru.tech.imageresizershrinker.core.ui.widget.sheets.ZoomModalSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.TopAppBarTitle
+import ru.tech.imageresizershrinker.core.ui.widget.utils.AutoContentBasedColors
 import ru.tech.imageresizershrinker.feature.compare.presentation.components.CompareSheet
-import ru.tech.imageresizershrinker.feature.resize_convert.presentation.viewModel.ResizeAndConvertViewModel
+import ru.tech.imageresizershrinker.feature.resize_convert.presentation.screenLogic.ResizeAndConvertComponent
 
 @Composable
 fun ResizeAndConvertContent(
-    uriState: List<Uri>?,
-    onGoBack: () -> Unit,
-    onNavigate: (Screen) -> Unit,
-    viewModel: ResizeAndConvertViewModel = hiltViewModel()
+    component: ResizeAndConvertComponent
 ) {
-    val context = LocalContext.current as ComponentActivity
-    val toastHostState = LocalToastHostState.current
-    val themeState = LocalDynamicThemeState.current
+    val context = LocalComponentActivity.current
 
-    val settingsState = LocalSettingsState.current
-    val allowChangeColor = settingsState.allowChangeColorByImage
+    val essentials = rememberLocalEssentials()
+    val showConfetti: () -> Unit = essentials::showConfetti
 
-    val scope = rememberCoroutineScope()
-    val confettiHostState = LocalConfettiHostState.current
-    val showConfetti: () -> Unit = {
-        scope.launch {
-            confettiHostState.showConfetti()
-        }
+    AutoContentBasedColors(component.bitmap)
+
+    val imagePicker = rememberImagePicker { uris: List<Uri> ->
+        component.updateUris(
+            uris = uris,
+            onFailure = essentials::showFailureToast
+        )
     }
 
-    LaunchedEffect(uriState) {
-        uriState?.takeIf { it.isNotEmpty() }?.let {
-            viewModel.updateUris(it) {
-                scope.launch {
-                    toastHostState.showError(context, it)
-                }
-            }
-        }
-    }
-    LaunchedEffect(viewModel.bitmap) {
-        viewModel.bitmap?.let {
-            if (allowChangeColor) {
-                themeState.updateColorByImage(it)
-            }
-        }
-    }
-
-    val pickImageLauncher =
-        rememberImagePicker(
-            mode = localImagePickerMode(Picker.Multiple)
-        ) { list ->
-            list.takeIf { it.isNotEmpty() }?.let {
-                viewModel.updateUris(list) {
-                    scope.launch {
-                        toastHostState.showError(context, it)
-                    }
-                }
-            }
-        }
-
-    val pickImage = pickImageLauncher::pickImage
+    val pickImage = imagePicker::pickImage
 
     AutoFilePicker(
         onAutoPick = pickImage,
-        isPickedAlready = !uriState.isNullOrEmpty()
+        isPickedAlready = !component.initialUris.isNullOrEmpty()
     )
 
     val saveBitmaps: (oneTimeSaveLocationUri: String?) -> Unit = {
-        viewModel.saveBitmaps(it) { results ->
-            context.parseSaveResults(
-                scope = scope,
-                results = results,
-                toastHostState = toastHostState,
-                isOverwritten = settingsState.overwriteFiles,
-                showConfetti = showConfetti
-            )
-        }
+        component.saveBitmaps(
+            oneTimeSaveLocationUri = it,
+            onComplete = essentials::parseSaveResults
+        )
     }
 
     var showResetDialog by rememberSaveable { mutableStateOf(false) }
@@ -178,15 +131,15 @@ fun ResizeAndConvertContent(
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
 
     val onBack = {
-        if (viewModel.haveChanges) showExitDialog = true
-        else onGoBack()
+        if (component.haveChanges) showExitDialog = true
+        else component.onGoBack()
     }
 
     var showZoomSheet by rememberSaveable { mutableStateOf(false) }
     var showCompareSheet by rememberSaveable { mutableStateOf(false) }
 
     CompareSheet(
-        data = viewModel.bitmap to viewModel.previewBitmap,
+        data = component.bitmap to component.previewBitmap,
         visible = showCompareSheet,
         onDismiss = {
             showCompareSheet = false
@@ -194,7 +147,7 @@ fun ResizeAndConvertContent(
     )
 
     ZoomModalSheet(
-        data = viewModel.previewBitmap,
+        data = component.previewBitmap,
         visible = showZoomSheet,
         onDismiss = {
             showZoomSheet = false
@@ -202,12 +155,14 @@ fun ResizeAndConvertContent(
     )
 
     AdaptiveLayoutScreen(
+        shouldDisableBackHandler = !component.haveChanges,
         title = {
             TopAppBarTitle(
                 title = stringResource(R.string.resize_and_convert),
-                input = viewModel.bitmap,
-                isLoading = viewModel.isImageLoading,
-                size = viewModel.imageInfo.sizeInBytes.toLong()
+                input = component.bitmap,
+                isLoading = component.isImageLoading,
+                size = component.imageInfo.sizeInBytes.toLong(),
+                originalSize = component.selectedUri?.fileSize(context)
             )
         },
         onGoBack = onBack,
@@ -216,18 +171,18 @@ fun ResizeAndConvertContent(
                 mutableStateOf(listOf<Uri>())
             }
             ShareButton(
-                enabled = viewModel.bitmap != null,
+                enabled = component.bitmap != null,
                 onShare = {
-                    viewModel.shareBitmaps(showConfetti)
+                    component.performSharing(showConfetti)
                 },
                 onCopy = { manager ->
-                    viewModel.cacheCurrentImage { uri ->
-                        manager.setClip(uri.asClip(context))
+                    component.cacheCurrentImage { uri ->
+                        manager.copyToClipboard(uri.asClip(context))
                         showConfetti()
                     }
                 },
                 onEdit = {
-                    viewModel.cacheImages {
+                    component.cacheImages {
                         editSheetData = it
                     }
                 }
@@ -236,24 +191,13 @@ fun ResizeAndConvertContent(
                 uris = editSheetData,
                 visible = editSheetData.isNotEmpty(),
                 onDismiss = {
-                    if (!it) {
-                        editSheetData = emptyList()
-                    }
+                    editSheetData = emptyList()
                 },
-                onNavigate = { screen ->
-                    scope.launch {
-                        editSheetData = emptyList()
-                        delay(200)
-                        onNavigate(screen)
-                    }
-                }
+                onNavigate = component.onNavigate
             )
 
             EnhancedIconButton(
-                containerColor = Color.Transparent,
-                contentColor = LocalContentColor.current,
-                enableAutoShadowAndBorder = false,
-                enabled = viewModel.bitmap != null,
+                enabled = component.bitmap != null,
                 onClick = { showResetDialog = true }
             ) {
                 Icon(
@@ -261,18 +205,15 @@ fun ResizeAndConvertContent(
                     contentDescription = stringResource(R.string.reset_image)
                 )
             }
-            if (viewModel.bitmap != null) {
+            if (component.bitmap != null) {
                 ShowOriginalButton(
-                    canShow = viewModel.canShow(),
+                    canShow = component.canShow(),
                     onStateChange = {
                         showOriginal = it
                     }
                 )
             } else {
                 EnhancedIconButton(
-                    containerColor = Color.Transparent,
-                    contentColor = LocalContentColor.current,
-                    enableAutoShadowAndBorder = false,
                     enabled = false,
                     onClick = {}
                 ) {
@@ -285,107 +226,117 @@ fun ResizeAndConvertContent(
         },
         imagePreview = {
             ImageContainer(
+                modifier = Modifier
+                    .detectSwipes(
+                        onSwipeRight = component::selectLeftUri,
+                        onSwipeLeft = component::selectRightUri
+                    ),
                 imageInside = isPortrait,
                 showOriginal = showOriginal,
-                previewBitmap = viewModel.previewBitmap,
-                originalBitmap = viewModel.bitmap,
-                isLoading = viewModel.isImageLoading,
-                shouldShowPreview = viewModel.shouldShowPreview
+                previewBitmap = component.previewBitmap,
+                originalBitmap = component.bitmap,
+                isLoading = component.isImageLoading,
+                shouldShowPreview = component.shouldShowPreview
             )
         },
         controls = {
-            val imageInfo = viewModel.imageInfo
+            val imageInfo = component.imageInfo
             ImageCounter(
-                imageCount = viewModel.uris?.size?.takeIf { it > 1 },
+                imageCount = component.uris?.size?.takeIf { it > 1 },
                 onRepick = {
                     showPickImageFromUrisSheet = true
                 }
             )
             AnimatedContent(
-                targetState = viewModel.uris?.size == 1
+                targetState = component.uris?.size == 1
             ) { oneUri ->
+                val preset = component.presetSelected
                 if (oneUri) {
                     ImageTransformBar(
                         onEditExif = { showEditExifDialog = true },
-                        onRotateLeft = viewModel::rotateLeft,
-                        onFlip = viewModel::flip,
-                        imageFormat = viewModel.imageInfo.imageFormat,
-                        onRotateRight = viewModel::rotateRight
+                        onRotateLeft = component::rotateLeft,
+                        onFlip = component::flip,
+                        imageFormat = component.imageInfo.imageFormat,
+                        onRotateRight = component::rotateRight,
+                        canRotate = !(preset is Preset.AspectRatio && preset.ratio != 1f)
                     )
                 } else {
                     LaunchedEffect(Unit) {
                         showEditExifDialog = false
-                        viewModel.updateExif(null)
+                        component.updateExif(null)
                     }
                     ImageTransformBar(
-                        onRotateLeft = viewModel::rotateLeft,
-                        onFlip = viewModel::flip,
-                        onRotateRight = viewModel::rotateRight
+                        onRotateLeft = component::rotateLeft,
+                        onFlip = component::flip,
+                        onRotateRight = component::rotateRight,
+                        canRotate = !(preset is Preset.AspectRatio && preset.ratio != 1f)
                     )
                 }
             }
             Spacer(Modifier.size(8.dp))
             PresetSelector(
-                value = viewModel.presetSelected,
+                value = component.presetSelected,
                 includeTelegramOption = true,
-                onValueChange = {
-                    viewModel.updatePreset(it)
-                }
+                includeAspectRatioOption = true,
+                onValueChange = component::updatePreset
             )
             Spacer(Modifier.size(8.dp))
             AnimatedVisibility(
-                visible = viewModel.uris?.size != 1,
+                visible = component.uris?.size != 1,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
                 Column {
                     SaveExifWidget(
-                        imageFormat = viewModel.imageInfo.imageFormat,
-                        checked = viewModel.keepExif,
-                        onCheckedChange = viewModel::setKeepExif
+                        imageFormat = component.imageInfo.imageFormat,
+                        checked = component.keepExif,
+                        onCheckedChange = component::setKeepExif
                     )
                     Spacer(Modifier.size(8.dp))
                 }
             }
             ResizeImageField(
                 imageInfo = imageInfo,
-                originalSize = viewModel.originalSize,
-                onHeightChange = viewModel::updateHeight,
-                onWidthChange = viewModel::updateWidth,
-                showWarning = viewModel.showWarning
+                originalSize = component.originalSize,
+                onHeightChange = component::updateHeight,
+                onWidthChange = component::updateWidth,
+                showWarning = component.showWarning
             )
             if (imageInfo.imageFormat.canChangeCompressionValue) {
                 Spacer(Modifier.height(8.dp))
             }
             QualitySelector(
                 imageFormat = imageInfo.imageFormat,
-                enabled = viewModel.bitmap != null,
+                enabled = component.bitmap != null,
                 quality = imageInfo.quality,
-                onQualityChange = viewModel::setQuality
+                onQualityChange = component::setQuality
             )
             Spacer(Modifier.height(8.dp))
             ImageFormatSelector(
                 value = imageInfo.imageFormat,
-                onValueChange = viewModel::setImageFormat
+                onValueChange = component::setImageFormat
             )
             Spacer(Modifier.height(8.dp))
             ResizeTypeSelector(
-                enabled = viewModel.bitmap != null,
+                enabled = component.bitmap != null,
                 value = imageInfo.resizeType,
-                onValueChange = viewModel::setResizeType
+                onValueChange = component::setResizeType
             )
             Spacer(Modifier.height(8.dp))
             ScaleModeSelector(
                 value = imageInfo.imageScaleMode,
-                onValueChange = viewModel::setImageScaleMode
+                onValueChange = component::setImageScaleMode
             )
         },
         buttons = { actions ->
             var showFolderSelectionDialog by rememberSaveable {
                 mutableStateOf(false)
             }
+            var showOneTimeImagePickingDialog by rememberSaveable {
+                mutableStateOf(false)
+            }
             BottomButtonsBlock(
-                targetState = (viewModel.uris.isNullOrEmpty()) to isPortrait,
+                targetState = (component.uris.isNullOrEmpty()) to isPortrait,
                 onSecondaryButtonClick = pickImage,
                 onPrimaryButtonClick = {
                     saveBitmaps(null)
@@ -395,32 +346,41 @@ fun ResizeAndConvertContent(
                 },
                 actions = {
                     if (isPortrait) actions()
+                },
+                onSecondaryButtonLongClick = {
+                    showOneTimeImagePickingDialog = true
                 }
             )
-            if (showFolderSelectionDialog) {
-                OneTimeSaveLocationSelectionDialog(
-                    onDismiss = { showFolderSelectionDialog = false },
-                    onSaveRequest = saveBitmaps
-                )
-            }
+            OneTimeSaveLocationSelectionDialog(
+                visible = showFolderSelectionDialog,
+                onDismiss = { showFolderSelectionDialog = false },
+                onSaveRequest = saveBitmaps,
+                formatForFilenameSelection = component.getFormatForFilenameSelection()
+            )
+            OneTimeImagePickingDialog(
+                onDismiss = { showOneTimeImagePickingDialog = false },
+                picker = Picker.Multiple,
+                imagePicker = imagePicker,
+                visible = showOneTimeImagePickingDialog
+            )
         },
         topAppBarPersistentActions = {
-            if (viewModel.bitmap == null) TopAppBarEmoji()
+            if (component.bitmap == null) TopAppBarEmoji()
             CompareButton(
                 onClick = { showCompareSheet = true },
-                visible = viewModel.previewBitmap != null
-                        && viewModel.bitmap != null
-                        && viewModel.shouldShowPreview
+                visible = component.previewBitmap != null
+                        && component.bitmap != null
+                        && component.shouldShowPreview
             )
             ZoomButton(
                 onClick = { showZoomSheet = true },
-                visible = viewModel.previewBitmap != null && viewModel.shouldShowPreview
+                visible = component.previewBitmap != null && component.shouldShowPreview
             )
         },
-        canShowScreenData = viewModel.bitmap != null,
+        canShowScreenData = component.bitmap != null,
         forceImagePreviewToMax = showOriginal,
         noDataControls = {
-            if (!viewModel.isImageLoading) {
+            if (!component.isImageLoading) {
                 ImageNotPickedWidget(onPickImage = pickImage)
             }
         },
@@ -430,33 +390,29 @@ fun ResizeAndConvertContent(
     ResetDialog(
         visible = showResetDialog,
         onDismiss = { showResetDialog = false },
-        onReset = viewModel::resetValues
+        onReset = component::resetValues
     )
 
+    val transformations by remember(component.imageInfo, component.presetSelected) {
+        derivedStateOf(component::getTransformations)
+    }
+
     PickImageFromUrisSheet(
-        transformations = listOf(
-            viewModel.imageInfoTransformationFactory(
-                imageInfo = viewModel.imageInfo,
-                preset = viewModel.presetSelected
-            )
-        ),
+        transformations = transformations,
         visible = showPickImageFromUrisSheet,
         onDismiss = {
             showPickImageFromUrisSheet = false
         },
-        uris = viewModel.uris,
-        selectedUri = viewModel.selectedUri,
+        uris = component.uris,
+        selectedUri = component.selectedUri,
         onUriPicked = { uri ->
-            try {
-                viewModel.setBitmap(uri = uri)
-            } catch (e: Exception) {
-                scope.launch {
-                    toastHostState.showError(context, e)
-                }
-            }
+            component.updateSelectedUri(
+                uri = uri,
+                onFailure = essentials::showFailureToast
+            )
         },
         onUriRemoved = { uri ->
-            viewModel.updateUrisSilently(removedUri = uri)
+            component.updateUrisSilently(removedUri = uri)
         },
         columns = if (isPortrait) 2 else 4,
     )
@@ -466,23 +422,23 @@ fun ResizeAndConvertContent(
         onDismiss = {
             showEditExifDialog = false
         },
-        exif = viewModel.exif,
-        onClearExif = viewModel::clearExif,
-        onUpdateTag = viewModel::updateExifByTag,
-        onRemoveTag = viewModel::removeExifTag
+        exif = component.exif,
+        onClearExif = component::clearExif,
+        onUpdateTag = component::updateExifByTag,
+        onRemoveTag = component::removeExifTag
     )
 
     ExitWithoutSavingDialog(
-        onExit = onGoBack,
+        onExit = component.onGoBack,
         onDismiss = { showExitDialog = false },
         visible = showExitDialog
     )
 
-    if (viewModel.isSaving) {
-        LoadingDialog(
-            done = viewModel.done,
-            left = viewModel.uris?.size ?: 1,
-            onCancelLoading = viewModel::cancelSaving
-        )
-    }
+    LoadingDialog(
+        visible = component.isSaving,
+        done = component.done,
+        left = component.uris?.size ?: 1,
+        onCancelLoading = component::cancelSaving
+    )
+
 }

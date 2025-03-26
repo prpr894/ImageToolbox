@@ -35,7 +35,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.tech.imageresizershrinker.core.ui.theme.blend
-import ru.tech.imageresizershrinker.core.ui.widget.controls.EnhancedSwitch
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedSwitch
 
 @Composable
 fun PreferenceRowSwitch(
@@ -44,7 +44,7 @@ fun PreferenceRowSwitch(
     enabled: Boolean = true,
     subtitle: String? = null,
     autoShadowElevation: Dp = 1.dp,
-    applyHorPadding: Boolean = true,
+    applyHorizontalPadding: Boolean = true,
     checked: Boolean,
     color: Color = Color.Unspecified,
     contentColor: Color? = null,
@@ -55,9 +55,11 @@ fun PreferenceRowSwitch(
         vertical = 8.dp
     ),
     drawStartIconContainer: Boolean = false,
-    changeAlphaWhenDisabled: Boolean = true,
     onDisabledClick: (() -> Unit)? = null,
-    onClick: (Boolean) -> Unit
+    onClick: (Boolean) -> Unit,
+    additionalContent: (@Composable () -> Unit)? = null,
+    changeAlphaWhenDisabled: Boolean = true,
+    drawContainer: Boolean = true,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     PreferenceRow(
@@ -65,7 +67,7 @@ fun PreferenceRowSwitch(
         enabled = enabled,
         modifier = modifier,
         resultModifier = resultModifier,
-        applyHorPadding = applyHorPadding,
+        applyHorizontalPadding = applyHorizontalPadding,
         title = title,
         contentColor = contentColor,
         shape = shape,
@@ -101,7 +103,9 @@ fun PreferenceRowSwitch(
                 interactionSource = interactionSource
             )
         },
-        interactionSource = interactionSource
+        interactionSource = interactionSource,
+        drawContainer = drawContainer,
+        additionalContent = additionalContent
     )
 }
 
@@ -119,7 +123,10 @@ fun PreferenceRowSwitch(
     contentColor: Color? = null,
     shape: Shape = RoundedCornerShape(16.dp),
     startIcon: ImageVector?,
-    onClick: (Boolean) -> Unit
+    onClick: (Boolean) -> Unit,
+    additionalContent: (@Composable () -> Unit)? = null,
+    drawContainer: Boolean = true,
+    resultModifier: Modifier = Modifier.padding(16.dp)
 ) {
     PreferenceRowSwitch(
         modifier = modifier,
@@ -142,8 +149,10 @@ fun PreferenceRowSwitch(
                 )
             }
         },
-        resultModifier = Modifier.padding(16.dp),
-        applyHorPadding = false,
-        onClick = onClick
+        resultModifier = resultModifier,
+        applyHorizontalPadding = false,
+        onClick = onClick,
+        additionalContent = additionalContent,
+        drawContainer = drawContainer
     )
 }

@@ -17,17 +17,25 @@
 
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
-import android.graphics.Bitmap
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.FilterParam
 import ru.tech.imageresizershrinker.core.resources.R
 
 class UiErodeFilter(
-    override val value: Float = 5f,
-) : UiFilter<Float>(
+    override val value: Pair<Float, Boolean> = 25f to true
+) : UiFilter<Pair<Float, Boolean>>(
     title = R.string.erode,
     value = value,
     paramsInfo = listOf(
-        FilterParam(null, 1f..15f, 0)
+        FilterParam(
+            title = R.string.just_size,
+            valueRange = 1f..150f,
+            roundTo = 0
+        ),
+        FilterParam(
+            title = R.string.use_circle_kernel,
+            valueRange = 0f..0f,
+            roundTo = 0
+        )
     )
-), Filter.Erode<Bitmap>
+), Filter.Erode

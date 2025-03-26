@@ -17,9 +17,10 @@
 
 package ru.tech.imageresizershrinker.core.domain.saving
 
-import ru.tech.imageresizershrinker.core.domain.saving.model.ImageSaveTarget
+import ru.tech.imageresizershrinker.core.domain.saving.io.Writeable
 import ru.tech.imageresizershrinker.core.domain.saving.model.SaveResult
 import ru.tech.imageresizershrinker.core.domain.saving.model.SaveTarget
+import kotlin.reflect.KClass
 
 interface FileController {
     val defaultSavingPath: String
@@ -27,21 +28,10 @@ interface FileController {
     suspend fun save(
         saveTarget: SaveTarget,
         keepOriginalMetadata: Boolean,
-        oneTimeSaveLocationUri: String? = null
+        oneTimeSaveLocationUri: String? = null,
     ): SaveResult
 
     fun getSize(uri: String): Long?
-
-    fun constructImageFilename(
-        saveTarget: ImageSaveTarget<*>,
-        forceNotAddSizeInFilename: Boolean = false
-    ): String
-
-    fun constructImageFilename(
-        saveTarget: ImageSaveTarget<*>,
-        extension: String,
-        forceNotAddSizeInFilename: Boolean = false
-    ): String
 
     fun clearCache(onComplete: (String) -> Unit = {})
 
@@ -51,6 +41,24 @@ interface FileController {
 
     suspend fun writeBytes(
         uri: String,
-        block: suspend (Writeable) -> Unit
+        block: suspend (Writeable) -> Unit,
     ): SaveResult
+
+    suspend fun <O : Any> saveObject(
+        key: String,
+        value: O,
+    ): Boolean
+
+    suspend fun <O : Any> restoreObject(
+        key: String,
+        kClass: KClass<O>,
+    ): O?
+
+    suspend fun <M> writeMetadata(
+        imageUri: String,
+        metadata: M?
+    )
+
+    suspend fun listFilesInDirectory(treeUri: String): List<String>
+
 }

@@ -20,7 +20,6 @@ package ru.tech.imageresizershrinker.feature.crop.presentation.components
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -64,10 +63,9 @@ import com.smarttoolfactory.cropper.widget.CropFrameDisplayCard
 import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
-import ru.tech.imageresizershrinker.core.ui.utils.helper.Picker
-import ru.tech.imageresizershrinker.core.ui.utils.helper.localImagePickerMode
-import ru.tech.imageresizershrinker.core.ui.utils.helper.rememberImagePicker
-import ru.tech.imageresizershrinker.core.ui.widget.controls.EnhancedSliderItem
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.rememberImagePicker
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedSliderItem
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.fadingEdges
 import kotlin.math.roundToInt
@@ -87,20 +85,16 @@ fun CropMaskSelection(
 
     val scope = rememberCoroutineScope()
 
-    val maskLauncher = rememberImagePicker(
-        mode = localImagePickerMode(Picker.Single)
-    ) { uris ->
-        uris.takeIf { it.isNotEmpty() }?.firstOrNull()?.let {
-            scope.launch {
-                loadImage(it)?.let {
-                    onCropMaskChange(
-                        outlineProperties.last().run {
-                            copy(
-                                cropOutline = (cropOutline as ImageMaskOutline).copy(image = it)
-                            )
-                        }
-                    )
-                }
+    val maskLauncher = rememberImagePicker { uri: Uri ->
+        scope.launch {
+            loadImage(uri)?.let {
+                onCropMaskChange(
+                    outlineProperties.last().run {
+                        copy(
+                            cropOutline = (cropOutline as ImageMaskOutline).copy(image = it)
+                        )
+                    }
+                )
             }
         }
     }
@@ -135,7 +129,10 @@ fun CropMaskSelection(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fadingEdges(listState)
         ) {
-            itemsIndexed(outlineProperties) { _, item ->
+            itemsIndexed(
+                items = outlineProperties,
+                key = { _, o -> o.cropOutline.id }
+            ) { _, item ->
                 val selected = selectedItem.cropOutline.id == item.cropOutline.id
                 CropFrameDisplayCard(
                     modifier = Modifier
@@ -153,7 +150,7 @@ fun CropMaskSelection(
                             )
                             else MaterialTheme.colorScheme.outlineVariant()
                         )
-                        .clickable {
+                        .hapticsClickable {
                             if (item.cropOutline is ImageMaskOutline) {
                                 maskLauncher.pickImage()
                             } else {

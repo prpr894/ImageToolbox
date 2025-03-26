@@ -20,6 +20,7 @@ package ru.tech.imageresizershrinker.feature.filters.data.model
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
+import ru.tech.imageresizershrinker.core.data.image.utils.ColorUtils.toModel
 import ru.tech.imageresizershrinker.core.domain.transformation.ChainTransformation
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
@@ -27,7 +28,7 @@ import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 internal class OldTvFilter(
     private val context: Context,
     override val value: Unit
-) : Filter.OldTv<Bitmap>, ChainTransformation<Bitmap> {
+) : ChainTransformation<Bitmap>, Filter.OldTv {
 
     override val cacheKey: String
         get() = (value).hashCode().toString()
@@ -35,7 +36,7 @@ internal class OldTvFilter(
     override fun getTransformations(): List<Transformation<Bitmap>> = listOf(
         GrainFilter(0.36f),
         HazeFilter(context, 0f to 0.3f),
-        MonochromeFilter(1f to Color(0xFF1C3A00))
+        MonochromeFilter(1f to Color(0xFF1C3A00).toModel())
     )
 
 }

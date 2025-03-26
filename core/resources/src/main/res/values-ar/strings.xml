@@ -147,7 +147,7 @@
     <string name="photo_picker_sub">قد يعمل منتقي الصور الحديث من Android الذي يظهر في الجزء السفلي من الشاشة فقط على adnroid 12+ ولديه أيضًا مشكلات في تلقي بيانات EXIF الوصفية</string>
     <string name="gallery_picker_sub">منتقي صور المعرض البسيط ، لن يعمل إلا إذا كان لديك هذا التطبيق</string>
     <string name="edit">تعديل</string>
-    <string name="order_sub">يحدد ترتيب الخيارات على الشاشة الرئيسية</string>
+    <string name="order_sub">يحدد ترتيب الأدوات على الشاشة الرئيسية</string>
     <string name="filename_not_work_with_photopicker">لا تعمل إضافة اسم الملف الأصلي إذا تم تحديد مصدر صورة منتقي الصور</string>
     <string name="brightness">سطوع</string>
     <string name="contrast">مقابلة</string>
@@ -223,7 +223,7 @@
     <string name="limits_resize">يحد من تغيير الحجم</string>
     <string name="limits_resize_sub">قم بتغيير حجم الصور المحددة لتتبع حدود العرض والارتفاع المحددة مع حفظ نسبة العرض إلى الارتفاع</string>
     <string name="quantizationLevels">مستويات التكميم</string>
-    <string name="snooth_toon">السلس تون</string>
+    <string name="smooth_toon">السلس تون</string>
     <string name="toon">تون</string>
     <string name="posterize">تتالي</string>
     <string name="content_scale">مقياس المحتوى</string>
@@ -254,7 +254,7 @@
     <string name="draw_on_background_sub">اختر لون الخلفية وارسم فوقه</string>
     <string name="background_color">لون الخلفية</string>
     <string name="cipher">الشفرة</string>
-    <string name="cipher_sub">تشفير وفك تشفير أي ملف (ليس فقط الصورة) بناءً على تشفير AES algorythm</string>
+    <string name="cipher_sub">تشفير وفك تشفير أي ملف (ليس فقط الصورة) بناءً على تشفير AES algorithm</string>
     <string name="pick_file">اختر الملف</string>
     <string name="encrypt">تشفير</string>
     <string name="decrypt">فك تشفير</string>
@@ -300,7 +300,7 @@
     <string name="contact_me">اتصل بي</string>
     <string name="backup_sub">قم بعمل نسخة احتياطية لإعدادات التطبيق الخاص بك إلى الملف</string>
     <string name="corrupted_file_or_not_a_backup">ملف تالف أو ليس نسخة احتياطية</string>
-    <string name="presets_sub" formatted="false">إذا قمت باختيار الاعداد المسبق 125 ، فسيتم حفظ الصورة بحجم 125% من الصورة الأصلية و بجودة 100%، وإذا اخترت الاعداد المسبق 50 ، فسيتم حفظ الصورة بحجم 50% وجودة 50% .</string>
+    <string name="presets_sub" formatted="false">إذا قمت باختيار الاعداد المسبق 125 ، فسيتم حفظ الصورة بحجم 125% من الصورة الأصلية ، وإذا اخترت الاعداد المسبق 50 ، فسيتم حفظ الصورة بحجم 50% .</string>
     <string name="font_scale">مقياس الخط</string>
     <string name="restore">استعادة</string>
     <string name="tg_chat_sub">ناقش حول التطبيق واحصل على تعليقات من المستخدمين الآخرين، ويمكنك هنا أيضًا الحصول على تحديثات تجريبية</string>
@@ -392,7 +392,7 @@
     <string name="disabled">عاجز</string>
     <string name="both">كلاهما</string>
     <string name="invert_colors_sub">يستبدل ألوان السمة بالألوان السلبية إذا تم تمكينها</string>
-    <string name="search_option_sub">تمكين القدرة على البحث من خلال جميع الخيارات المتاحة على الشاشة الرئيسية</string>
+    <string name="search_option_sub">تمكن القدرة على البحث خلال جميع الأدوات المتاحة على الشاشة الرئيسية</string>
     <string name="mask_preview_sub">سيتم عرض قناع الفلتر المرسوم ليظهر لك النتيجة التقريبية</string>
     <string name="inverse_fill_type_sub">إذا تم تمكينه، فسيتم تصفية كافة المناطق غير المقنعة بدلاً من السلوك الافتراضي</string>
     <string name="simple_variants">المتغيرات البسيطة</string>
@@ -443,8 +443,8 @@
     <string name="use_pixel_switch_sub">سيتم استخدام مفتاح يشبه البكسل بدلاً من مادة Google التي تعتمد عليها</string>
     <string name="saved_to_original">تمت الكتابة فوق الملف بالاسم %s في الوجهة الأصلية</string>
     <string name="magnifier_sub">لتمكين المكبر الموجود أعلى الإصبع في أوضاع الرسم لتسهيل الوصول إليه</string>
-    <string name="force_exif_widget_inital_value">قوة القيمة الأولية</string>
-    <string name="force_exif_widget_inital_value_sub">يفرض فحص عنصر واجهة المستخدم exif في البداية</string>
+    <string name="force_exif_widget_initial_value">قوة القيمة الأولية</string>
+    <string name="force_exif_widget_initial_value_sub">يفرض فحص عنصر واجهة المستخدم exif في البداية</string>
     <string name="allow_multiple_languages">السماح بعدة لغات</string>
     <string name="slide">الانزلاق</string>
     <string name="side_by_side">جنباألى جنب</string>
@@ -587,8 +587,8 @@
     <string name="full_filter_sub">قم بتطبيق أي سلاسل تصفية على صور معينة أو صورة واحدة</string>
     <string name="pdf_tools_sub">العمل مع ملفات PDF: معاينة، تحويل إلى مجموعة من الصور أو إنشاء واحدة من صور معينة</string>
     <string name="preview_pdf">معاينة PDF</string>
-    <string name="pdf_to_images">قوات الدفاع الشعبي إلى الصور</string>
-    <string name="images_to_pdf">الصور إلى PDF</string>
+    <string name="pdf_to_images">PDF إلى صور</string>
+    <string name="images_to_pdf">صور إلى PDF</string>
     <string name="preview_pdf_sub">معاينة PDF بسيطة</string>
     <string name="pdf_to_images_sub">تحويل PDF إلى صور بتنسيق الإخراج المحدد</string>
     <string name="images_to_pdf_sub">حزم الصور المعطاة في ملف PDF الناتج</string>
@@ -725,7 +725,7 @@
     <string name="erase_background">محو الخلفية</string>
     <string name="blur_radius">طمس نصف قطرها</string>
     <string name="create_issue">إنشاء مشكلة</string>
-    <string name="something_went_wrong_emphasis">عفوًا... حدث خطأ ما. يمكنك الكتابة لي باستخدام الخيارات أدناه وسأحاول إيجاد الحل</string>
+    <string name="something_went_wrong_emphasis">عفوًا… حدث خطأ ما. يمكنك الكتابة لي باستخدام الخيارات أدناه وسأحاول إيجاد الحل</string>
     <string name="resize_and_convert">تغيير الحجم والتحويل</string>
     <string name="resize_and_convert_sub">تغيير حجم الصور المعينة أو تحويلها إلى تنسيقات أخرى. يمكن أيضًا تحرير بيانات EXIF التعريفية هنا في حالة اختيار صورة واحدة.</string>
     <string name="max_colors_count">الحد الأقصى لعدد الألوان</string>
@@ -778,7 +778,7 @@
     <string name="attention">انتباه</string>
     <string name="fading_edges">حواف باهتة</string>
     <string name="invert_colors">عكس الألوان</string>
-    <string name="exit">مخرج</string>
+    <string name="exit">مغادرة</string>
     <string name="preview_closing">إذا تركت المعاينة الآن، فسوف تحتاج إلى إضافة الصور مرة أخرى</string>
     <string name="lasso">لاسو</string>
     <string name="lasso_sub">رسم مسارًا مغلقًا ومملوءًا بمسار معين</string>
@@ -898,4 +898,31 @@
     <string name="convert_sub">تحويل دفعات الصور إلى تنسيق معين</string>
     <string name="add_new_folder">إضافة مجلد جديد</string>
     <string name="tag_compression">الضغط</string>
+    <string name="tag_photometric_interpretation">التفسير الضوئي</string>
+    <string name="tag_samples_per_pixel">عينات لكل بكسل</string>
+    <string name="tag_planar_configuration">التكوين المستوي</string>
+    <string name="tag_y_cb_cr_sub_sampling">Y Cb Cr أخذ العينات الفرعية</string>
+    <string name="tag_y_cb_cr_positioning">Y Cb Cr لتحديد المواقع</string>
+    <string name="tag_x_resolution">القرار العاشر</string>
+    <string name="tag_y_resolution">القرار ص</string>
+    <string name="tag_bits_per_sample">بت لكل عينة</string>
+    <string name="tag_datetime">التاريخ والوقت</string>
+    <string name="tag_make">مصنّع</string>
+    <string name="tag_image_description">وصف الصورة</string>
+    <string name="tag_model">نموذج</string>
+    <string name="tag_software">برمجية</string>
+    <string name="tag_copyright">حقوق النشر</string>
+    <string name="tag_artist">فنان</string>
+    <string name="tag_flashpix_version">إصدار Flashpix</string>
+    <string name="tag_exif_version">إصدار Exif</string>
+    <string name="draw_text_sub">ارسم النص علي المسار بالخط المُعطى واللون</string>
+    <string name="tag_resolution_unit">وحدة الدقة</string>
+    <string name="tag_white_point">نقطة بيضاء</string>
+    <string name="tag_gamma">جاما</string>
+    <string name="tag_user_comment">تعليق المستخدم</string>
+    <string name="tag_related_sound_file">ملف الصوت المرتبط</string>
+    <string name="tag_datetime_original">الوقت والتاريخ الأصليين</string>
+    <string name="font_size">حجم الخط</string>
+    <string name="watermark_size">حجم العلامة المائية</string>
+    <string name="repeat_text">تكرار النص</string>
 </resources>

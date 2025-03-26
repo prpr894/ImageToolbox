@@ -27,17 +27,17 @@ sealed class Quality(
     ): Quality {
         return when (imageFormat) {
             is ImageFormat.Jxl -> {
-                val value = this as? Jxl ?: return Jxl(qualityValue.coerceIn(1..100))
+                val value = this as? Jxl ?: return Jxl()
                 value.copy(
                     qualityValue = qualityValue.coerceIn(1..100),
-                    effort = effort.coerceIn(0..9),
+                    effort = effort.coerceIn(1..10),
                     speed = speed.coerceIn(0..4)
                 )
             }
 
             is ImageFormat.Png.Lossy -> {
                 val value = this as? PngLossy
-                    ?: return PngLossy(compressionLevel = qualityValue.coerceIn(0..9))
+                    ?: return PngLossy()
                 value.copy(
                     maxColors = value.maxColors.coerceIn(2..1024),
                     compressionLevel = compressionLevel.coerceIn(0..9)
@@ -45,13 +45,24 @@ sealed class Quality(
             }
 
             is ImageFormat.Avif -> {
-                val value = this as? Heif
-                    ?: return Heif(qualityValue = qualityValue.coerceIn(1..100))
+                val value = this as? Avif
+                    ?: return Avif()
                 value.copy(
                     qualityValue = qualityValue.coerceIn(1..100),
                     effort = effort.coerceIn(0..9)
                 )
             }
+
+            is ImageFormat.Tif,
+            is ImageFormat.Tiff -> {
+                val value = this as? Tiff
+                    ?: return Tiff()
+                value.copy(
+                    compressionScheme = value.compressionScheme.coerceIn(0..9)
+                )
+            }
+
+            is ImageFormat.Jpeg2000 -> Base(qualityValue.coerceIn(20..100))
 
             else -> {
                 Base(qualityValue.coerceIn(0..100))
@@ -59,21 +70,29 @@ sealed class Quality(
         }
     }
 
+    fun isDefault(): Boolean = when (this) {
+        is Base -> this == Base()
+        is Avif -> this == Avif()
+        is Jxl -> this == Jxl()
+        is PngLossy -> this == PngLossy()
+        is Tiff -> this == Tiff()
+    }
+
     data class Jxl(
         @IntRange(from = 1, to = 100)
         override val qualityValue: Int = 50,
-        @IntRange(from = 0, to = 9)
-        val effort: Int = 5,
+        @IntRange(from = 1, to = 10)
+        val effort: Int = 2,
         @IntRange(from = 0, to = 4)
         val speed: Int = 0,
         val channels: Channels = Channels.RGBA
     ) : Quality(qualityValue)
 
-    data class Heif(
+    data class Avif(
         @IntRange(from = 1, to = 100)
         override val qualityValue: Int = 50,
         @IntRange(from = 0, to = 9)
-        val effort: Int = 6
+        val effort: Int = 0
     ) : Quality(qualityValue)
 
     data class PngLossy(
@@ -82,6 +101,10 @@ sealed class Quality(
         @IntRange(from = 0, to = 9)
         val compressionLevel: Int = 7,
     ) : Quality(compressionLevel)
+
+    data class Tiff(
+        val compressionScheme: Int = 0
+    ) : Quality(compressionScheme)
 
     data class Base(
         override val qualityValue: Int = 100

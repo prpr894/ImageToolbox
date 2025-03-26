@@ -41,7 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.ToggleGroupButton
-import ru.tech.imageresizershrinker.core.ui.widget.controls.EnhancedSliderItem
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedSliderItem
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.feature.image_stitch.domain.StitchMode
 import kotlin.math.roundToInt
@@ -60,14 +60,16 @@ fun StitchModeSelector(
             modifier = Modifier.padding(start = 3.dp, end = 2.dp),
             enabled = true,
             title = {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(stringResource(id = R.string.stitch_mode))
+                Column {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(stringResource(id = R.string.stitch_mode))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             },
             items = listOf(
                 stringResource(R.string.horizontal),
@@ -81,7 +83,7 @@ fun StitchModeSelector(
                 is StitchMode.Grid.Horizontal -> 2
                 is StitchMode.Grid.Vertical -> 3
             },
-            indexChanged = {
+            onIndexChange = {
                 onValueChange(
                     when (it) {
                         0 -> StitchMode.Horizontal
@@ -111,6 +113,7 @@ fun StitchModeSelector(
                     ),
                 icon = Icons.Rounded.TableRows,
                 valueRange = 2f..6f,
+                steps = 3,
                 internalStateTransformation = {
                     it.roundToInt()
                 },
@@ -142,6 +145,7 @@ fun StitchModeSelector(
                     ),
                 icon = Icons.Rounded.ViewColumn,
                 valueRange = 2f..6f,
+                steps = 3,
                 internalStateTransformation = {
                     it.roundToInt()
                 },

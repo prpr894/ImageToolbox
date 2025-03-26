@@ -23,12 +23,15 @@ sealed class SaveResult(
 
     data class Success(
         val message: String? = null,
-        override val savingPath: String
+        override val savingPath: String,
+        val isOverwritten: Boolean = false,
     ) : SaveResult(savingPath)
 
-    sealed class Error : SaveResult("") {
-        data object MissingPermissions : Error()
-        data class Exception(val throwable: Throwable) : Error()
+    sealed class Error(open val throwable: Throwable) : SaveResult("") {
+        data object MissingPermissions : Error(IllegalAccessException("MissingPermissions"))
+        data class Exception(
+            override val throwable: Throwable
+        ) : Error(throwable)
     }
 
     fun onSuccess(

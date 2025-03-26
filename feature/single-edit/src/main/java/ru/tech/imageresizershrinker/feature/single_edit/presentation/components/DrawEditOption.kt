@@ -25,7 +25,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -35,7 +37,6 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -45,7 +46,6 @@ import androidx.compose.material.icons.automirrored.rounded.Redo
 import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.material.icons.rounded.Done
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetValue
@@ -69,44 +69,54 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import ru.tech.imageresizershrinker.core.domain.model.coerceIn
+import ru.tech.imageresizershrinker.core.domain.model.pt
 import ru.tech.imageresizershrinker.core.domain.utils.notNullAnd
-import ru.tech.imageresizershrinker.core.filters.presentation.model.UiFilter
+import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.FilterTemplateCreationSheetComponent
+import ru.tech.imageresizershrinker.core.filters.presentation.widget.addFilters.AddFiltersSheetComponent
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSimpleSettingInteractor
+import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSimpleSettingsInteractor
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.EraseModeButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.PanModeButton
 import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.AlphaSelector
+import ru.tech.imageresizershrinker.core.ui.widget.controls.selection.HelperGridParamsSelector
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedTopAppBar
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedTopAppBarType
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.HelperGridParams
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.other.DrawLockScreenOrientation
-import ru.tech.imageresizershrinker.core.ui.widget.other.EnhancedTopAppBar
-import ru.tech.imageresizershrinker.core.ui.widget.other.EnhancedTopAppBarType
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwitch
-import ru.tech.imageresizershrinker.core.ui.widget.text.Marquee
+import ru.tech.imageresizershrinker.core.ui.widget.saver.ColorSaver
+import ru.tech.imageresizershrinker.core.ui.widget.saver.PtSaver
+import ru.tech.imageresizershrinker.core.ui.widget.text.marquee
+import ru.tech.imageresizershrinker.feature.draw.domain.DrawLineStyle
 import ru.tech.imageresizershrinker.feature.draw.domain.DrawMode
 import ru.tech.imageresizershrinker.feature.draw.domain.DrawPathMode
-import ru.tech.imageresizershrinker.feature.draw.domain.coerceIn
-import ru.tech.imageresizershrinker.feature.draw.domain.pt
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.BitmapDrawer
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.BrushSoftnessSelector
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.DrawColorSelector
-import ru.tech.imageresizershrinker.feature.draw.presentation.components.DrawModeSaver
+import ru.tech.imageresizershrinker.feature.draw.presentation.components.DrawLineStyleSelector
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.DrawModeSelector
-import ru.tech.imageresizershrinker.feature.draw.presentation.components.DrawPathModeSaver
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.DrawPathModeSelector
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.LineWidthSelector
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.OpenColorPickerCard
-import ru.tech.imageresizershrinker.feature.draw.presentation.components.PtSaver
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.UiPathPaint
 import ru.tech.imageresizershrinker.feature.pick_color.presentation.components.PickColorFromImageSheet
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DrawEditOption(
     visible: Boolean,
-    onRequestFiltering: suspend (Bitmap, List<UiFilter<*>>) -> Bitmap?,
+    onRequestFiltering: suspend (Bitmap, List<Filter<*>>) -> Bitmap?,
+    drawMode: DrawMode,
+    onUpdateDrawMode: (DrawMode) -> Unit,
+    drawPathMode: DrawPathMode,
+    onUpdateDrawPathMode: (DrawPathMode) -> Unit,
+    drawLineStyle: DrawLineStyle,
+    onUpdateDrawLineStyle: (DrawLineStyle) -> Unit,
     onDismiss: () -> Unit,
     useScaffold: Boolean,
     bitmap: Bitmap?,
@@ -117,6 +127,10 @@ fun DrawEditOption(
     lastPaths: List<UiPathPaint>,
     undonePaths: List<UiPathPaint>,
     addPath: (UiPathPaint) -> Unit,
+    helperGridParams: HelperGridParams,
+    onUpdateHelperGridParams: (HelperGridParams) -> Unit,
+    addFiltersSheetComponent: AddFiltersSheetComponent,
+    filterTemplateCreationSheetComponent: FilterTemplateCreationSheetComponent
 ) {
     bitmap?.let {
         var panEnabled by rememberSaveable { mutableStateOf(false) }
@@ -136,16 +150,13 @@ fun DrawEditOption(
 
         val settingsState = LocalSettingsState.current
         var strokeWidth by rememberSaveable(stateSaver = PtSaver) { mutableStateOf(settingsState.defaultDrawLineWidth.pt) }
-        var drawColor by rememberSaveable { mutableStateOf(Color.Black) }
-        var drawMode by rememberSaveable(stateSaver = DrawModeSaver) { mutableStateOf(DrawMode.Pen) }
+        var drawColor by rememberSaveable(stateSaver = ColorSaver) { mutableStateOf(settingsState.defaultDrawColor) }
+
         var alpha by rememberSaveable(drawMode) {
             mutableFloatStateOf(if (drawMode is DrawMode.Highlighter) 0.4f else 1f)
         }
         var brushSoftness by rememberSaveable(drawMode, stateSaver = PtSaver) {
             mutableStateOf(if (drawMode is DrawMode.Neon) 35.pt else 0.pt)
-        }
-        var drawPathMode by rememberSaveable(stateSaver = DrawPathModeSaver) {
-            mutableStateOf(DrawPathMode.Free)
         }
 
         LaunchedEffect(drawMode, strokeWidth) {
@@ -211,131 +222,170 @@ fun DrawEditOption(
             onDismiss = onDismiss,
             useScaffold = useScaffold,
             controls = { scaffoldState ->
-                val focus = LocalFocusManager.current
-                LaunchedEffect(scaffoldState?.bottomSheetState?.currentValue, focus) {
-                    val current = scaffoldState?.bottomSheetState?.currentValue
-                    if (current.notNullAnd { it != SheetValue.Expanded }) {
-                        focus.clearFocus()
+                Column(
+                    modifier = Modifier.padding(vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    val focus = LocalFocusManager.current
+                    LaunchedEffect(scaffoldState?.bottomSheetState?.currentValue, focus) {
+                        val current = scaffoldState?.bottomSheetState?.currentValue
+                        if (current.notNullAnd { it != SheetValue.Expanded }) {
+                            focus.clearFocus()
+                        }
                     }
-                }
 
-                if (!useScaffold) secondaryControls()
-                OpenColorPickerCard(
-                    onOpen = {
-                        showPickColorSheet = true
+                    if (!useScaffold) secondaryControls()
+                    AnimatedVisibility(
+                        visible = drawMode !is DrawMode.SpotHeal,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        OpenColorPickerCard(
+                            onOpen = {
+                                showPickColorSheet = true
+                            }
+                        )
                     }
-                )
-                AnimatedVisibility(
-                    visible = drawPathMode.isStroke,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
-                ) {
-                    LineWidthSelector(
-                        modifier = Modifier.padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = 16.dp
-                        ),
-                        title = if (drawMode is DrawMode.Text) {
-                            stringResource(R.string.font_size)
-                        } else stringResource(R.string.line_width),
-                        valueRange = if (drawMode is DrawMode.Image) {
-                            10f..120f
-                        } else 1f..100f,
-                        value = strokeWidth.value,
-                        onValueChange = { strokeWidth = it.pt }
+                    AnimatedVisibility(
+                        visible = drawMode !is DrawMode.PathEffect && drawMode !is DrawMode.Image && drawMode !is DrawMode.SpotHeal,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        DrawColorSelector(
+                            value = drawColor,
+                            onValueChange = { drawColor = it },
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                    AnimatedVisibility(
+                        visible = drawPathMode.isStroke,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        LineWidthSelector(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            title = if (drawMode is DrawMode.Text) {
+                                stringResource(R.string.font_size)
+                            } else stringResource(R.string.line_width),
+                            valueRange = if (drawMode is DrawMode.Image) {
+                                10f..120f
+                            } else 1f..100f,
+                            value = strokeWidth.value,
+                            onValueChange = { strokeWidth = it.pt }
+                        )
+                    }
+                    AnimatedVisibility(
+                        visible = drawMode !is DrawMode.Highlighter && drawMode !is DrawMode.PathEffect && drawMode !is DrawMode.SpotHeal,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        BrushSoftnessSelector(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            value = brushSoftness.value,
+                            onValueChange = { brushSoftness = it.pt }
+                        )
+                    }
+                    AnimatedVisibility(
+                        visible = drawMode !is DrawMode.Neon && drawMode !is DrawMode.PathEffect && drawMode !is DrawMode.SpotHeal,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        AlphaSelector(
+                            value = alpha,
+                            onValueChange = { alpha = it },
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                    DrawModeSelector(
+                        addFiltersSheetComponent = addFiltersSheetComponent,
+                        filterTemplateCreationSheetComponent = filterTemplateCreationSheetComponent,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        value = drawMode,
+                        strokeWidth = strokeWidth,
+                        onValueChange = onUpdateDrawMode,
+                        values = remember(drawLineStyle) {
+                            derivedStateOf {
+                                if (drawLineStyle == DrawLineStyle.None) {
+                                    DrawMode.entries
+                                } else {
+                                    listOf(
+                                        DrawMode.Pen,
+                                        DrawMode.Highlighter,
+                                        DrawMode.Neon
+                                    )
+                                }
+                            }
+                        }.value
                     )
-                }
-                AnimatedVisibility(
-                    visible = drawMode !is DrawMode.Highlighter && drawMode !is DrawMode.PathEffect,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
-                ) {
-                    BrushSoftnessSelector(
-                        modifier = Modifier
-                            .padding(top = 16.dp, end = 16.dp, start = 16.dp),
-                        value = brushSoftness.value,
-                        onValueChange = { brushSoftness = it.pt }
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                AnimatedVisibility(
-                    visible = drawMode !is DrawMode.PathEffect && drawMode !is DrawMode.Image,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
-                ) {
-                    DrawColorSelector(
-                        drawColor = drawColor,
-                        onColorChange = { drawColor = it }
-                    )
-                }
-                AnimatedVisibility(
-                    visible = drawMode !is DrawMode.Neon && drawMode !is DrawMode.PathEffect,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
-                ) {
-                    AlphaSelector(
-                        value = alpha,
-                        onValueChange = { alpha = it }
-                    )
-                }
-                DrawModeSelector(
-                    modifier = Modifier.padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 16.dp
-                    ),
-                    value = drawMode,
-                    strokeWidth = strokeWidth,
-                    onValueChange = { drawMode = it }
-                )
-                DrawPathModeSelector(
-                    modifier = Modifier.padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 16.dp
-                    ),
-                    value = drawPathMode,
-                    onValueChange = { drawPathMode = it },
-                    values = remember(drawMode) {
-                        derivedStateOf {
-                            if (drawMode !is DrawMode.Text && drawMode !is DrawMode.Image) {
-                                DrawPathMode.entries
-                            } else {
-                                listOf(
-                                    DrawPathMode.Free,
-                                    DrawPathMode.Line,
-                                    DrawPathMode.OutlinedRect,
+                    DrawPathModeSelector(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        value = drawPathMode,
+                        onValueChange = onUpdateDrawPathMode,
+                        values = remember(drawMode, drawLineStyle) {
+                            derivedStateOf {
+                                val outlinedModes = listOf(
+                                    DrawPathMode.OutlinedRect(),
                                     DrawPathMode.OutlinedOval,
                                     DrawPathMode.OutlinedTriangle,
                                     DrawPathMode.OutlinedPolygon(),
                                     DrawPathMode.OutlinedStar()
                                 )
+                                if (drawMode !is DrawMode.Text && drawMode !is DrawMode.Image) {
+                                    when (drawLineStyle) {
+                                        DrawLineStyle.None -> DrawPathMode.entries
+
+                                        !is DrawLineStyle.Stamped<*> -> listOf(
+                                            DrawPathMode.Free,
+                                            DrawPathMode.Line,
+                                            DrawPathMode.LinePointingArrow(),
+                                            DrawPathMode.PointingArrow(),
+                                            DrawPathMode.DoublePointingArrow(),
+                                            DrawPathMode.DoubleLinePointingArrow(),
+                                        ) + outlinedModes
+
+                                        else -> listOf(
+                                            DrawPathMode.Free,
+                                            DrawPathMode.Line
+                                        ) + outlinedModes
+                                    }
+                                } else {
+                                    listOf(
+                                        DrawPathMode.Free,
+                                        DrawPathMode.Line
+                                    ) + outlinedModes
+                                }
                             }
-                        }
-                    }.value
-                )
-                val settingsInteractor = LocalSimpleSettingInteractor.current
-                val scope = rememberCoroutineScope()
-                PreferenceRowSwitch(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp
-                        ),
-                    shape = RoundedCornerShape(24.dp),
-                    title = stringResource(R.string.magnifier),
-                    subtitle = stringResource(R.string.magnifier_sub),
-                    checked = settingsState.magnifierEnabled,
-                    onClick = {
-                        scope.launch {
-                            settingsInteractor.toggleMagnifierEnabled()
-                        }
-                    },
-                    startIcon = Icons.Outlined.ZoomIn
-                )
+                        }.value
+                    )
+                    DrawLineStyleSelector(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        value = drawLineStyle,
+                        onValueChange = onUpdateDrawLineStyle
+                    )
+                    HelperGridParamsSelector(
+                        value = helperGridParams,
+                        onValueChange = onUpdateHelperGridParams,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    val settingsInteractor = LocalSimpleSettingsInteractor.current
+                    val scope = rememberCoroutineScope()
+                    PreferenceRowSwitch(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        title = stringResource(R.string.magnifier),
+                        subtitle = stringResource(R.string.magnifier_sub),
+                        checked = settingsState.magnifierEnabled,
+                        onClick = {
+                            scope.launch {
+                                settingsInteractor.toggleMagnifierEnabled()
+                            }
+                        },
+                        startIcon = Icons.Outlined.ZoomIn
+                    )
+                }
             },
             fabButtons = null,
             actions = {
@@ -369,11 +419,10 @@ fun DrawEditOption(
                         }
                     },
                     title = {
-                        Marquee {
-                            Text(
-                                text = stringResource(R.string.draw),
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.draw),
+                            modifier = Modifier.marquee()
+                        )
                     }
                 )
             }
@@ -411,12 +460,14 @@ fun DrawEditOption(
                             stateBitmap = it
                         },
                         drawPathMode = drawPathMode,
-                        backgroundColor = Color.Transparent
+                        backgroundColor = Color.Transparent,
+                        drawLineStyle = drawLineStyle,
+                        helperGridParams = helperGridParams
                     )
                 }
             }
         }
-        var color by rememberSaveable {
+        var color by rememberSaveable(stateSaver = ColorSaver) {
             mutableStateOf(Color.Black)
         }
         PickColorFromImageSheet(

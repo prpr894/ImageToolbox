@@ -17,9 +17,6 @@
 
 package ru.tech.imageresizershrinker.feature.main.presentation.components
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -36,7 +33,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
@@ -46,8 +42,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -58,10 +54,11 @@ import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.Github
 import ru.tech.imageresizershrinker.core.resources.icons.GooglePlay
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
+import ru.tech.imageresizershrinker.core.ui.utils.helper.AppVersion
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils.isInstalledFromPlayStore
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedFloatingActionButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedFloatingActionButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.drawHorizontalStroke
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.pulsate
 import ru.tech.imageresizershrinker.core.ui.widget.text.RoundedTextField
@@ -93,7 +90,7 @@ internal fun SearchableBottomBar(
                     onClick = onTryGetUpdate
                 ) {
                     Text(
-                        stringResource(R.string.version) + " ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+                        stringResource(R.string.version) + " $AppVersion (${BuildConfig.VERSION_CODE})"
                     )
                 }
             } else {
@@ -126,9 +123,6 @@ internal fun SearchableBottomBar(
                         },
                         startIcon = {
                             EnhancedIconButton(
-                                containerColor = Color.Transparent,
-                                contentColor = LocalContentColor.current,
-                                enableAutoShadowAndBorder = false,
                                 onClick = {
                                     onUpdateSearch("")
                                     onCloseSearch()
@@ -149,9 +143,6 @@ internal fun SearchableBottomBar(
                                 exit = fadeOut() + scaleOut()
                             ) {
                                 EnhancedIconButton(
-                                    containerColor = Color.Transparent,
-                                    contentColor = LocalContentColor.current,
-                                    enableAutoShadowAndBorder = false,
                                     onClick = {
                                         onUpdateSearch("")
                                     },
@@ -172,36 +163,21 @@ internal fun SearchableBottomBar(
         },
         floatingActionButton = {
             val context = LocalContext.current
+            val linkHandler = LocalUriHandler.current
             if (!searching) {
                 EnhancedFloatingActionButton(
                     onClick = {
                         if (context.isInstalledFromPlayStore()) {
-                            try {
-                                context.startActivity(
-                                    Intent(
-                                        Intent.ACTION_VIEW,
-                                        Uri.parse("market://details?id=${context.packageName}")
-                                    )
-                                )
-                            } catch (e: ActivityNotFoundException) {
-                                context.startActivity(
-                                    Intent(
-                                        Intent.ACTION_VIEW,
-                                        Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
-                                    )
-                                )
+                            runCatching {
+                                linkHandler.openUri("market://details?id=${context.packageName}")
+                            }.onFailure {
+                                linkHandler.openUri("https://play.google.com/store/apps/details?id=${context.packageName}")
                             }
                         } else {
-                            context.startActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse(APP_LINK)
-                                )
-                            )
+                            linkHandler.openUri(APP_LINK)
                         }
                     },
-                    modifier = Modifier
-                        .requiredSize(size = 56.dp),
+                    modifier = Modifier.requiredSize(size = 56.dp),
                     content = {
                         if (context.isInstalledFromPlayStore()) {
                             Icon(

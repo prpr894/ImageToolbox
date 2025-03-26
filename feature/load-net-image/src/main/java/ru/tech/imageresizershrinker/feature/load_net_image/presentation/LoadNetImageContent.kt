@@ -17,358 +17,76 @@
 
 package ru.tech.imageresizershrinker.feature.load_net_image.presentation
 
-import androidx.activity.ComponentActivity
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Cancel
-import androidx.compose.material.icons.rounded.BrokenImage
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImagePainter
-import com.t8rin.dynamic.theme.LocalDynamicThemeState
-import com.t8rin.dynamic.theme.rememberAppColorTuple
-import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import ru.tech.imageresizershrinker.core.domain.image.model.ImageInfo
 import ru.tech.imageresizershrinker.core.resources.R
-import ru.tech.imageresizershrinker.core.resources.icons.ImageEdit
-import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.toBitmap
-import ru.tech.imageresizershrinker.core.ui.utils.helper.asClip
-import ru.tech.imageresizershrinker.core.ui.utils.helper.isLandscapeOrientationAsState
-import ru.tech.imageresizershrinker.core.ui.utils.helper.parseSaveResult
-import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
+import ru.tech.imageresizershrinker.core.ui.utils.helper.isPortraitOrientationAsState
 import ru.tech.imageresizershrinker.core.ui.widget.AdaptiveLayoutScreen
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.BottomButtonsBlock
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.ShareButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.ToggleGroupButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.ZoomButton
-import ru.tech.imageresizershrinker.core.ui.widget.dialogs.OneTimeSaveLocationSelectionDialog
-import ru.tech.imageresizershrinker.core.ui.widget.image.Picture
-import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
-import ru.tech.imageresizershrinker.core.ui.widget.other.LoadingDialog
-import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
-import ru.tech.imageresizershrinker.core.ui.widget.other.TopAppBarEmoji
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.ProcessImagesPreferenceSheet
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.ZoomModalSheet
-import ru.tech.imageresizershrinker.core.ui.widget.text.RoundedTextField
-import ru.tech.imageresizershrinker.feature.load_net_image.presentation.viewModel.LoadNetImageViewModel
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.LoadingDialog
+import ru.tech.imageresizershrinker.core.ui.widget.text.TopAppBarTitle
+import ru.tech.imageresizershrinker.core.ui.widget.utils.AutoContentBasedColors
+import ru.tech.imageresizershrinker.feature.load_net_image.presentation.components.LoadNetImageActionButtons
+import ru.tech.imageresizershrinker.feature.load_net_image.presentation.components.LoadNetImageAdaptiveActions
+import ru.tech.imageresizershrinker.feature.load_net_image.presentation.components.LoadNetImageTopAppBarActions
+import ru.tech.imageresizershrinker.feature.load_net_image.presentation.components.LoadNetImageUrlTextField
+import ru.tech.imageresizershrinker.feature.load_net_image.presentation.components.ParsedImagePreview
+import ru.tech.imageresizershrinker.feature.load_net_image.presentation.components.ParsedImagesSelection
+import ru.tech.imageresizershrinker.feature.load_net_image.presentation.screenLogic.LoadNetImageComponent
 
 @Composable
 fun LoadNetImageContent(
-    url: String,
-    onGoBack: () -> Unit,
-    onNavigate: (Screen) -> Unit,
-    viewModel: LoadNetImageViewModel = hiltViewModel()
+    component: LoadNetImageComponent
 ) {
-    val context = LocalContext.current as ComponentActivity
-    val themeState = LocalDynamicThemeState.current
-    val settingsState = LocalSettingsState.current
-    val allowChangeColor = settingsState.allowChangeColorByImage
-    val toastHostState = LocalToastHostState.current
+    AutoContentBasedColors(component.bitmap)
 
-    val confettiHostState = LocalConfettiHostState.current
-
-    val scope = rememberCoroutineScope()
-
-    val appColorTuple = rememberAppColorTuple(
-        defaultColorTuple = settingsState.appColorTuple,
-        dynamicColor = settingsState.isDynamicColors,
-        darkTheme = settingsState.isNightMode
-    )
-
-    LaunchedEffect(viewModel.bitmap) {
-        viewModel.bitmap?.let { image ->
-            if (allowChangeColor) {
-                themeState.updateColorByImage(image)
-            }
-        } ?: themeState.updateColorTuple(appColorTuple)
-    }
-
-    var scaleType by rememberSaveable(
-        saver = Saver(
-            save = {
-                if (it == ContentScale.FillWidth) 0 else 1
-            },
-            restore = {
-                mutableStateOf(
-                    if (it == 0) {
-                        ContentScale.FillWidth
-                    } else {
-                        ContentScale.Fit
-                    }
-                )
-            }
-        )
-    ) { mutableStateOf(ContentScale.FillWidth) }
-
-    val isLandscape by isLandscapeOrientationAsState()
-
-    var link by rememberSaveable(url) { mutableStateOf(url) }
-
-    var showZoomSheet by rememberSaveable { mutableStateOf(false) }
-
-    ZoomModalSheet(
-        data = viewModel.bitmap,
-        visible = showZoomSheet,
-        onDismiss = {
-            showZoomSheet = false
-        }
-    )
-
-    var wantToEdit by rememberSaveable { mutableStateOf(false) }
-
-    val saveBitmap: (oneTimeSaveLocationUri: String?) -> Unit = {
-        viewModel.saveBitmap(link, it) { saveResult ->
-            context.parseSaveResult(
-                saveResult = saveResult,
-                onSuccess = {
-                    confettiHostState.showConfetti()
-                },
-                toastHostState = toastHostState,
-                scope = scope
-            )
-        }
-    }
-
-    var imageState: AsyncImagePainter.State by remember {
-        mutableStateOf(
-            AsyncImagePainter.State.Empty
-        )
-    }
-
-    val showConfetti: () -> Unit = {
-        scope.launch {
-            confettiHostState.showConfetti()
-        }
-    }
+    val isPortrait by isPortraitOrientationAsState()
 
     AdaptiveLayoutScreen(
+        shouldDisableBackHandler = true,
         title = {
-            Text(
-                text = stringResource(R.string.load_image_from_net),
-                textAlign = TextAlign.Center
+            TopAppBarTitle(
+                title = stringResource(R.string.load_image_from_net),
+                input = component.bitmap,
+                isLoading = component.isImageLoading,
+                size = null
             )
         },
-        onGoBack = onGoBack,
+        onGoBack = component.onGoBack,
         actions = {
-            ShareButton(
-                enabled = viewModel.bitmap != null,
-                onShare = {
-                    viewModel.shareBitmap(showConfetti)
-                },
-                onCopy = { manager ->
-                    viewModel.cacheCurrentImage { uri ->
-                        manager.setClip(uri.asClip(context))
-                        showConfetti()
-                    }
-                }
-            )
+            LoadNetImageAdaptiveActions(component)
         },
         topAppBarPersistentActions = {
-            if (viewModel.bitmap == null) {
-                TopAppBarEmoji()
-            } else {
-                ZoomButton(
-                    onClick = { showZoomSheet = true },
-                    visible = viewModel.bitmap != null,
-                )
-            }
+            LoadNetImageTopAppBarActions(component)
         },
         imagePreview = {
-            AnimatedContent(
-                targetState = scaleType,
-                modifier = Modifier.fillMaxSize()
-            ) { scale ->
-                Picture(
-                    allowHardware = false,
-                    model = link,
-                    modifier = Modifier
-                        .then(if (scale == ContentScale.FillWidth) Modifier.fillMaxWidth() else Modifier)
-                        .padding(bottom = 16.dp)
-                        .then(
-                            if (viewModel.bitmap == null) Modifier.height(140.dp)
-                            else Modifier
-                        )
-                        .container()
-                        .padding(4.dp),
-                    contentScale = scale,
-                    shape = MaterialTheme.shapes.small,
-                    error = {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.surfaceContainer),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.BrokenImage,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .padding(vertical = 8.dp, horizontal = 16.dp)
-                                    .size(64.dp)
-                            )
-                            Text(stringResource(id = R.string.no_image))
-                            Spacer(Modifier.height(8.dp))
-                        }
-                    },
-                    onState = {
-                        if (it is AsyncImagePainter.State.Error) {
-                            viewModel.updateBitmap(null)
-                        } else if (it is AsyncImagePainter.State.Success) {
-                            viewModel.updateBitmap(it.result.drawable.toBitmap())
-                        }
-                        imageState = it
-                    },
-                )
-            }
+            ParsedImagePreview(component)
         },
         controls = {
-            ToggleGroupButton(
-                modifier = Modifier
-                    .container(shape = RoundedCornerShape(24.dp)),
-                title = stringResource(id = R.string.content_scale),
-                enabled = viewModel.bitmap != null,
-                items = listOf(
-                    stringResource(R.string.fill),
-                    stringResource(R.string.fit)
-                ),
-                selectedIndex = (scaleType == ContentScale.Fit).toInt(),
-                indexChanged = {
-                    scaleType = if (it == 0) {
-                        ContentScale.FillWidth
-                    } else {
-                        ContentScale.Fit
-                    }
-                }
-            )
-            Spacer(Modifier.height(8.dp))
-            RoundedTextField(
-                modifier = Modifier
-                    .container(shape = RoundedCornerShape(24.dp))
-                    .padding(8.dp),
-                value = link,
-                onValueChange = {
-                    link = it
-                },
-                singleLine = false,
-                label = {
-                    Text(stringResource(id = R.string.image_link))
-                },
-                endIcon = {
-                    AnimatedVisibility(link.isNotBlank()) {
-                        EnhancedIconButton(
-                            containerColor = Color.Transparent,
-                            contentColor = LocalContentColor.current,
-                            enableAutoShadowAndBorder = false,
-                            onClick = { link = "" },
-                            modifier = Modifier.padding(end = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Cancel,
-                                contentDescription = stringResource(R.string.cancel)
-                            )
-                        }
-                    }
-                }
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                LoadNetImageUrlTextField(component)
+                ParsedImagesSelection(component)
+            }
         },
         buttons = { actions ->
-            var showFolderSelectionDialog by rememberSaveable {
-                mutableStateOf(false)
-            }
-            BottomButtonsBlock(
-                targetState = (false) to !isLandscape,
-                onSecondaryButtonClick = {
-                    viewModel.bitmap?.let { bitmap ->
-                        viewModel.cacheImage(
-                            image = bitmap,
-                            imageInfo = ImageInfo(
-                                width = bitmap.width,
-                                height = bitmap.height,
-                            )
-                        )
-                        wantToEdit = true
-                    }
-                },
-                isPrimaryButtonVisible = imageState is AsyncImagePainter.State.Success,
-                isSecondaryButtonVisible = imageState is AsyncImagePainter.State.Success,
-                secondaryButtonIcon = Icons.Outlined.ImageEdit,
-                onPrimaryButtonClick = {
-                    saveBitmap(null)
-                },
-                onPrimaryButtonLongClick = {
-                    showFolderSelectionDialog = true
-                },
-                actions = {
-                    if (!isLandscape) actions()
-                }
+            LoadNetImageActionButtons(
+                component = component,
+                actions = actions
             )
-            if (showFolderSelectionDialog) {
-                OneTimeSaveLocationSelectionDialog(
-                    onDismiss = { showFolderSelectionDialog = false },
-                    onSaveRequest = saveBitmap
-                )
-            }
         },
         canShowScreenData = true,
-        isPortrait = !isLandscape
+        isPortrait = isPortrait
     )
 
-    if (viewModel.isSaving) {
-        LoadingDialog(
-            onCancelLoading = viewModel::cancelSaving
-        )
-    }
-
-    ProcessImagesPreferenceSheet(
-        uris = listOfNotNull(viewModel.tempUri),
-        visible = wantToEdit,
-        onDismiss = {
-            wantToEdit = it
-        },
-        onNavigate = { screen ->
-            scope.launch {
-                wantToEdit = false
-                delay(200)
-                onNavigate(screen)
-            }
-        }
+    LoadingDialog(
+        visible = component.isSaving,
+        done = component.done,
+        left = component.left,
+        onCancelLoading = component::cancelSaving
     )
 }
-
-private fun Boolean.toInt() = if (this) 1 else 0

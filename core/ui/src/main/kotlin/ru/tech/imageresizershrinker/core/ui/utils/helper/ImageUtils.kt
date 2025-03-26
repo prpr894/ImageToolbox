@@ -22,6 +22,7 @@ import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.provider.OpenableColumns
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
@@ -32,7 +33,6 @@ import androidx.core.graphics.BitmapCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.text.isDigitsOnly
 import androidx.exifinterface.media.ExifInterface
-import com.t8rin.logger.makeLog
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageInfo
 import ru.tech.imageresizershrinker.core.domain.image.model.MetadataTag
 import ru.tech.imageresizershrinker.core.resources.R
@@ -220,10 +220,10 @@ object ImageUtils {
         }
 
     private val possibleConfigs = mutableListOf<Bitmap.Config>().apply {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(Bitmap.Config.RGBA_1010102)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (SDK_INT >= Build.VERSION_CODES.O) {
             add(Bitmap.Config.RGBA_F16)
         }
         add(Bitmap.Config.ARGB_8888)
@@ -257,7 +257,6 @@ object ImageUtils {
     }
 
     fun String.restrict(with: Int): String {
-        with.makeLog()
         if (isEmpty()) return this
 
         return if ((this.toIntOrNull() ?: 0) >= with) with.toString()
@@ -314,5 +313,12 @@ object ImageUtils {
         get() = aspectRatio
             .coerceAtLeast(0.005f)
             .coerceAtMost(1000f)
+
+    val Bitmap.Config.isHardware: Boolean
+        get() = SDK_INT >= 26 && this == Bitmap.Config.HARDWARE
+
+    fun Bitmap.Config?.toSoftware(): Bitmap.Config {
+        return if (this == null || isHardware) Bitmap.Config.ARGB_8888 else this
+    }
 
 }

@@ -17,15 +17,14 @@
 
 package ru.tech.imageresizershrinker.feature.draw.presentation.components
 
-import androidx.compose.runtime.saveable.Saver
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
+import ru.tech.imageresizershrinker.core.domain.model.Pt
+import ru.tech.imageresizershrinker.feature.draw.domain.DrawLineStyle
 import ru.tech.imageresizershrinker.feature.draw.domain.DrawMode
 import ru.tech.imageresizershrinker.feature.draw.domain.DrawPathMode
 import ru.tech.imageresizershrinker.feature.draw.domain.PathPaint
-import ru.tech.imageresizershrinker.feature.draw.domain.Pt
-import ru.tech.imageresizershrinker.feature.draw.domain.pt
 
 data class UiPathPaint(
     override val path: Path,
@@ -35,7 +34,8 @@ data class UiPathPaint(
     override val isErasing: Boolean,
     override val drawMode: DrawMode = DrawMode.Pen,
     override val canvasSize: IntegerSize,
-    override val drawPathMode: DrawPathMode = DrawPathMode.Free
+    override val drawPathMode: DrawPathMode = DrawPathMode.Free,
+    override val drawLineStyle: DrawLineStyle = DrawLineStyle.None
 ) : PathPaint<Path, Color>
 
 
@@ -47,14 +47,6 @@ fun PathPaint<Path, Color>.toUiPathPaint() = UiPathPaint(
     isErasing = isErasing,
     drawMode = drawMode,
     canvasSize = canvasSize,
-    drawPathMode = drawPathMode
-)
-
-val PtSaver: Saver<Pt, Float> = Saver(
-    save = {
-        it.value
-    },
-    restore = {
-        it.pt
-    }
+    drawPathMode = drawPathMode,
+    drawLineStyle = drawLineStyle
 )

@@ -18,11 +18,11 @@
 package ru.tech.imageresizershrinker.feature.settings.presentation.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Block
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,34 +40,34 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
-import ru.tech.imageresizershrinker.core.resources.emoji.Emoji
 import ru.tech.imageresizershrinker.core.resources.icons.Cool
 import ru.tech.imageresizershrinker.core.resources.icons.Robot
+import ru.tech.imageresizershrinker.core.resources.shapes.CloverShape
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.shapes.CloverShape
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedAlertDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
-import ru.tech.imageresizershrinker.core.ui.widget.modifier.alertDialogBorder
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.scaleOnTap
 import ru.tech.imageresizershrinker.core.ui.widget.other.EmojiItem
 import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRow
-import ru.tech.imageresizershrinker.feature.settings.presentation.components.additional.EmojiSheet
+import ru.tech.imageresizershrinker.core.ui.widget.sheets.EmojiSelectionSheet
 
 @Composable
 fun EmojiSettingItem(
     selectedEmojiIndex: Int,
-    addColorTupleFromEmoji: (getEmoji: (Int?) -> String, showShoeDescription: (String) -> Unit) -> Unit,
-    updateEmoji: (Int) -> Unit,
-    modifier: Modifier = Modifier.padding(start = 8.dp, end = 8.dp),
+    onAddColorTupleFromEmoji: (String) -> Unit,
+    onUpdateEmoji: (Int) -> Unit,
+    modifier: Modifier = Modifier.padding(horizontal = 8.dp),
     shape: Shape = ContainerShapeDefaults.topShape
 ) {
     val settingsState = LocalSettingsState.current
     val toastHost = LocalToastHostState.current
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    var showSecretDescriptionDialog by rememberSaveable { mutableStateOf("") }
     var showShoeDescriptionDialog by rememberSaveable { mutableStateOf("") }
     var showEmojiDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -106,7 +106,6 @@ fun EmojiSettingItem(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                val emojis = Emoji.allIcons()
                 EmojiItem(
                     emoji = emoji?.toString(),
                     modifier = Modifier.then(
@@ -114,15 +113,12 @@ fun EmojiSettingItem(
                             Modifier.scaleOnTap(
                                 onRelease = { time ->
                                     if (time > 500) {
-                                        addColorTupleFromEmoji(
-                                            { index ->
-                                                index?.let {
-                                                    emojis[it].toString()
-                                                } ?: ""
-                                            }, {
-                                                showShoeDescriptionDialog = it
-                                            }
-                                        )
+                                        onAddColorTupleFromEmoji(emoji.toString())
+                                        if (emoji.toString().contains("frog", true)) {
+                                            showSecretDescriptionDialog = emoji.toString()
+                                        } else if (emoji.toString().contains("shoe", true)) {
+                                            showShoeDescriptionDialog = emoji.toString()
+                                        }
                                     }
                                 }
                             )
@@ -141,44 +137,68 @@ fun EmojiSettingItem(
             }
         }
     )
-    EmojiSheet(
+    EmojiSelectionSheet(
         selectedEmojiIndex = selectedEmojiIndex,
-        emojiWithCategories = Emoji.allIconsCategorized(),
-        allEmojis = Emoji.allIcons(),
-        onEmojiPicked = updateEmoji,
+        onEmojiPicked = onUpdateEmoji,
         visible = showEmojiDialog,
         onDismiss = {
             showEmojiDialog = false
         }
     )
 
-    if (showShoeDescriptionDialog.isNotEmpty()) {
-        AlertDialog(
-            icon = {
-                EmojiItem(
-                    emoji = showShoeDescriptionDialog,
-                    fontScale = 1f,
-                    fontSize = MaterialTheme.typography.headlineLarge.fontSize,
-                )
-            },
-            title = {
-                Text(text = "Shoe")
-            },
-            text = {
-                Text(text = "15.07.1981 - Shoe, (ShoeUnited since 1998)")
-            },
-            confirmButton = {
-                EnhancedButton(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    onClick = { showShoeDescriptionDialog = "" }
-                ) {
-                    Text(stringResource(R.string.close))
-                }
-            },
-            onDismissRequest = {
-                showShoeDescriptionDialog = ""
-            },
-            modifier = Modifier.alertDialogBorder()
-        )
-    }
+    EnhancedAlertDialog(
+        visible = showShoeDescriptionDialog.isNotEmpty(),
+        icon = {
+            EmojiItem(
+                emoji = showShoeDescriptionDialog,
+                fontScale = 1f,
+                fontSize = MaterialTheme.typography.headlineLarge.fontSize,
+            )
+        },
+        title = {
+            Text(text = "Shoe")
+        },
+        text = {
+            Text(text = "15.07.1981 - Shoe, (ShoeUnited since 1998)")
+        },
+        confirmButton = {
+            EnhancedButton(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                onClick = { showShoeDescriptionDialog = "" }
+            ) {
+                Text(stringResource(R.string.close))
+            }
+        },
+        onDismissRequest = {
+            showShoeDescriptionDialog = ""
+        }
+    )
+
+    EnhancedAlertDialog(
+        visible = showSecretDescriptionDialog.isNotEmpty(),
+        icon = {
+            EmojiItem(
+                emoji = showSecretDescriptionDialog,
+                fontScale = 1f,
+                fontSize = MaterialTheme.typography.headlineLarge.fontSize,
+            )
+        },
+        text = {
+            Text(
+                text = "\uD83D\uDC49 \uD83D\uDC46, \uD83D\uDC47 \uD83D\uDE4B \uD83D\uDC70 ❗ \uD83D\uDC64 \uD83D\uDC96 \uD83D\uDCF6 \uD83C\uDF05",
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            EnhancedButton(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                onClick = { showSecretDescriptionDialog = "" }
+            ) {
+                Text(stringResource(R.string.close))
+            }
+        },
+        onDismissRequest = {
+            showSecretDescriptionDialog = ""
+        }
+    )
 }

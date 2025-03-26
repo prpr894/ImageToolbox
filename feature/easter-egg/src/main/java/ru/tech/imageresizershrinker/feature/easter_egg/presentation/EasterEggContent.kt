@@ -19,10 +19,8 @@
 
 package ru.tech.imageresizershrinker.feature.easter_egg.presentation
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -72,20 +70,24 @@ import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.BuildConfig
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.emoji.Emoji
-import ru.tech.imageresizershrinker.core.ui.shapes.MaterialStarShape
+import ru.tech.imageresizershrinker.core.resources.shapes.MaterialStarShape
 import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
+import ru.tech.imageresizershrinker.core.ui.utils.helper.AppVersion
 import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedTopAppBar
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedTopAppBarType
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
 import ru.tech.imageresizershrinker.core.ui.widget.other.EmojiItem
-import ru.tech.imageresizershrinker.core.ui.widget.other.EnhancedTopAppBar
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
-import ru.tech.imageresizershrinker.core.ui.widget.text.Marquee
+import ru.tech.imageresizershrinker.core.ui.widget.text.marquee
+import ru.tech.imageresizershrinker.feature.easter_egg.presentation.screenLogic.EasterEggComponent
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
 @Composable
 fun EasterEggContent(
-    onGoBack: () -> Unit
+    component: EasterEggComponent
 ) {
     val confettiHostState = LocalConfettiHostState.current
     val themeState = LocalDynamicThemeState.current
@@ -113,40 +115,41 @@ fun EasterEggContent(
         }
     }
 
-    val painter = painterResource(R.drawable.ic_launcher_monochrome)
+    val painter = painterResource(R.drawable.ic_launcher_foreground)
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         EnhancedTopAppBar(
             title = {
-                Marquee {
-                    Row {
-                        emojiData.forEach { emoji ->
-                            EmojiItem(
-                                emoji = emoji,
-                                fontScale = 1f
-                            )
-                        }
+                Row(modifier = Modifier.marquee()) {
+                    emojiData.forEach { emoji ->
+                        EmojiItem(
+                            emoji = emoji,
+                            fontScale = 1f
+                        )
                     }
                 }
             },
             navigationIcon = {
                 EnhancedIconButton(
-                    onClick = onGoBack
+                    onClick = component.onGoBack
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                         contentDescription = stringResource(R.string.exit)
                     )
                 }
-            }
+            },
+            type = EnhancedTopAppBarType.Center
         )
 
         BoxWithConstraints(
             modifier = Modifier.weight(1f)
         ) {
-            val width = constraints.maxWidth
+            val width = this.constraints.maxWidth
             val height = constraints.maxHeight
             val ballSize = (min(maxWidth, maxHeight) * 0.3f).coerceAtMost(180.dp)
             val ballSizePx = with(LocalDensity.current) { ballSize.toPx().roundToInt() }
@@ -226,7 +229,7 @@ fun EasterEggContent(
                     modifier = Modifier
                         .clip(MaterialStarShape)
                         .background(MaterialTheme.colorScheme.tertiaryContainer)
-                        .clickable {
+                        .hapticsClickable {
                             speed = if (speed == 0.2f) {
                                 Random.nextFloat()
                             } else 0.2f
@@ -262,7 +265,7 @@ fun EasterEggContent(
                             maxLines = 1
                         )
                         AutoSizeText(
-                            text = "${BuildConfig.VERSION_NAME}${if (BuildConfig.FLAVOR == "foss") "-foss" else ""}\n(${BuildConfig.VERSION_CODE})",
+                            text = "$AppVersion\n(${BuildConfig.VERSION_CODE})",
                             style = LocalTextStyle.current.copy(
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Normal,
@@ -277,6 +280,4 @@ fun EasterEggContent(
             }
         }
     }
-
-    BackHandler(onBack = onGoBack)
 }

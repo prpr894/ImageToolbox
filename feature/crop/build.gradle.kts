@@ -23,3 +23,7 @@ plugins {
 }
 
 android.namespace = "ru.tech.imageresizershrinker.feature.crop"
+
+dependencies {
+    implementation(libs.toolbox.opencvTools)
+}

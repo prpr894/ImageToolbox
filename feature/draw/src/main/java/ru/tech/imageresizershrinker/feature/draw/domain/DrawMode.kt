@@ -17,6 +17,10 @@
 
 package ru.tech.imageresizershrinker.feature.draw.domain
 
+import ru.tech.imageresizershrinker.core.domain.model.Pt
+import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
+import ru.tech.imageresizershrinker.core.settings.domain.model.FontType
+
 sealed class DrawMode(open val ordinal: Int) {
     data object Neon : DrawMode(2)
     data object Highlighter : DrawMode(3)
@@ -30,35 +34,39 @@ sealed class DrawMode(open val ordinal: Int) {
         data class Pixelation(
             val pixelSize: Float = 35f
         ) : PathEffect(4)
+
+        data class Custom(
+            val filter: Filter<*>? = null
+        ) : PathEffect(5)
     }
 
     data class Text(
         val text: String = "Text",
-        val font: Int = 0,
+        val font: FontType? = null,
         val isRepeated: Boolean = false,
         val repeatingInterval: Pt = Pt.Zero
-    ) : DrawMode(5)
+    ) : DrawMode(6)
 
     data class Image(
         val imageData: Any = "file:///android_asset/svg/emotions/aasparkles.svg",
         val repeatingInterval: Pt = Pt.Zero
-    ) : DrawMode(6)
+    ) : DrawMode(7)
+
+    data object SpotHeal : DrawMode(8)
 
     companion object {
         val entries by lazy {
             listOf(
                 Pen,
+                PathEffect.PrivacyBlur(),
+                SpotHeal,
                 Text(),
+                Image(),
                 Neon,
                 Highlighter,
-                PathEffect.PrivacyBlur(),
                 PathEffect.Pixelation(),
-                Image()
+                PathEffect.Custom()
             )
         }
-
-        operator fun invoke(ordinal: Int) = entries.find {
-            it.ordinal == ordinal
-        } ?: Pen
     }
 }

@@ -78,16 +78,16 @@ import ru.tech.imageresizershrinker.core.resources.icons.MiniEdit
 import ru.tech.imageresizershrinker.core.resources.icons.PaletteSwatch
 import ru.tech.imageresizershrinker.core.resources.icons.Swatch
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.shapes.IconShapeContainer
-import ru.tech.imageresizershrinker.core.ui.shapes.SmallMaterialStarShape
 import ru.tech.imageresizershrinker.core.ui.theme.toColor
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils.copyToClipboard
 import ru.tech.imageresizershrinker.core.ui.utils.helper.toHex
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedChip
 import ru.tech.imageresizershrinker.core.ui.widget.color_picker.ColorInfo
 import ru.tech.imageresizershrinker.core.ui.widget.color_picker.ColorSelection
-import ru.tech.imageresizershrinker.core.ui.widget.controls.EnhancedSliderItem
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedChip
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedSliderItem
+import ru.tech.imageresizershrinker.core.ui.widget.icon_shape.IconShapeContainer
 import ru.tech.imageresizershrinker.core.ui.widget.image.Picture
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
@@ -95,14 +95,14 @@ import ru.tech.imageresizershrinker.core.ui.widget.modifier.fadingEdges
 import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
 import ru.tech.imageresizershrinker.core.ui.widget.palette_selection.getTitle
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwitch
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
+import ru.tech.imageresizershrinker.core.ui.widget.saver.ColorSaver
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 
 @Composable
 internal fun GeneratePaletteScreenControls(
     bitmap: Bitmap,
-    useMaterialYouPalette: Boolean?
+    useMaterialYouPalette: Boolean?,
 ) {
     val context = LocalContext.current
     val toastHostState = LocalToastHostState.current
@@ -129,7 +129,7 @@ internal fun GeneratePaletteScreenControls(
                 var contrast by rememberSaveable {
                     mutableFloatStateOf(0f)
                 }
-                var keyColor by rememberSaveable(bitmap) {
+                var keyColor by rememberSaveable(bitmap, stateSaver = ColorSaver) {
                     mutableStateOf(bitmap.extractPrimaryColor())
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -154,7 +154,7 @@ internal fun GeneratePaletteScreenControls(
                         modifier = Modifier
                             .size(56.dp)
                             .container(
-                                shape = SmallMaterialStarShape,
+                                shape = RoundedCornerShape(8.dp),
                                 resultPadding = 0.dp
                             )
                     )
@@ -260,7 +260,7 @@ internal fun GeneratePaletteScreenControls(
                     }
                 }
 
-                SimpleSheet(
+                EnhancedModalBottomSheet(
                     sheetContent = {
                         Box {
                             Column(
@@ -360,10 +360,7 @@ internal fun GeneratePaletteScreenControls(
                     },
                     maximumColorCount = count,
                     onColorChange = {
-                        context.copyToClipboard(
-                            context.getString(R.string.color),
-                            it.color.toHex()
-                        )
+                        context.copyToClipboard(it.color.toHex())
                         scope.launch {
                             toastHostState.showToast(
                                 icon = Icons.Rounded.ContentPaste,

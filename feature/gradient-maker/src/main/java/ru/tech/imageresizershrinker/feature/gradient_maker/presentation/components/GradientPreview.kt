@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.BrokenImage
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -41,11 +40,12 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.zIndex
 import com.smarttoolfactory.colordetector.util.ColorUtil.roundToTwoDigits
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
+import ru.tech.imageresizershrinker.core.resources.icons.BrokenImageAlt
 import ru.tech.imageresizershrinker.core.ui.widget.image.Picture
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.transparencyChecker
 
 @Composable
-fun GradientPreview(
+internal fun GradientPreview(
     brush: ShaderBrush?,
     gradientAlpha: Float,
     allowPickingImage: Boolean?,
@@ -98,7 +98,7 @@ fun GradientPreview(
             ) {
                 AnimatedVisibility(visible = brush == null) {
                     Icon(
-                        imageVector = Icons.Outlined.BrokenImage,
+                        imageVector = Icons.Rounded.BrokenImageAlt,
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(0.5f)
                     )

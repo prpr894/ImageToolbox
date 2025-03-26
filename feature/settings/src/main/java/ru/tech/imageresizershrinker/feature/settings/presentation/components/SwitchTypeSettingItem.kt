@@ -29,7 +29,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ToggleOff
 import androidx.compose.material.icons.outlined.ToggleOn
 import androidx.compose.material.icons.rounded.Android
-import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.RadioButtonChecked
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
 import androidx.compose.material3.MaterialTheme
@@ -49,22 +48,23 @@ import androidx.compose.ui.unit.dp
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.Cube
 import ru.tech.imageresizershrinker.core.resources.icons.IOS
+import ru.tech.imageresizershrinker.core.resources.icons.MaterialDesign
 import ru.tech.imageresizershrinker.core.resources.icons.MiniEdit
 import ru.tech.imageresizershrinker.core.resources.icons.Windows
 import ru.tech.imageresizershrinker.core.settings.domain.model.SwitchType
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.theme.takeColorFromScheme
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.utils.provider.SafeLocalContainerColor
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItem
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheetDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 
 @Composable
 fun SwitchTypeSettingItem(
     onValueChange: (SwitchType) -> Unit,
-    shape: Shape = ContainerShapeDefaults.centerShape,
+    shape: Shape = ContainerShapeDefaults.topShape,
     modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
     val settingsState = LocalSettingsState.current
@@ -85,7 +85,7 @@ fun SwitchTypeSettingItem(
         endIcon = Icons.Rounded.MiniEdit
     )
 
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         visible = showSheet,
         onDismiss = { showSheet = it },
         title = {
@@ -122,8 +122,8 @@ fun SwitchTypeSettingItem(
                     title = type.title,
                     subtitle = type.subtitle,
                     color = takeColorFromScheme {
-                        if (selected) secondaryContainer.copy(0.7f)
-                        else SimpleSheetDefaults.contentContainerColor
+                        if (selected) secondaryContainer
+                        else SafeLocalContainerColor
                     },
                     shape = ContainerShapeDefaults.shapeForIndex(index, entries.size),
                     startIcon = type.icon,
@@ -137,7 +137,7 @@ fun SwitchTypeSettingItem(
                                     .copy(alpha = 0.5f)
                                 else Color.Transparent
                             ).value,
-                            shape = shape
+                            shape = ContainerShapeDefaults.shapeForIndex(index, entries.size)
                         ),
                     endIcon = if (selected) {
                         Icons.Rounded.RadioButtonChecked
@@ -171,7 +171,7 @@ private val SwitchType.subtitle: String
 
 private val SwitchType.icon: ImageVector
     get() = when (this) {
-        SwitchType.MaterialYou -> Icons.Rounded.AutoAwesome
+        SwitchType.MaterialYou -> Icons.Outlined.MaterialDesign
         SwitchType.Compose -> Icons.Rounded.Cube
         SwitchType.Pixel -> Icons.Rounded.Android
         SwitchType.Fluent -> Icons.Rounded.Windows

@@ -52,8 +52,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asAndroidPath
-import androidx.compose.ui.graphics.asComposePaint
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -68,28 +66,28 @@ import net.engawapg.lib.zoomable.ZoomableDefaults.defaultZoomOnDoubleTap
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
-import ru.tech.imageresizershrinker.core.filters.presentation.model.UiFilter
-import ru.tech.imageresizershrinker.core.filters.presentation.model.UiPixelationFilter
-import ru.tech.imageresizershrinker.core.filters.presentation.model.UiStackBlurFilter
+import ru.tech.imageresizershrinker.core.domain.model.Pt
+import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.createScaledBitmap
-import ru.tech.imageresizershrinker.core.ui.utils.helper.scaleToFitCanvas
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.HelperGridParams
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.drawHelperGrid
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.observePointersCountWithOffset
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.smartDelayAfterDownInMillis
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.transparencyChecker
+import ru.tech.imageresizershrinker.feature.draw.domain.DrawLineStyle
 import ru.tech.imageresizershrinker.feature.draw.domain.DrawMode
 import ru.tech.imageresizershrinker.feature.draw.domain.DrawPathMode
-import ru.tech.imageresizershrinker.feature.draw.domain.Pt
-import ru.tech.imageresizershrinker.feature.draw.presentation.components.utils.clipBitmap
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.utils.copy
+import ru.tech.imageresizershrinker.feature.draw.presentation.components.utils.copyAsAndroidPath
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.utils.drawRepeatedImageOnPath
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.utils.drawRepeatedTextOnPath
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.utils.overlay
-import ru.tech.imageresizershrinker.feature.draw.presentation.components.utils.pathEffectPaint
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.utils.rememberPaint
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.utils.rememberPathEffectPaint
 import ru.tech.imageresizershrinker.feature.draw.presentation.components.utils.rememberPathHelper
+import ru.tech.imageresizershrinker.feature.draw.presentation.components.utils.transformationsForMode
 import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Path as NativePath
 
@@ -97,7 +95,7 @@ import android.graphics.Path as NativePath
 @Composable
 fun BitmapDrawer(
     imageBitmap: ImageBitmap,
-    onRequestFiltering: suspend (Bitmap, List<UiFilter<*>>) -> Bitmap?,
+    onRequestFiltering: suspend (Bitmap, List<Filter<*>>) -> Bitmap?,
     paths: List<UiPathPaint>,
     brushSoftness: Pt,
     zoomState: ZoomState = rememberZoomState(maxScale = 30f),
@@ -113,6 +111,8 @@ fun BitmapDrawer(
     backgroundColor: Color,
     panEnabled: Boolean,
     drawColor: Color,
+    drawLineStyle: DrawLineStyle = DrawLineStyle.None,
+    helperGridParams: HelperGridParams = remember { HelperGridParams() },
 ) {
     val scope = rememberCoroutineScope()
 
@@ -243,39 +243,6 @@ fun BitmapDrawer(
                 }
             }
 
-            fun transformationsForMode(
-                drawMode: DrawMode,
-            ): List<UiFilter<*>> = when (drawMode) {
-                is DrawMode.PathEffect.PrivacyBlur -> {
-                    listOf(
-                        UiStackBlurFilter(
-                            value = when {
-                                drawMode.blurRadius < 10 -> 0.8f
-                                drawMode.blurRadius < 20 -> 0.5f
-                                else -> 0.3f
-                            } to drawMode.blurRadius
-                        )
-                    )
-                }
-
-                is DrawMode.PathEffect.Pixelation -> {
-                    listOf(
-                        UiStackBlurFilter(
-                            value = when {
-                                drawMode.pixelSize < 10 -> 0.8f
-                                drawMode.pixelSize < 20 -> 0.5f
-                                else -> 0.3f
-                            } to 20
-                        ),
-                        UiPixelationFilter(
-                            value = drawMode.pixelSize
-                        )
-                    )
-                }
-
-                else -> emptyList()
-            }
-
             val drawPaint by rememberPaint(
                 strokeWidth = strokeWidth,
                 isEraserOn = isEraserOn,
@@ -283,7 +250,8 @@ fun BitmapDrawer(
                 brushSoftness = brushSoftness,
                 drawMode = drawMode,
                 canvasSize = canvasSize,
-                drawPathMode = drawPathMode
+                drawPathMode = drawPathMode,
+                drawLineStyle = drawLineStyle
             )
 
             var drawPath by remember(
@@ -304,7 +272,7 @@ fun BitmapDrawer(
                 drawPathMode
             ) { mutableStateOf(Path()) }
 
-            canvas.apply {
+            with(canvas) {
                 val drawHelper by rememberPathHelper(
                     drawDownPosition = drawDownPosition,
                     currentDrawPosition = currentDrawPosition,
@@ -428,7 +396,8 @@ fun BitmapDrawer(
                                     isErasing = isEraserOn,
                                     drawMode = drawMode,
                                     canvasSize = canvasSize,
-                                    drawPathMode = drawPathMode
+                                    drawPathMode = drawPathMode,
+                                    drawLineStyle = drawLineStyle
                                 )
                             )
                         }
@@ -438,7 +407,7 @@ fun BitmapDrawer(
                         motionEvent = MotionEvent.Idle
 
                         scope.launch {
-                            if (drawMode is DrawMode.PathEffect && !isEraserOn) Unit
+                            if ((drawMode is DrawMode.PathEffect || drawMode is DrawMode.SpotHeal) && !isEraserOn) Unit
                             else drawPath = Path()
 
                             pathWithoutTransformations = Path()
@@ -453,83 +422,19 @@ fun BitmapDrawer(
                     drawColor(Color.Transparent.toArgb(), PorterDuff.Mode.CLEAR)
                     drawColor(backgroundColor.toArgb())
 
-                    paths.forEach { (nonScaledPath, strokeWidth, brushSoftness, drawColor, isEraserOn, drawMode, size, drawPathMode) ->
-                        val path by remember(nonScaledPath, canvasSize, size) {
-                            derivedStateOf {
-                                nonScaledPath.scaleToFitCanvas(
-                                    currentSize = canvasSize,
-                                    oldSize = size
-                                ).asAndroidPath()
-                            }
-                        }
-
-                        if (drawMode is DrawMode.PathEffect && !isEraserOn) {
-                            var shaderSource by remember(backgroundColor) {
-                                mutableStateOf<ImageBitmap?>(null)
-                            }
-                            LaunchedEffect(shaderSource, invalidations) {
-                                if (shaderSource == null || invalidations <= paths.size) {
-                                    shaderSource = onRequestFiltering(
-                                        drawImageBitmap.overlay(drawBitmap)
-                                            .asAndroidBitmap(),
-                                        transformationsForMode(drawMode)
-                                    )?.asImageBitmap()?.clipBitmap(
-                                        path = path.asComposePath(),
-                                        paint = pathEffectPaint(
-                                            strokeWidth = strokeWidth,
-                                            drawPathMode = drawPathMode,
-                                            canvasSize = canvasSize
-                                        ).asComposePaint()
-                                    )?.also {
-                                        it.prepareToDraw()
-                                        invalidations++
-                                    }
-                                }
-                            }
-                            if (shaderSource != null) {
-                                LaunchedEffect(shaderSource) {
-                                    drawPath = Path()
-                                }
-                                val imagePaint = remember { Paint() }
-                                drawImage(
-                                    image = shaderSource!!,
-                                    topLeftOffset = Offset.Zero,
-                                    paint = imagePaint
-                                )
-                            }
-                        } else {
-                            val pathPaint by rememberPaint(
-                                strokeWidth = strokeWidth,
-                                isEraserOn = isEraserOn,
-                                drawColor = drawColor,
-                                brushSoftness = brushSoftness,
-                                drawMode = drawMode,
-                                canvasSize = canvasSize,
-                                drawPathMode = drawPathMode
-                            )
-                            if (drawMode is DrawMode.Text && !isEraserOn) {
-                                if (drawMode.isRepeated) {
-                                    drawRepeatedTextOnPath(
-                                        text = drawMode.text,
-                                        path = path,
-                                        paint = pathPaint,
-                                        interval = drawMode.repeatingInterval.toPx(canvasSize)
-                                    )
-                                } else {
-                                    drawTextOnPath(drawMode.text, path, 0f, 0f, pathPaint)
-                                }
-                            } else if (drawMode is DrawMode.Image && !isEraserOn) {
-                                drawRepeatedImageOnPath(
-                                    drawMode = drawMode,
-                                    strokeWidth = strokeWidth,
-                                    canvasSize = canvasSize,
-                                    path = path,
-                                    paint = pathPaint
-                                )
-                            } else {
-                                drawPath(path, pathPaint)
-                            }
-                        }
+                    paths.forEach { uiPathPaint ->
+                        UiPathPaintCanvasAction(
+                            uiPathPaint = uiPathPaint,
+                            invalidations = invalidations,
+                            onInvalidate = { invalidations++ },
+                            pathsCount = paths.size,
+                            backgroundColor = backgroundColor,
+                            drawImageBitmap = drawImageBitmap,
+                            drawBitmap = drawBitmap,
+                            onClearDrawPath = { drawPath = Path() },
+                            onRequestFiltering = onRequestFiltering,
+                            canvasSize = canvasSize
+                        )
                     }
 
                     if (drawMode !is DrawMode.PathEffect || isEraserOn) {
@@ -555,7 +460,13 @@ fun BitmapDrawer(
                                 strokeWidth = strokeWidth,
                                 canvasSize = canvasSize,
                                 path = androidPath,
-                                paint = drawPaint
+                                paint = drawPaint,
+                                invalidations = invalidations
+                            )
+                        } else if (drawMode is DrawMode.SpotHeal && !isEraserOn) {
+                            drawPath(
+                                androidPath,
+                                drawPaint.apply { color = Color.Red.copy(0.5f).toArgb() }
                             )
                         } else {
                             drawPath(androidPath, drawPaint)
@@ -572,7 +483,10 @@ fun BitmapDrawer(
                 LaunchedEffect(outputImage, paths, backgroundColor, drawMode) {
                     shaderBitmap = onRequestFiltering(
                         outputImage.asAndroidBitmap(),
-                        transformationsForMode(drawMode)
+                        transformationsForMode(
+                            drawMode = drawMode,
+                            canvasSize = canvasSize
+                        )
                     )?.createScaledBitmap(
                         width = imageWidth,
                         height = imageHeight
@@ -589,7 +503,7 @@ fun BitmapDrawer(
                                 drawPathMode = drawPathMode,
                                 canvasSize = canvasSize
                             )
-                            val newPath = drawPath.copy().asAndroidPath().apply {
+                            val newPath = drawPath.copyAsAndroidPath().apply {
                                 fillType = NativePath.FillType.INVERSE_WINDING
                             }
                             val imagePaint = remember { Paint() }
@@ -654,10 +568,11 @@ fun BitmapDrawer(
                     )
                     .clip(RoundedCornerShape(2.dp))
                     .transparencyChecker()
+                    .drawHelperGrid(helperGridParams)
                     .border(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.outlineVariant(),
-                        RoundedCornerShape(2.dp)
+                        shape = RoundedCornerShape(2.dp)
                     ),
                 bitmap = previewBitmap,
                 contentDescription = null,

@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -35,10 +36,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FitScreen
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.rounded.AspectRatio
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -61,32 +62,37 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.domain.image.model.Preset
+import ru.tech.imageresizershrinker.core.domain.model.DomainAspectRatio
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.EditAlt
 import ru.tech.imageresizershrinker.core.resources.icons.Telegram
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalEditPresetsController
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedChip
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.SupportingButton
 import ru.tech.imageresizershrinker.core.ui.widget.controls.OOMWarning
-import ru.tech.imageresizershrinker.core.ui.widget.modifier.alertDialogBorder
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedAlertDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedChip
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.image.AspectRatioSelector
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.fadingEdges
 import ru.tech.imageresizershrinker.core.ui.widget.other.RevealDirection
 import ru.tech.imageresizershrinker.core.ui.widget.other.RevealValue
 import ru.tech.imageresizershrinker.core.ui.widget.other.SwipeToReveal
 import ru.tech.imageresizershrinker.core.ui.widget.other.rememberRevealState
+import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwitch
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.RoundedTextField
 import ru.tech.imageresizershrinker.core.ui.widget.text.RoundedTextFieldColors
 
-@OptIn(ExperimentalMaterialApi::class)
+
 @Composable
 fun PresetSelector(
     value: Preset,
-    includeTelegramOption: Boolean,
+    includeTelegramOption: Boolean = false,
+    includeAspectRatioOption: Boolean = false,
     isBytesResize: Boolean = false,
     showWarning: Boolean = false,
     onValueChange: (Preset) -> Unit
@@ -156,6 +162,72 @@ fun PresetSelector(
                 }
                 Spacer(Modifier.height(8.dp))
 
+                AnimatedVisibility(visible = value is Preset.AspectRatio && includeAspectRatioOption) {
+                    val aspectRatios = remember {
+                        DomainAspectRatio.defaultList.drop(3)
+                    }
+
+                    Column(
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    ) {
+                        AspectRatioSelector(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(8.dp),
+                            selectedAspectRatio = remember(value, aspectRatios) {
+                                derivedStateOf {
+                                    aspectRatios.firstOrNull {
+                                        it.value == (value as? Preset.AspectRatio)?.ratio
+                                    }
+                                }
+                            }.value,
+                            onAspectRatioChange = { domainAspectRatio, _ ->
+                                if (value is Preset.AspectRatio) {
+                                    onValueChange(
+                                        value.copy(ratio = domainAspectRatio.value)
+                                    )
+                                } else {
+                                    onValueChange(
+                                        Preset.AspectRatio(
+                                            ratio = domainAspectRatio.value,
+                                            isFit = false
+                                        )
+                                    )
+                                }
+                            },
+                            title = {},
+                            aspectRatios = aspectRatios,
+                            shape = ContainerShapeDefaults.topShape,
+                            color = MaterialTheme.colorScheme.surface,
+                            unselectedCardColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        PreferenceRowSwitch(
+                            modifier = Modifier.fillMaxWidth(),
+                            title = stringResource(R.string.fit_to_bounds),
+                            subtitle = stringResource(R.string.fit_to_bounds_sub),
+                            checked = (value as? Preset.AspectRatio)?.isFit == true,
+                            onClick = {
+                                if (value is Preset.AspectRatio) {
+                                    onValueChange(
+                                        value.copy(isFit = it)
+                                    )
+                                } else {
+                                    onValueChange(
+                                        Preset.AspectRatio(
+                                            ratio = 1f,
+                                            isFit = it
+                                        )
+                                    )
+                                }
+                            },
+                            startIcon = Icons.Outlined.FitScreen,
+                            shape = ContainerShapeDefaults.bottomShape,
+                            color = MaterialTheme.colorScheme.surface
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -172,7 +244,7 @@ fun PresetSelector(
                         contentPadding = PaddingValues(horizontal = 8.dp)
                     ) {
                         if (includeTelegramOption) {
-                            item {
+                            item(key = "tg") {
                                 val selected = value.isTelegram()
                                 EnhancedChip(
                                     selected = selected,
@@ -187,7 +259,33 @@ fun PresetSelector(
                                 }
                             }
                         }
-                        items(data) {
+                        if (includeAspectRatioOption) {
+                            item(key = "aspect") {
+                                val selected = value.isAspectRatio()
+                                EnhancedChip(
+                                    selected = selected,
+                                    onClick = {
+                                        onValueChange(
+                                            Preset.AspectRatio(
+                                                ratio = 1f,
+                                                isFit = false
+                                            )
+                                        )
+                                    },
+                                    selectedColor = MaterialTheme.colorScheme.primary,
+                                    shape = MaterialTheme.shapes.medium
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.AspectRatio,
+                                        contentDescription = stringResource(R.string.aspect_ratio)
+                                    )
+                                }
+                            }
+                        }
+                        items(
+                            items = data,
+                            key = { it }
+                        ) {
                             val selected = value.value() == it
                             EnhancedChip(
                                 selected = selected,
@@ -275,31 +373,29 @@ fun PresetSelector(
         }
     )
 
-    if (showPresetInfoDialog) {
-        AlertDialog(
-            modifier = Modifier.alertDialogBorder(),
-            onDismissRequest = { showPresetInfoDialog = false },
-            confirmButton = {
-                EnhancedButton(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    onClick = { showPresetInfoDialog = false }
-                ) {
-                    Text(stringResource(R.string.ok))
-                }
-            },
-            title = {
-                Text(stringResource(R.string.presets))
-            },
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Info,
-                    contentDescription = stringResource(R.string.about_app)
-                )
-            },
-            text = {
-                if (isBytesResize) Text(stringResource(R.string.presets_sub_bytes))
-                else Text(stringResource(R.string.presets_sub))
+    EnhancedAlertDialog(
+        visible = showPresetInfoDialog,
+        onDismissRequest = { showPresetInfoDialog = false },
+        confirmButton = {
+            EnhancedButton(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                onClick = { showPresetInfoDialog = false }
+            ) {
+                Text(stringResource(R.string.ok))
             }
-        )
-    }
+        },
+        title = {
+            Text(stringResource(R.string.presets))
+        },
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.Info,
+                contentDescription = stringResource(R.string.about_app)
+            )
+        },
+        text = {
+            if (isBytesResize) Text(stringResource(R.string.presets_sub_bytes))
+            else Text(stringResource(R.string.presets_sub))
+        }
+    )
 }

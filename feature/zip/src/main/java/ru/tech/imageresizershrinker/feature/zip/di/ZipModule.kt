@@ -21,7 +21,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import ru.tech.imageresizershrinker.feature.zip.data.ZipManagerImpl
+import ru.tech.imageresizershrinker.feature.zip.data.AndroidZipManager
 import ru.tech.imageresizershrinker.feature.zip.domain.ZipManager
 import javax.inject.Singleton
 
@@ -33,7 +33,7 @@ internal interface ZipModule {
     @Singleton
     @Binds
     fun provideZipManager(
-        manager: ZipManagerImpl
+        manager: AndroidZipManager
     ): ZipManager
 
 }

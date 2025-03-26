@@ -18,14 +18,15 @@
 package ru.tech.imageresizershrinker.feature.filters.data.model
 
 import android.graphics.Bitmap
+import com.t8rin.trickle.DitheringType
+import com.t8rin.trickle.Trickle
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
-import ru.tech.imageresizershrinker.feature.filters.data.utils.DitherTool
 
 internal class BayerThreeDitheringFilter(
     override val value: Pair<Float, Boolean> = 200f to false,
-) : Filter.BayerThreeDithering<Bitmap>, Transformation<Bitmap> {
+) : Transformation<Bitmap>, Filter.BayerThreeDithering {
 
     override val cacheKey: String
         get() = value.hashCode().toString()
@@ -33,12 +34,11 @@ internal class BayerThreeDitheringFilter(
     override suspend fun transform(
         input: Bitmap,
         size: IntegerSize
-    ): Bitmap = DitherTool(
+    ): Bitmap = Trickle.dithering(
+        input = input,
+        type = DitheringType.BayerThree,
         threshold = value.first.toInt(),
         isGrayScale = value.second
-    ).dither(
-        type = DitherTool.Type.BayerThree,
-        src = input
     )
 
 }

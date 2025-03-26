@@ -18,31 +18,29 @@
 package ru.tech.imageresizershrinker.app.presentation
 
 import android.content.Intent
-import android.os.Bundle
-import androidx.activity.viewModels
+import androidx.compose.runtime.Composable
+import com.arkivanov.decompose.retainedComponent
 import dagger.hilt.android.AndroidEntryPoint
-import dev.olshevski.navigation.reimagined.navigate
-import ru.tech.imageresizershrinker.core.crash.components.GlobalExceptionHandler
-import ru.tech.imageresizershrinker.core.crash.components.M3Activity
+import ru.tech.imageresizershrinker.core.ui.utils.ComposeActivity
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils.parseImageFromIntent
-import ru.tech.imageresizershrinker.core.ui.utils.provider.setContentWithWindowSizeClass
 import ru.tech.imageresizershrinker.feature.root.presentation.RootContent
-import ru.tech.imageresizershrinker.feature.root.presentation.viewModel.RootViewModel
+import ru.tech.imageresizershrinker.feature.root.presentation.screenLogic.RootComponent
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class AppActivity : M3Activity() {
+class AppActivity : ComposeActivity() {
 
-    private val viewModel by viewModels<RootViewModel>()
+    @Inject
+    lateinit var rootComponentFactory: RootComponent.Factory
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        parseImage(intent)
-
-        setContentWithWindowSizeClass {
-            RootContent(viewModel = viewModel)
-        }
+    private val component: RootComponent by lazy {
+        retainedComponent(factory = rootComponentFactory::invoke)
     }
+
+    @Composable
+    override fun Content() = RootContent(component = component)
+
+    override fun onFirstLaunch() = parseImage(intent)
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -52,18 +50,15 @@ class AppActivity : M3Activity() {
     private fun parseImage(intent: Intent?) {
         parseImageFromIntent(
             intent = intent,
-            onStart = viewModel::hideSelectDialog,
-            onHasExtraImageType = viewModel::updateExtraImageType,
-            onColdStart = viewModel::cancelShowingExitDialog,
-            onGetUris = viewModel::updateUris,
-            onShowToast = viewModel::showToast,
-            onNavigate = { screen ->
-                GlobalExceptionHandler.registerScreenOpen(screen)
-                viewModel.navController.navigate(screen)
-            },
-            isHasUris = !viewModel.uris.isNullOrEmpty(),
-            onWantGithubReview = viewModel::onWantGithubReview,
-            isOpenEditInsteadOfPreview = viewModel.settingsState.openEditInsteadOfPreview
+            onStart = component::hideSelectDialog,
+            onHasExtraDataType = component::updateExtraDataType,
+            onColdStart = component::cancelShowingExitDialog,
+            onGetUris = component::updateUris,
+            onShowToast = component::showToast,
+            onNavigate = component::navigateTo,
+            isHasUris = !component.uris.isNullOrEmpty(),
+            onWantGithubReview = component::onWantGithubReview,
+            isOpenEditInsteadOfPreview = component.settingsState.openEditInsteadOfPreview
         )
     }
 }

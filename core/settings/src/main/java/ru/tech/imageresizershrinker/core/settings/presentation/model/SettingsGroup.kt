@@ -15,18 +15,17 @@
  * along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
+@file:Suppress("KotlinConstantConditions")
+
 package ru.tech.imageresizershrinker.core.settings.presentation.model
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Cached
+import androidx.compose.material.icons.outlined.Architecture
 import androidx.compose.material.icons.rounded.Celebration
 import androidx.compose.material.icons.rounded.Description
-import androidx.compose.material.icons.rounded.Draw
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Face6
-import androidx.compose.material.icons.rounded.FitScreen
 import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.IntegrationInstructions
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.PersonSearch
 import androidx.compose.material.icons.rounded.PhoneAndroid
@@ -35,34 +34,43 @@ import androidx.compose.material.icons.rounded.ShieldMoon
 import androidx.compose.material.icons.rounded.SortByAlpha
 import androidx.compose.material.icons.rounded.SystemSecurityUpdate
 import androidx.compose.material.icons.rounded.Vibration
+import androidx.compose.material.icons.rounded.ViewCarousel
 import androidx.compose.material.icons.twotone.Palette
 import androidx.compose.ui.graphics.vector.ImageVector
+import ru.tech.imageresizershrinker.core.resources.BuildConfig
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.resources.icons.ClipboardFile
+import ru.tech.imageresizershrinker.core.resources.icons.Draw
 import ru.tech.imageresizershrinker.core.resources.icons.Exif
 import ru.tech.imageresizershrinker.core.resources.icons.Firebase
 import ru.tech.imageresizershrinker.core.resources.icons.FolderOpened
 import ru.tech.imageresizershrinker.core.resources.icons.ImageSearch
 import ru.tech.imageresizershrinker.core.resources.icons.LabelPercent
+import ru.tech.imageresizershrinker.core.resources.icons.Mop
 import ru.tech.imageresizershrinker.core.resources.icons.Shadow
 import ru.tech.imageresizershrinker.core.resources.icons.Stacks
 
 sealed class SettingsGroup(
+    val id: Int,
     val titleId: Int,
     val icon: ImageVector,
     val settingsList: List<Setting>,
-    val initialState: Boolean
+    val initialState: Boolean,
 ) {
     data object ContactMe : SettingsGroup(
+        id = 0,
         icon = Icons.Rounded.PersonSearch,
         titleId = R.string.contact_me,
         settingsList = listOf(
             Setting.Author,
+            Setting.SendLogs,
             Setting.Donate
         ),
         initialState = true
     )
 
     data object PrimaryCustomization : SettingsGroup(
+        id = 1,
         icon = Icons.Rounded.Palette,
         titleId = R.string.customization,
         settingsList = listOf(
@@ -76,19 +84,34 @@ sealed class SettingsGroup(
     )
 
     data object SecondaryCustomization : SettingsGroup(
+        id = 2,
         icon = Icons.TwoTone.Palette,
         titleId = R.string.secondary_customization,
         settingsList = listOf(
             Setting.ColorBlindScheme,
             Setting.BorderThickness,
+            Setting.MainScreenTitle
+        ),
+        initialState = false
+    )
+
+    data object Layout : SettingsGroup(
+        id = 3,
+        icon = Icons.Rounded.ViewCarousel,
+        titleId = R.string.layout,
+        settingsList = listOf(
             Setting.SwitchType,
+            Setting.SliderType,
+            Setting.UseCompactSelectors,
             Setting.DragHandleWidth,
+            Setting.CenterAlignDialogButtons,
             Setting.FabAlignment
         ),
         initialState = false
     )
 
     data object NightMode : SettingsGroup(
+        id = 4,
         icon = Icons.Rounded.ShieldMoon,
         titleId = R.string.night_mode,
         settingsList = listOf(
@@ -98,6 +121,7 @@ sealed class SettingsGroup(
     )
 
     data object Shadows : SettingsGroup(
+        id = 5,
         icon = Icons.Filled.Shadow,
         titleId = R.string.shadows,
         settingsList = listOf(
@@ -112,6 +136,7 @@ sealed class SettingsGroup(
     )
 
     data object Font : SettingsGroup(
+        id = 6,
         icon = Icons.Rounded.SortByAlpha,
         titleId = R.string.text,
         settingsList = listOf(
@@ -122,9 +147,10 @@ sealed class SettingsGroup(
         initialState = false
     )
 
-    data object OptionsArrangement : SettingsGroup(
+    data object ToolsArrangement : SettingsGroup(
+        id = 7,
         icon = Icons.Rounded.Stacks,
-        titleId = R.string.options_arrangement,
+        titleId = R.string.tools_arrangement,
         settingsList = listOf(
             Setting.ScreenOrder,
             Setting.ScreenSearch,
@@ -134,6 +160,7 @@ sealed class SettingsGroup(
     )
 
     data object Presets : SettingsGroup(
+        id = 8,
         icon = Icons.Rounded.LabelPercent,
         titleId = R.string.presets,
         settingsList = listOf(
@@ -143,27 +170,33 @@ sealed class SettingsGroup(
         initialState = false
     )
 
-    data object ScaleMode : SettingsGroup(
-        icon = Icons.Rounded.FitScreen,
-        titleId = R.string.scale_mode,
+    data object DefaultValues : SettingsGroup(
+        id = 9,
+        icon = Icons.Outlined.Architecture,
+        titleId = R.string.default_values,
         settingsList = listOf(
-            Setting.DefaultScaleMode
+            Setting.DefaultScaleMode,
+            Setting.DefaultResizeType
         ),
         initialState = false
     )
 
     data object Draw : SettingsGroup(
+        id = 10,
         icon = Icons.Rounded.Draw,
         titleId = R.string.draw,
         settingsList = listOf(
             Setting.LockDrawOrientation,
             Setting.DefaultDrawLineWidth,
+            Setting.DefaultDrawColor,
+            Setting.DefaultDrawPathMode,
             Setting.Magnifier
         ),
         initialState = false
     )
 
     data object Exif : SettingsGroup(
+        id = 11,
         icon = Icons.Rounded.Exif,
         titleId = R.string.exif,
         settingsList = listOf(
@@ -173,15 +206,18 @@ sealed class SettingsGroup(
     )
 
     data object Folder : SettingsGroup(
+        id = 12,
         icon = Icons.Rounded.FolderOpened,
         titleId = R.string.folder,
         settingsList = listOf(
-            Setting.SavingFolder
+            Setting.SavingFolder,
+            Setting.OneTimeSaveLocation
         ),
         initialState = false
     )
 
     data object Filename : SettingsGroup(
+        id = 13,
         icon = Icons.Rounded.Description,
         titleId = R.string.filename,
         settingsList = listOf(
@@ -190,14 +226,18 @@ sealed class SettingsGroup(
             Setting.AddFileSize,
             Setting.AddOriginalFilename,
             Setting.ReplaceSequenceNumber,
+            Setting.AddTimestampToFilename,
+            Setting.UseFormattedFilenameTimestamp,
             Setting.OverwriteFiles,
+            Setting.ChecksumAsFilename,
             Setting.RandomizeFilename
         ),
         initialState = false
     )
 
     data object Cache : SettingsGroup(
-        icon = Icons.Rounded.Cached,
+        id = 14,
+        icon = Icons.Rounded.Mop,
         titleId = R.string.cache,
         settingsList = listOf(
             Setting.ClearCache,
@@ -207,6 +247,7 @@ sealed class SettingsGroup(
     )
 
     data object ImageSource : SettingsGroup(
+        id = 15,
         icon = Icons.Rounded.ImageSearch,
         titleId = R.string.image_source,
         settingsList = listOf(
@@ -216,6 +257,7 @@ sealed class SettingsGroup(
     )
 
     data object BackupRestore : SettingsGroup(
+        id = 16,
         icon = Icons.Rounded.SettingsBackupRestore,
         titleId = R.string.backup_and_restore,
         settingsList = listOf(
@@ -227,7 +269,8 @@ sealed class SettingsGroup(
     )
 
     data object Firebase : SettingsGroup(
-        icon = Icons.Rounded.Firebase,
+        id = 17,
+        icon = Icons.Outlined.Firebase,
         titleId = R.string.firebase,
         settingsList = listOf(
             Setting.Crashlytics,
@@ -237,6 +280,7 @@ sealed class SettingsGroup(
     )
 
     data object Updates : SettingsGroup(
+        id = 18,
         icon = Icons.Rounded.SystemSecurityUpdate,
         titleId = R.string.updates,
         settingsList = listOf(
@@ -248,20 +292,25 @@ sealed class SettingsGroup(
     )
 
     data object AboutApp : SettingsGroup(
+        id = 19,
         icon = Icons.Rounded.Info,
         titleId = R.string.about_app,
         settingsList = listOf(
             Setting.CurrentVersionCode,
+            Setting.OpenSourceLicenses,
             Setting.HelpTranslate,
             Setting.IssueTracker,
-            Setting.Telegram,
+            Setting.FreeSoftwarePartner,
+            Setting.TelegramChannel,
+            Setting.TelegramGroup,
             Setting.SourceCode
         ),
         initialState = true
     )
 
     data object Clipboard : SettingsGroup(
-        icon = Icons.Rounded.IntegrationInstructions,
+        id = 20,
+        icon = Icons.Rounded.ClipboardFile,
         titleId = R.string.clipboard,
         settingsList = listOf(
             Setting.AutoPinClipboard,
@@ -272,6 +321,7 @@ sealed class SettingsGroup(
     )
 
     data object Haptics : SettingsGroup(
+        id = 21,
         icon = Icons.Rounded.Vibration,
         titleId = R.string.vibration,
         settingsList = listOf(
@@ -281,16 +331,20 @@ sealed class SettingsGroup(
     )
 
     data object Screen : SettingsGroup(
+        id = 22,
         icon = Icons.Rounded.PhoneAndroid,
         titleId = R.string.screen,
         settingsList = listOf(
             Setting.BrightnessEnforcement,
-            Setting.SecureMode
+            Setting.SecureMode,
+            Setting.SystemBarsVisibility,
+            Setting.ShowSystemBarsBySwipe
         ),
         initialState = false
     )
 
     data object Emoji : SettingsGroup(
+        id = 23,
         icon = Icons.Rounded.Face6,
         titleId = R.string.emoji,
         settingsList = listOf(
@@ -302,6 +356,7 @@ sealed class SettingsGroup(
     )
 
     data object Confetti : SettingsGroup(
+        id = 24,
         icon = Icons.Rounded.Celebration,
         titleId = R.string.confetti,
         settingsList = listOf(
@@ -314,13 +369,17 @@ sealed class SettingsGroup(
     )
 
     data object Behavior : SettingsGroup(
+        id = 25,
         icon = Icons.Rounded.Explore,
         titleId = R.string.behavior,
         settingsList = listOf(
             Setting.SkipFilePicking,
+            Setting.EnableToolExitConfirmation,
             Setting.ShowSettingsInLandscape,
             Setting.UseFullscreenSettings,
+            Setting.FastSettingsSide,
             Setting.OpenEditInsteadOfPreview,
+            Setting.EnableLinksPreview,
             Setting.GeneratePreviews
         ),
         initialState = false
@@ -333,6 +392,7 @@ sealed class SettingsGroup(
                 PrimaryCustomization,
                 SecondaryCustomization,
                 NightMode,
+                Layout,
                 Emoji,
                 Confetti,
                 Shadows,
@@ -340,9 +400,9 @@ sealed class SettingsGroup(
                 Screen,
                 Font,
                 Behavior,
-                OptionsArrangement,
+                ToolsArrangement,
                 Presets,
-                ScaleMode,
+                DefaultValues,
                 Draw,
                 Exif,
                 Folder,
@@ -354,7 +414,9 @@ sealed class SettingsGroup(
                 Firebase,
                 Updates,
                 AboutApp
-            )
+            ).filter {
+                !(it is Firebase && BuildConfig.FLAVOR == "foss")
+            }
         }
     }
 }

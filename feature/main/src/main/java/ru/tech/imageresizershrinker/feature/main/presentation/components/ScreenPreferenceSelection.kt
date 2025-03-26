@@ -20,8 +20,8 @@ package ru.tech.imageresizershrinker.feature.main.presentation.components
 import android.content.ClipboardManager
 import android.net.Uri
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -29,12 +29,11 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -44,8 +43,10 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.widthIn
@@ -56,6 +57,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ManageSearch
 import androidx.compose.material.icons.outlined.ContentPasteOff
+import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.SearchOff
 import androidx.compose.material3.Badge
@@ -63,8 +65,8 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -79,13 +81,16 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.getSystemService
 import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.resources.icons.BookmarkOff
+import ru.tech.imageresizershrinker.core.resources.icons.BookmarkRemove
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.utils.helper.clipList
 import ru.tech.imageresizershrinker.core.ui.utils.helper.rememberClipboardData
 import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
-import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalWindowSizeClass
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedFloatingActionButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedFloatingActionButtonType
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedFloatingActionButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedFloatingActionButtonType
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
 import ru.tech.imageresizershrinker.core.ui.widget.other.BoxAnimatedVisibility
 import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItemOverload
@@ -98,8 +103,10 @@ internal fun RowScope.ScreenPreferenceSelection(
     isGrid: Boolean,
     isSheetSlideable: Boolean,
     onGetClipList: (List<Uri>) -> Unit,
+    onNavigationBarItemChange: (Int) -> Unit,
     onNavigateToScreenWithPopUpTo: (Screen) -> Unit,
     onChangeShowScreenSearch: (Boolean) -> Unit,
+    onToggleFavorite: (Screen) -> Unit,
     showNavRail: Boolean,
 ) {
     val scope = rememberCoroutineScope()
@@ -107,27 +114,67 @@ internal fun RowScope.ScreenPreferenceSelection(
     val settingsState = LocalSettingsState.current
     val cutout = WindowInsets.displayCutout.asPaddingValues()
     val canSearchScreens = settingsState.screensSearchEnabled
-
-    val compactHeight =
-        LocalWindowSizeClass.current.heightSizeClass == WindowHeightSizeClass.Compact
+    val isSearching =
+        showScreenSearch && screenSearchKeyword.isNotEmpty() && canSearchScreens
 
     AnimatedContent(
         modifier = Modifier
             .weight(1f)
             .widthIn(min = 1.dp),
-        targetState = currentScreenList.isNotEmpty(),
+        targetState = remember(currentScreenList, isSearching, settingsState.favoriteScreenList) {
+            Triple(
+                currentScreenList.isNotEmpty(),
+                isSearching,
+                settingsState.favoriteScreenList.isEmpty()
+            )
+        },
         transitionSpec = {
             fadeIn() togetherWith fadeOut()
         }
-    ) { hasScreens ->
+    ) { (hasScreens, isSearching, noFavorites) ->
         if (hasScreens) {
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
                 val clipboardData by rememberClipboardData()
                 val allowAutoPaste = settingsState.allowAutoClipboardPaste
-                val showClipButton = clipboardData.isNotEmpty() || !allowAutoPaste
+                val showClipButton =
+                    (clipboardData.isNotEmpty() && allowAutoPaste) || !allowAutoPaste
                 val showSearchButton = !showScreenSearch && canSearchScreens
+
+                val layoutDirection = LocalLayoutDirection.current
+                val navBarsPadding = WindowInsets
+                    .navigationBars
+                    .asPaddingValues()
+                    .calculateBottomPadding()
+
+                val contentPadding by remember(
+                    isGrid, navBarsPadding,
+                    showClipButton, showSearchButton,
+                    isSheetSlideable, layoutDirection,
+                    cutout, showNavRail
+                ) {
+                    derivedStateOf {
+                        PaddingValues(
+                            bottom = 12.dp + if (isGrid) {
+                                navBarsPadding
+                            } else {
+                                0.dp
+                            } + if (showClipButton && showSearchButton) {
+                                76.dp + 48.dp
+                            } else if (showClipButton || showSearchButton) {
+                                76.dp
+                            } else 0.dp,
+                            top = 12.dp,
+                            end = 12.dp + if (isSheetSlideable) {
+                                cutout.calculateEndPadding(layoutDirection)
+                            } else 0.dp,
+                            start = 12.dp + if (!showNavRail) {
+                                cutout.calculateStartPadding(layoutDirection)
+                            } else 0.dp
+                        )
+                    }
+                }
 
                 LazyVerticalStaggeredGrid(
                     reverseLayout = showScreenSearch && screenSearchKeyword.isNotEmpty() && canSearchScreens,
@@ -135,47 +182,12 @@ internal fun RowScope.ScreenPreferenceSelection(
                     columns = StaggeredGridCells.Adaptive(220.dp),
                     verticalItemSpacing = 12.dp,
                     horizontalArrangement = Arrangement.spacedBy(
-                        12.dp,
-                        Alignment.CenterHorizontally
+                        space = 12.dp,
+                        alignment = Alignment.CenterHorizontally
                     ),
-                    contentPadding = PaddingValues(
-                        bottom = 12.dp + if (isGrid) {
-                            WindowInsets
-                                .navigationBars
-                                .asPaddingValues()
-                                .calculateBottomPadding() + if (!compactHeight) {
-                                128.dp
-                            } else 0.dp
-                        } else {
-                            0.dp
-                        } + showClipButton.let {
-                            if (it) 76.dp else 0.dp
-                        } + showSearchButton.let {
-                            if (it && showClipButton) 48.dp else if (!showClipButton) 76.dp else 0.dp
-                        },
-                        top = 12.dp,
-                        end = 12.dp + if (isSheetSlideable) {
-                            cutout.calculateEndPadding(
-                                LocalLayoutDirection.current
-                            )
-                        } else 0.dp,
-                        start = 12.dp + if (!showNavRail) {
-                            cutout.calculateStartPadding(
-                                LocalLayoutDirection.current
-                            )
-                        } else 0.dp
-                    ),
+                    contentPadding = contentPadding,
                     content = {
                         items(currentScreenList) { screen ->
-                            val interactionSource = remember {
-                                MutableInteractionSource()
-                            }
-                            val pressed by interactionSource.collectIsPressedAsState()
-
-                            val cornerSize by animateDpAsState(
-                                if (pressed) 6.dp
-                                else 18.dp
-                            )
                             PreferenceItemOverload(
                                 onClick = {
                                     onNavigateToScreenWithPopUpTo(screen)
@@ -185,9 +197,73 @@ internal fun RowScope.ScreenPreferenceSelection(
                                     .widthIn(min = 1.dp)
                                     .fillMaxWidth()
                                     .animateItem(),
-                                shape = RoundedCornerShape(cornerSize),
+                                shape = RoundedCornerShape(18.dp),
                                 title = stringResource(screen.title),
                                 subtitle = stringResource(screen.subtitle),
+                                badge = {
+                                    AnimatedVisibility(
+                                        visible = screen.isBetaFeature,
+                                        modifier = Modifier
+                                            .align(Alignment.CenterVertically)
+                                            .padding(start = 4.dp, bottom = 2.dp, top = 2.dp),
+                                        enter = fadeIn(),
+                                        exit = fadeOut()
+                                    ) {
+                                        Badge(
+                                            content = {
+                                                Text(stringResource(R.string.beta))
+                                            },
+                                            containerColor = MaterialTheme.colorScheme.tertiary,
+                                            contentColor = MaterialTheme.colorScheme.onTertiary
+                                        )
+                                    }
+                                },
+                                endIcon = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        if (!settingsState.groupOptionsByTypes) {
+                                            EnhancedIconButton(
+                                                onClick = {
+                                                    onToggleFavorite(screen)
+                                                },
+                                                modifier = Modifier.offset(8.dp)
+                                            ) {
+                                                val inFavorite by remember(
+                                                    settingsState.favoriteScreenList,
+                                                    screen
+                                                ) {
+                                                    derivedStateOf {
+                                                        settingsState.favoriteScreenList.find { it == screen.id } != null
+                                                    }
+                                                }
+                                                AnimatedContent(
+                                                    targetState = inFavorite,
+                                                    transitionSpec = {
+                                                        (fadeIn() + scaleIn(initialScale = 0.85f))
+                                                            .togetherWith(
+                                                                fadeOut() + scaleOut(
+                                                                    targetScale = 0.85f
+                                                                )
+                                                            )
+                                                    }
+                                                ) { isInFavorite ->
+                                                    val icon by remember(isInFavorite) {
+                                                        derivedStateOf {
+                                                            if (isInFavorite) Icons.Rounded.BookmarkRemove
+                                                            else Icons.Rounded.BookmarkBorder
+                                                        }
+                                                    }
+                                                    Icon(
+                                                        imageVector = icon,
+                                                        contentDescription = null
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
                                 startIcon = {
                                     AnimatedContent(
                                         targetState = screen.icon,
@@ -204,8 +280,7 @@ internal fun RowScope.ScreenPreferenceSelection(
                                             )
                                         }
                                     }
-                                },
-                                interactionSource = interactionSource
+                                }
                             )
                         }
                     }
@@ -300,32 +375,70 @@ internal fun RowScope.ScreenPreferenceSelection(
                 }
             }
         } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Spacer(Modifier.weight(1f))
-                Text(
-                    text = stringResource(R.string.nothing_found_by_search),
-                    fontSize = 18.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(
-                        start = 24.dp,
-                        end = 24.dp,
-                        top = 8.dp,
-                        bottom = 8.dp
+            if (!isSearching && noFavorites) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = stringResource(R.string.no_favorite_options_selected),
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(
+                            start = 24.dp,
+                            end = 24.dp,
+                            top = 8.dp,
+                            bottom = 8.dp
+                        )
                     )
-                )
-                Icon(
-                    imageVector = Icons.Rounded.SearchOff,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .weight(2f)
-                        .sizeIn(maxHeight = 140.dp, maxWidth = 140.dp)
-                        .fillMaxSize()
-                )
-                Spacer(Modifier.weight(1f))
+                    Icon(
+                        imageVector = Icons.Outlined.BookmarkOff,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .weight(2f)
+                            .sizeIn(maxHeight = 140.dp, maxWidth = 140.dp)
+                            .fillMaxSize()
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    EnhancedButton(
+                        onClick = {
+                            onNavigationBarItemChange(1)
+                        }
+                    ) {
+                        Text(stringResource(R.string.add_favorites))
+                    }
+                    Spacer(Modifier.weight(1f))
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = stringResource(R.string.nothing_found_by_search),
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(
+                            start = 24.dp,
+                            end = 24.dp,
+                            top = 8.dp,
+                            bottom = 8.dp
+                        )
+                    )
+                    Icon(
+                        imageVector = Icons.Rounded.SearchOff,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .weight(2f)
+                            .sizeIn(maxHeight = 140.dp, maxWidth = 140.dp)
+                            .fillMaxSize()
+                    )
+                    Spacer(Modifier.weight(1f))
+                }
             }
         }
     }

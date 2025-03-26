@@ -21,11 +21,18 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import ru.tech.imageresizershrinker.core.domain.utils.readableByteCount
 import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.ui.theme.Green
+import ru.tech.imageresizershrinker.core.ui.theme.blend
+import ru.tech.imageresizershrinker.core.ui.theme.takeColorFromScheme
 
 @Composable
 fun <T : Any> TopAppBarTitle(
@@ -33,56 +40,110 @@ fun <T : Any> TopAppBarTitle(
     input: T?,
     isLoading: Boolean,
     size: Long?,
+    originalSize: Long? = null,
     updateOnSizeChange: Boolean = true
 ) {
-    Marquee {
-        if (updateOnSizeChange) {
-            AnimatedContent(
-                targetState = Triple(
-                    input,
-                    isLoading,
-                    size
-                ),
-                transitionSpec = { fadeIn() togetherWith fadeOut() }
-            ) { (inp, loading, size) ->
-                if (loading) {
-                    Text(
-                        stringResource(R.string.loading)
-                    )
-                } else if (inp == null || size == null || size <= 0) {
-                    AnimatedContent(targetState = title) {
-                        Text(it)
+    if (updateOnSizeChange) {
+        AnimatedContent(
+            targetState = Triple(
+                input,
+                isLoading,
+                size
+            ),
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            modifier = Modifier.marquee()
+        ) { (inp, loading, size) ->
+            if (loading) {
+                Text(
+                    stringResource(R.string.loading)
+                )
+            } else if (inp == null || size == null) {
+                AnimatedContent(targetState = title) {
+                    Text(it)
+                }
+            } else {
+                AnimatedContent(originalSize) { originalSize ->
+                    val readableOriginal = if ((originalSize ?: 0) > 0) {
+                        readableByteCount(originalSize ?: 0)
+                    } else {
+                        "? B"
                     }
-                } else {
+                    val readableCompressed = if (size > 0) {
+                        readableByteCount(size)
+                    } else {
+                        "(...)"
+                    }
+                    val isSizesEqual =
+                        size == originalSize || readableCompressed == readableOriginal
+                    val color = takeColorFromScheme {
+                        when {
+                            isSizesEqual || originalSize == null -> onBackground
+                            size > originalSize -> error.blend(errorContainer)
+                            size <= 0 -> tertiary
+                            else -> Green
+                        }
+                    }
                     Text(
-                        stringResource(
-                            R.string.size,
-                            readableByteCount(size)
-                        )
+                        text = buildAnnotatedString {
+                            append(
+                                if (originalSize == null || isSizesEqual) {
+                                    stringResource(R.string.size, readableCompressed)
+                                } else ""
+                            )
+                            originalSize?.takeIf { !isSizesEqual }?.let {
+                                append(readableOriginal)
+                                append(" -> ")
+                                withStyle(LocalTextStyle.current.toSpanStyle().copy(color)) {
+                                    append(readableCompressed)
+                                }
+                            }
+                        }
                     )
                 }
             }
-        } else {
-            AnimatedContent(
-                targetState = input to isLoading,
-                transitionSpec = { fadeIn() togetherWith fadeOut() }
-            ) { (inp, loading) ->
-                if (loading) {
-                    Text(
-                        stringResource(R.string.loading)
-                    )
-                } else if (inp == null || size == null || size <= 0) {
-                    AnimatedContent(targetState = title) {
-                        Text(it)
-                    }
-                } else {
-                    Text(
-                        stringResource(
-                            R.string.size,
-                            readableByteCount(size)
-                        )
-                    )
+        }
+    } else {
+        AnimatedContent(
+            targetState = input to isLoading,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            modifier = Modifier.marquee()
+        ) { (inp, loading) ->
+            if (loading) {
+                Text(
+                    stringResource(R.string.loading)
+                )
+            } else if (inp == null || size == null || size <= 0) {
+                AnimatedContent(targetState = title) {
+                    Text(it)
                 }
+            } else {
+                val readableOriginal = readableByteCount(originalSize ?: 0)
+                val readableCompressed = readableByteCount(size)
+                val isSizesEqual =
+                    size == originalSize || readableCompressed == readableOriginal
+                val color = takeColorFromScheme {
+                    when {
+                        isSizesEqual || originalSize == null -> onBackground
+                        size > originalSize -> error.blend(errorContainer)
+                        else -> Green
+                    }
+                }
+                Text(
+                    text = buildAnnotatedString {
+                        append(
+                            if (originalSize == null || isSizesEqual) {
+                                stringResource(R.string.size, readableCompressed)
+                            } else ""
+                        )
+                        originalSize?.takeIf { !isSizesEqual }?.let {
+                            append(readableOriginal)
+                            append(" -> ")
+                            withStyle(LocalTextStyle.current.toSpanStyle().copy(color)) {
+                                append(readableCompressed)
+                            }
+                        }
+                    }
+                )
             }
         }
     }

@@ -46,7 +46,9 @@ fun OOMWarning(visible: Boolean) {
     ) {
         Column(
             modifier = Modifier
-                .padding(12.dp)
+                .padding(
+                    top = 12.dp
+                )
                 .container(
                     color = MaterialTheme.colorScheme.errorContainer.copy(
                         alpha = 0.7f

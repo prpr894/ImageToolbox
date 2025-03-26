@@ -17,9 +17,13 @@
 
 package ru.tech.imageresizershrinker.core.ui.widget.controls.selection
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -36,6 +40,8 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material3.Badge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -65,15 +71,15 @@ import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
 import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedChip
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.SupportingButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.ToggleGroupButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedChip
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.animateShape
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.fadingEdges
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.scaleOnTap
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 
@@ -85,7 +91,6 @@ fun ScaleModeSelector(
     backgroundColor: Color = Color.Unspecified,
     shape: Shape = RoundedCornerShape(24.dp),
     enableItemsCardBackground: Boolean = true,
-    showAsColumns: Boolean = false,
     titlePadding: PaddingValues = PaddingValues(top = 8.dp),
     titleArrangement: Arrangement.Horizontal = Arrangement.Center,
     entries: List<ImageScaleMode> = ImageScaleMode.defaultEntries(),
@@ -101,7 +106,8 @@ fun ScaleModeSelector(
             Text(
                 text = stringResource(R.string.scale_mode),
                 textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f, false)
             )
             Badge(
                 content = {
@@ -162,140 +168,98 @@ fun ScaleModeSelector(
                         .padding(horizontal = 8.dp)
                         .container(
                             color = MaterialTheme.colorScheme.surface,
-                            shape = if (isColorSpaceSelectionVisible) ContainerShapeDefaults.topShape
-                            else ContainerShapeDefaults.defaultShape
+                            shape = animateShape(
+                                if (isColorSpaceSelectionVisible) {
+                                    ContainerShapeDefaults.topShape
+                                } else ContainerShapeDefaults.defaultShape
+                            )
                         )
                         .padding(horizontal = 8.dp, vertical = 12.dp)
                 } else Modifier.padding(8.dp)
             )
 
-        if (showAsColumns) {
-            FlowRow(
-                verticalArrangement = Arrangement.spacedBy(
-                    8.dp,
-                    Alignment.CenterVertically
+        val state = rememberLazyStaggeredGridState()
+        LazyHorizontalStaggeredGrid(
+            verticalArrangement = Arrangement.spacedBy(
+                space = 8.dp,
+                alignment = Alignment.CenterVertically
+            ),
+            state = state,
+            horizontalItemSpacing = 8.dp,
+            rows = StaggeredGridCells.Adaptive(30.dp),
+            modifier = Modifier
+                .heightIn(max = if (enableItemsCardBackground) 160.dp else 140.dp)
+                .then(chipsModifier)
+                .fadingEdges(
+                    scrollableState = state,
+                    isVertical = false,
+                    spanCount = 3
                 ),
-                horizontalArrangement = Arrangement.spacedBy(
-                    8.dp,
-                    Alignment.CenterHorizontally
-                ),
-                modifier = chipsModifier
-            ) {
-                entries.forEach {
-                    val selected by remember(value, it) {
-                        derivedStateOf {
-                            value::class.isInstance(it)
-                        }
+            contentPadding = PaddingValues(2.dp)
+        ) {
+            items(entries) {
+                val selected by remember(value, it) {
+                    derivedStateOf {
+                        value::class.isInstance(it)
                     }
-                    EnhancedChip(
-                        onClick = {
-                            onValueChange(it.copy(value.scaleColorSpace))
-                        },
-                        selected = selected,
-                        label = {
-                            Text(text = stringResource(it.title))
-                        },
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                        selectedColor = MaterialTheme.colorScheme.outlineVariant(
-                            0.2f,
-                            MaterialTheme.colorScheme.tertiary
-                        ),
-                        selectedContentColor = MaterialTheme.colorScheme.onTertiary,
-                        unselectedContentColor = MaterialTheme.colorScheme.onSurface
-                    )
                 }
-            }
-        } else {
-            val state = rememberLazyStaggeredGridState()
-            LazyHorizontalStaggeredGrid(
-                verticalArrangement = Arrangement.spacedBy(
-                    space = 8.dp,
-                    alignment = Alignment.CenterVertically
-                ),
-                state = state,
-                horizontalItemSpacing = 8.dp,
-                rows = StaggeredGridCells.Adaptive(30.dp),
-                modifier = Modifier
-                    .heightIn(max = 160.dp)
-                    .then(chipsModifier)
-                    .fadingEdges(
-                        scrollableState = state,
-                        isVertical = false,
-                        spanCount = 3
+                EnhancedChip(
+                    onClick = {
+                        onValueChange(it.copy(value.scaleColorSpace))
+                    },
+                    selected = selected,
+                    label = {
+                        Text(text = stringResource(id = it.title))
+                    },
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                    selectedColor = MaterialTheme.colorScheme.outlineVariant(
+                        0.2f,
+                        MaterialTheme.colorScheme.tertiary
                     ),
-                contentPadding = PaddingValues(2.dp)
-            ) {
-                items(entries) {
-                    val selected by remember(value, it) {
-                        derivedStateOf {
-                            value::class.isInstance(it)
-                        }
-                    }
-                    EnhancedChip(
-                        onClick = {
-                            onValueChange(it.copy(value.scaleColorSpace))
-                        },
-                        selected = selected,
-                        label = {
-                            Text(text = stringResource(id = it.title))
-                        },
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                        selectedColor = MaterialTheme.colorScheme.outlineVariant(
-                            0.2f,
-                            MaterialTheme.colorScheme.tertiary
-                        ),
-                        selectedContentColor = MaterialTheme.colorScheme.onTertiary,
-                        unselectedContentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                    selectedContentColor = MaterialTheme.colorScheme.onTertiary,
+                    unselectedContentColor = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
 
-        if (isColorSpaceSelectionVisible) {
-            Spacer(modifier = Modifier.height(4.dp))
+        AnimatedVisibility(
+            visible = isColorSpaceSelectionVisible,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
             val items = remember {
                 ScaleColorSpace.entries
             }
-            ToggleGroupButton(
-                enabled = true,
-                itemCount = items.size,
-                inactiveButtonColor = MaterialTheme.colorScheme.surfaceContainer,
+            DataSelector(
+                value = value.scaleColorSpace,
+                onValueChange = {
+                    onValueChange(
+                        value.copy(it)
+                    )
+                },
+                spanCount = 2,
+                entries = items,
+                title = stringResource(R.string.tag_color_space),
+                titleIcon = Icons.Outlined.ColorLens,
+                itemContentText = {
+                    it.title
+                },
+                color = MaterialTheme.colorScheme.surface,
+                shape = ContainerShapeDefaults.bottomShape,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-                    .container(
-                        color = MaterialTheme.colorScheme.surface,
-                        shape = ContainerShapeDefaults.bottomShape
-                    ),
-                title = {
-                    Text(
-                        modifier = Modifier.padding(top = 8.dp),
-                        text = stringResource(R.string.tag_color_space),
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Medium
-                    )
-                },
-                selectedIndex = items.indexOfFirst {
-                    value.scaleColorSpace::class.isInstance(it)
-                },
-                buttonIcon = {},
-                itemContent = {
-                    AutoSizeText(
-                        text = items[it].title,
-                        maxLines = 1
-                    )
-                },
-                indexChanged = {
-                    onValueChange(
-                        value.copy(items[it])
-                    )
-                }
+                    .padding(top = 4.dp)
+                    .padding(horizontal = 8.dp),
+                selectedItemColor = MaterialTheme.colorScheme.secondary
             )
-            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        AnimatedVisibility(isColorSpaceSelectionVisible || enableItemsCardBackground) {
+            Spacer(Modifier.height(8.dp))
         }
     }
 
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         sheetContent = {
             Column(
                 modifier = Modifier
@@ -374,6 +338,14 @@ private val ScaleColorSpace.title: String
         is ScaleColorSpace.F32Rec709 -> "Rec.709"
         is ScaleColorSpace.F32sRGB -> "F32 sRGB"
         is ScaleColorSpace.LCH -> "LCH"
+        ScaleColorSpace.OklabGamma22 -> "Oklab G2.2"
+        ScaleColorSpace.OklabGamma28 -> "Oklab G2.8"
+        ScaleColorSpace.OklabRec709 -> "Oklab Rec.709"
+        ScaleColorSpace.OklabSRGB -> "Oklab sRGB"
+        ScaleColorSpace.JzazbzGamma22 -> "Jzazbz ${stringResource(R.string.gamma)} 2.2"
+        ScaleColorSpace.JzazbzGamma28 -> "Jzazbz ${stringResource(R.string.gamma)} 2.8"
+        ScaleColorSpace.JzazbzRec709 -> "Jzazbz Rec.709"
+        ScaleColorSpace.JzazbzSRGB -> "Jzazbz sRGB"
     }
 
 private val ImageScaleMode.title: Int
@@ -429,6 +401,7 @@ private val ImageScaleMode.title: Int
         is ImageScaleMode.Lagrange3 -> R.string.lagrange_3
         is ImageScaleMode.Lanczos6 -> R.string.lanczos_6
         is ImageScaleMode.Lanczos6Jinc -> R.string.lanczos_6_jinc
+        is ImageScaleMode.Area -> R.string.area
     }
 
 private val ImageScaleMode.subtitle: Int
@@ -484,4 +457,5 @@ private val ImageScaleMode.subtitle: Int
         is ImageScaleMode.Lagrange3 -> R.string.lagrange_3_sub
         is ImageScaleMode.Lanczos6 -> R.string.lanczos_6_sub
         is ImageScaleMode.Lanczos6Jinc -> R.string.lanczos_6_jinc_sub
+        is ImageScaleMode.Area -> R.string.area_sub
     }

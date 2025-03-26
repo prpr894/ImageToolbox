@@ -17,24 +17,28 @@
 
 package ru.tech.imageresizershrinker.core.ui.widget.sheets
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.rounded.AddCircleOutline
 import androidx.compose.material.icons.rounded.RemoveCircleOutline
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -46,8 +50,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -60,10 +64,12 @@ import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.Exif
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.localizedName
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.toMap
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedAlertDialog
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedBottomSheetDefaults
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedIconButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
-import ru.tech.imageresizershrinker.core.ui.widget.modifier.alertDialogBorder
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
@@ -84,55 +90,56 @@ fun EditExifSheet(
         mutableStateOf(exif?.toMap())
     }
 
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         confirmButton = {
-            EnhancedButton(
-                onClick = onDismiss
-            ) {
-                AutoSizeText(stringResource(R.string.ok))
-            }
-        },
-        title = {
             val count = remember(exifMap) {
                 MetadataTag.entries.count {
                     it !in (exifMap?.keys ?: emptyList())
                 }
             }
-            Row {
-                if (exifMap?.isEmpty() == false) {
-                    EnhancedButton(
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(0.2f),
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer.copy(0.7f),
+            Row(
+                modifier = Modifier.offset(x = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AnimatedVisibility(exifMap?.isEmpty() == false) {
+                    EnhancedIconButton(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
                         onClick = {
                             showClearExifDialog = true
-                        }
+                        },
+                        forceMinimumInteractiveComponentSize = false
                     ) {
-                        Text(stringResource(R.string.clear))
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteSweep,
+                            contentDescription = null
+                        )
                     }
-                    Spacer(Modifier.width(8.dp))
                 }
-                if (count > 0) {
-                    EnhancedButton(
+                AnimatedVisibility(count > 0) {
+                    EnhancedIconButton(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         onClick = { showAddExifDialog.value = true }
                     ) {
-                        Text(stringResource(R.string.add_tag))
+                        Icon(
+                            imageVector = Icons.Rounded.AddCircleOutline,
+                            contentDescription = null
+                        )
                     }
+                }
+                Spacer(Modifier.width(4.dp))
+                EnhancedButton(
+                    onClick = onDismiss
+                ) {
+                    AutoSizeText(stringResource(R.string.close))
                 }
             }
         },
-        dragHandle = {
-            SimpleDragHandle {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    TitleItem(
-                        text = stringResource(id = R.string.edit_exif),
-                        icon = Icons.Rounded.Exif
-                    )
-                }
-            }
+        title = {
+            TitleItem(
+                text = stringResource(id = R.string.edit_exif),
+                icon = Icons.Rounded.Exif,
+                modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 8.dp, end = 16.dp)
+            )
         },
         visible = visible,
         onDismiss = {
@@ -150,16 +157,19 @@ fun EditExifSheet(
                     contentPadding = PaddingValues(8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    itemsIndexed(data) { index, (tag, value) ->
+                    itemsIndexed(
+                        items = data,
+                        key = { _, t -> t.first.key }
+                    ) { index, (tag, value) ->
                         Column(
                             Modifier
                                 .fillMaxWidth()
                                 .container(
-                                    color = SimpleSheetDefaults.contentContainerColor,
+                                    color = EnhancedBottomSheetDefaults.contentContainerColor,
                                     shape = ContainerShapeDefaults.shapeForIndex(
                                         index = index,
                                         size = data.size
-                                    ),
+                                    )
                                 )
                         ) {
                             Row {
@@ -172,9 +182,6 @@ fun EditExifSheet(
                                     textAlign = TextAlign.Start
                                 )
                                 EnhancedIconButton(
-                                    containerColor = Color.Transparent,
-                                    contentColor = LocalContentColor.current,
-                                    enableAutoShadowAndBorder = false,
                                     onClick = {
                                         onRemoveTag(tag)
                                         exifMap = exifMap?.toMutableMap()
@@ -213,14 +220,34 @@ fun EditExifSheet(
                 }
             }
         } else {
-            Box {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.5f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Spacer(Modifier.weight(1f))
                 Text(
-                    stringResource(R.string.no_exif),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    textAlign = TextAlign.Center
+                    text = stringResource(R.string.no_exif),
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(
+                        start = 24.dp,
+                        end = 24.dp,
+                        top = 8.dp,
+                        bottom = 8.dp
+                    )
                 )
+                Icon(
+                    imageVector = Icons.Outlined.Exif,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .weight(2f)
+                        .sizeIn(maxHeight = 140.dp, maxWidth = 140.dp)
+                        .fillMaxSize()
+                )
+                Spacer(Modifier.weight(1f))
             }
         }
         AddExifSheet(
@@ -235,42 +262,40 @@ fun EditExifSheet(
                     ?.apply { this[tag] = "" }
             }
         )
-        if (showClearExifDialog) {
-            AlertDialog(
-                modifier = Modifier.alertDialogBorder(),
-                onDismissRequest = { showClearExifDialog = false },
-                title = {
-                    Text(stringResource(R.string.clear_exif))
-                },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Rounded.Delete,
-                        contentDescription = null
-                    )
-                },
-                confirmButton = {
-                    EnhancedButton(
-                        onClick = { showClearExifDialog = false }
-                    ) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                },
-                dismissButton = {
-                    EnhancedButton(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        onClick = {
-                            showClearExifDialog = false
-                            onClearExif()
-                            exifMap = emptyMap()
-                        }
-                    ) {
-                        Text(stringResource(R.string.clear))
-                    }
-                },
-                text = {
-                    Text(stringResource(R.string.clear_exif_sub))
+        EnhancedAlertDialog(
+            visible = showClearExifDialog,
+            onDismissRequest = { showClearExifDialog = false },
+            title = {
+                Text(stringResource(R.string.clear_exif))
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.DeleteSweep,
+                    contentDescription = null
+                )
+            },
+            confirmButton = {
+                EnhancedButton(
+                    onClick = { showClearExifDialog = false }
+                ) {
+                    Text(stringResource(R.string.cancel))
                 }
-            )
-        }
+            },
+            dismissButton = {
+                EnhancedButton(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    onClick = {
+                        showClearExifDialog = false
+                        onClearExif()
+                        exifMap = emptyMap()
+                    }
+                ) {
+                    Text(stringResource(R.string.clear))
+                }
+            },
+            text = {
+                Text(stringResource(R.string.clear_exif_sub))
+            }
+        )
     }
 }

@@ -31,12 +31,17 @@ import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import ru.tech.imageresizershrinker.core.domain.model.ExtraDataType
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
 import ru.tech.imageresizershrinker.core.ui.widget.image.UrisCarousel
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.ScreenPreference
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
@@ -46,12 +51,14 @@ import ru.tech.imageresizershrinker.core.ui.widget.utils.screenList
 @Composable
 fun ProcessImagesPreferenceSheet(
     uris: List<Uri>,
-    extraImageType: String? = null,
+    extraDataType: ExtraDataType? = null,
     visible: Boolean,
-    onDismiss: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
     onNavigate: (Screen) -> Unit
 ) {
-    SimpleSheet(
+    val scope = rememberCoroutineScope()
+
+    EnhancedModalBottomSheet(
         title = {
             TitleItem(
                 text = stringResource(R.string.image),
@@ -61,15 +68,13 @@ fun ProcessImagesPreferenceSheet(
         confirmButton = {
             EnhancedButton(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                onClick = {
-                    onDismiss(false)
-                },
+                onClick = onDismiss
             ) {
                 AutoSizeText(stringResource(id = R.string.cancel))
             }
         },
         sheetContent = {
-            val urisCorrespondingScreens by uris.screenList(extraImageType)
+            val urisCorrespondingScreens by uris.screenList(extraDataType)
 
             Box(Modifier.fillMaxWidth()) {
                 LazyVerticalStaggeredGrid(
@@ -78,23 +83,34 @@ fun ProcessImagesPreferenceSheet(
                     verticalItemSpacing = 8.dp,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (extraImageType in listOf("gif", null)) {
+                    if (extraDataType == null || extraDataType == ExtraDataType.Gif) {
                         item(
                             span = StaggeredGridItemSpan.FullLine
                         ) {
                             UrisCarousel(uris)
                         }
                     }
-                    items(urisCorrespondingScreens) { screen ->
+                    items(
+                        items = urisCorrespondingScreens,
+                        key = { it.toString() }
+                    ) { screen ->
                         ScreenPreference(
                             screen = screen,
-                            navigate = onNavigate
+                            navigate = {
+                                scope.launch {
+                                    onDismiss()
+                                    delay(200)
+                                    onNavigate(screen)
+                                }
+                            }
                         )
                     }
                 }
             }
         },
         visible = visible,
-        onDismiss = onDismiss
+        onDismiss = {
+            if (!it) onDismiss()
+        }
     )
 }

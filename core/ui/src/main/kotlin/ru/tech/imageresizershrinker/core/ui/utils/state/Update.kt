@@ -17,12 +17,27 @@
 
 package ru.tech.imageresizershrinker.core.ui.utils.state
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
 
 inline fun <T> MutableState<T>.update(
     transform: (T) -> T
 ): T = run {
-    transform(this.value).also { this.value = it }
+    transform(this.value).also {
+        this.value = it
+    }
+}
+
+inline fun <T> MutableState<T>.update(
+    onValueChanged: () -> Unit,
+    transform: (T) -> T
+): T = run {
+    transform(this.value).also {
+        if (this.value != it) onValueChanged()
+        this.value = it
+    }
 }
 
 inline fun <T> MutableState<T>.updateIf(
@@ -33,6 +48,15 @@ inline fun <T> MutableState<T>.updateIf(
         this.value = transform(this.value)
     }
 }
+
+@Composable
+fun <T> derivedValueOf(
+    vararg keys: Any?,
+    calculation: () -> T
+): T = remember(keys) {
+    derivedStateOf(calculation)
+}.value
+
 
 //fun <T> T.asFun(): Function1<T, T> {
 //    val value = this

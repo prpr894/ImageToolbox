@@ -21,12 +21,14 @@ import android.graphics.Bitmap
 import com.awxkee.aire.Aire
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
+import ru.tech.imageresizershrinker.core.filters.domain.model.BlurEdgeMode
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
+import ru.tech.imageresizershrinker.feature.filters.data.utils.toEdgeMode
 import kotlin.math.roundToInt
 
 internal class FastGaussianBlur3DFilter(
-    override val value: Float = 25f
-) : Transformation<Bitmap>, Filter.FastGaussianBlur3D<Bitmap> {
+    override val value: Pair<Float, BlurEdgeMode> = 10f to BlurEdgeMode.Reflect101
+) : Transformation<Bitmap>, Filter.FastGaussianBlur3D {
 
     override val cacheKey: String
         get() = value.hashCode().toString()
@@ -36,7 +38,8 @@ internal class FastGaussianBlur3DFilter(
         size: IntegerSize
     ): Bitmap = Aire.fastGaussian3Degree(
         bitmap = input,
-        radius = value.roundToInt()
+        radius = value.first.roundToInt(),
+        edgeMode = value.second.toEdgeMode()
     )
 
 }

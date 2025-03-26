@@ -58,7 +58,7 @@
     <string name="restart_app">App újraindítása</string>
     <string name="pick_two_images">Két kép kiválasztása a kezdéshez</string>
     <string name="replace_sequence_number_sub">Ha engedélyezett, kicseréli a hagyományos időbélyeget a kép sorszámára, ha kötegelt feldolgozást használ</string>
-    <string name="image_not_saved">Mentés...</string>
+    <string name="image_not_saved">Mentés…</string>
     <string name="emojis_count">Hangulatjelek száma</string>
     <string name="edit">Szerkesztés</string>
     <string name="unsupported_type">Nem támogatott típus: %1$s</string>
@@ -106,7 +106,7 @@
     <string name="distortion">Torzítás</string>
     <string name="emboss">domborzat</string>
     <string name="customization">Testreszabás</string>
-    <string name="add_tag">Cimke hozzáadása</string>
+    <string name="add_tag">Címke hozzáadása</string>
     <string name="clipboard_paste_invalid_color_code">Érvényes aRGB-kód beillesztése</string>
     <string name="dynamic_colors">Dinamikus színek</string>
     <string name="photo_picker">Képválasztó</string>
@@ -122,12 +122,12 @@
     <string name="filename_not_work_with_photopicker">Az eredeti fájlnév nem adható hozzá, ha a képet képválasztóból választott képet</string>
     <string name="color_filter">Színszűrő</string>
     <string name="by_bytes_resize">Átméretezés súly alapján</string>
-    <string name="clear_exif_sub">A kép minden EXIF adata törölve lessz. Ez nem visszafordítható!</string>
+    <string name="clear_exif_sub">A kép minden EXIF adata törölve lesz. Ez nem visszafordítható!</string>
     <string name="sobel_edge">Sobel-élek</string>
     <string name="single_edit">Egyedüli szerkesztés</string>
     <string name="solarize">Megéget</string>
     <string name="dilation">Tágulás</string>
-    <string name="image_preview_sub">Bármijen kép előnézete: GIF, SVG, és így tovább...</string>
+    <string name="image_preview_sub">Bármijen kép előnézete: GIF, SVG, és így tovább…</string>
     <string name="color_copied">Szín másolva</string>
     <string name="flexible">Rugalmas</string>
     <string name="image_preview">Kép előnézet</string>
@@ -237,7 +237,7 @@
     <string name="sketch">Vázlat</string>
     <string name="threshold">Küszöb</string>
     <string name="quantizationLevels">Kvantálási szintek</string>
-    <string name="snooth_toon">Sima ton</string>
+    <string name="smooth_toon">Sima ton</string>
     <string name="toon">Toon</string>
     <string name="rgb_filter">RGB szűrő</string>
     <string name="false_color">Hamis szín</string>
@@ -412,7 +412,7 @@
     <string name="only_clip_sub">A tárhelyre mentés nem történik meg, a képet csak a vágólapra próbálja meg elhelyezni</string>
     <string name="saved_to_original">Fájl felülírva a következővel: %s az eredeti célhelyen</string>
     <string name="magnifier_sub">Engedélyezi a nagyítót az ujj tetején rajzi módokban a jobb hozzáférhetőség érdekében</string>
-    <string name="force_exif_widget_inital_value">Kezdeti érték kényszerítése</string>
+    <string name="force_exif_widget_initial_value">Kezdeti érték kényszerítése</string>
     <string name="rate">Mérték</string>
     <string name="rate_app_sub">Ez az alkalmazás teljesen ingyenes, ha azt szeretné, hogy nagyobb legyen, csillagozza meg a projektet a Githubon 😄</string>
     <string name="segmentation_mode_auto_only">Csak automata</string>
@@ -769,7 +769,7 @@
     <string name="toggle_tap">Toggle Tap</string>
     <string name="transparency">Átláthatóság</string>
     <string name="magnifier">Nagyító</string>
-    <string name="force_exif_widget_inital_value_sub">Az exif widgetet kezdetben ellenőrizni kényszeríti</string>
+    <string name="force_exif_widget_initial_value_sub">Az exif widgetet kezdetben ellenőrizni kényszeríti</string>
     <string name="allow_multiple_languages">Több nyelv engedélyezése</string>
     <string name="favorite">Kedvenc</string>
     <string name="no_favorite_filters">Még nincsenek kedvenc szűrők hozzáadva</string>

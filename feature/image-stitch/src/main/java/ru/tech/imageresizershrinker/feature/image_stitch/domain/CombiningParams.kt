@@ -22,5 +22,6 @@ data class CombiningParams(
     val spacing: Int = 0,
     val scaleSmallImagesToLarge: Boolean = true,
     val backgroundColor: Int = 0x00000000,
-    val fadingEdgesMode: Int? = 0
+    val fadingEdgesMode: Int? = 0,
+    val alignment: StitchAlignment = StitchAlignment.Start
 )

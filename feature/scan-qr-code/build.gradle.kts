@@ -26,4 +26,6 @@ android.namespace = "ru.tech.imageresizershrinker.feature.scan_qr_code"
 
 dependencies {
     implementation(projects.core.filters)
+    "marketImplementation"(libs.quickie.bundled)
+    "fossImplementation"(libs.quickie.foss)
 }

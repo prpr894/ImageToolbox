@@ -40,6 +40,7 @@ import com.smarttoolfactory.colordetector.util.ColorUtil
 import com.smarttoolfactory.colorpicker.selector.SelectorRectSaturationValueHSV
 import com.smarttoolfactory.colorpicker.slider.SliderAlphaHSL
 import com.smarttoolfactory.colorpicker.slider.SliderHueHSV
+import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 
 @Composable
@@ -66,8 +67,11 @@ fun AlphaColorSelection(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(4 / 3f)
-                .container(RoundedCornerShape(2.dp), resultPadding = 0.dp)
-                .clip(RoundedCornerShape(3.dp)),
+                .container(
+                    RoundedCornerShape(size = 6.dp),
+                    resultPadding = 0.dp
+                )
+                .clip(RoundedCornerShape(6.dp)),
             hue = hue,
             saturation = saturation,
             value = value
@@ -90,10 +94,10 @@ fun AlphaColorSelection(
                 .container(
                     shape = CircleShape,
                     resultPadding = 0.dp,
-                    color = Color.Transparent,
-                    composeColorOnTopOfBackground = false,
                     clip = false,
-                    isShadowClip = true
+                    isShadowClip = true,
+                    autoShadowElevation = if (LocalSettingsState.current.drawSliderShadows) 1.dp
+                    else 0.dp
                 )
                 .padding(horizontal = 10.dp)
         )
@@ -106,8 +110,6 @@ fun AlphaColorSelection(
                 .container(
                     shape = CircleShape,
                     resultPadding = 0.dp,
-                    color = Color.Transparent,
-                    composeColorOnTopOfBackground = false,
                     clip = false,
                     isShadowClip = true
                 )

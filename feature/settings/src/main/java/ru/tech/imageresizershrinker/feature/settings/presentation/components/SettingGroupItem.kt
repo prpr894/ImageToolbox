@@ -17,26 +17,30 @@
 
 package ru.tech.imageresizershrinker.feature.settings.presentation.components
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+import ru.tech.imageresizershrinker.core.resources.R
+import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
+import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSimpleSettingsInteractor
 import ru.tech.imageresizershrinker.core.ui.theme.blend
 import ru.tech.imageresizershrinker.core.ui.theme.takeColorFromScheme
 import ru.tech.imageresizershrinker.core.ui.widget.other.ExpandableItem
+import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 
 @Composable
 fun SettingGroupItem(
+    groupKey: Int,
     icon: ImageVector,
     text: String,
     initialState: Boolean = false,
@@ -45,15 +49,17 @@ fun SettingGroupItem(
         .padding(2.dp),
     content: @Composable ColumnScope.(Boolean) -> Unit
 ) {
-    val interactionSource = remember {
-        MutableInteractionSource()
-    }
-    val pressed by interactionSource.collectIsPressedAsState()
+    val scope = rememberCoroutineScope()
+    val toastHostState = LocalToastHostState.current
+    val context = LocalContext.current
 
-    val cornerSize by animateDpAsState(
-        if (pressed) 8.dp
-        else 20.dp
-    )
+    val settingsState = LocalSettingsState.current
+
+    val initialState =
+        settingsState.settingGroupsInitialVisibility[groupKey] ?: initialState
+
+    val simpleSettingsInteractor = LocalSimpleSettingsInteractor.current
+
     ExpandableItem(
         modifier = modifier,
         visibleContent = {
@@ -68,9 +74,27 @@ fun SettingGroupItem(
                 surfaceContainerLowest, 0.4f
             )
         },
-        shape = RoundedCornerShape(cornerSize),
+        onLongClick = {
+            scope.launch {
+                simpleSettingsInteractor.toggleSettingsGroupVisibility(
+                    key = groupKey,
+                    value = !initialState
+                )
+
+                toastHostState.showToast(
+                    message = context.getString(
+                        if (initialState) {
+                            R.string.settings_group_visibility_hidden
+                        } else {
+                            R.string.settings_group_visibility_visible
+                        },
+                        text
+                    ),
+                    icon = Icons.Outlined.Settings
+                )
+            }
+        },
         expandableContent = content,
-        initialState = initialState,
-        interactionSource = interactionSource
+        initialState = initialState
     )
 }

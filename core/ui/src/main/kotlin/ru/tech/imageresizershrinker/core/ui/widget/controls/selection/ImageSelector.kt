@@ -24,24 +24,34 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.MiniEdit
-import ru.tech.imageresizershrinker.core.ui.shapes.CloverShape
-import ru.tech.imageresizershrinker.core.ui.utils.helper.Picker
-import ru.tech.imageresizershrinker.core.ui.utils.helper.localImagePickerMode
-import ru.tech.imageresizershrinker.core.ui.utils.helper.rememberImagePicker
+import ru.tech.imageresizershrinker.core.resources.shapes.CloverShape
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.Picker
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.rememberFilePicker
+import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.rememberImagePicker
+import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils.getFilename
+import ru.tech.imageresizershrinker.core.ui.widget.dialogs.OneTimeImagePickingDialog
 import ru.tech.imageresizershrinker.core.ui.widget.image.Picture
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItemOverload
 
@@ -49,30 +59,102 @@ import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItemOve
 fun ImageSelector(
     value: Any?,
     onValueChange: (Uri) -> Unit,
-    subtitle: String,
+    title: String = stringResource(id = R.string.image),
+    subtitle: String?,
     modifier: Modifier = Modifier,
+    autoShadowElevation: Dp = 1.dp,
     color: Color = MaterialTheme.colorScheme.surfaceContainerLow,
-    shape: Shape = RoundedCornerShape(20.dp)
+    shape: Shape = RoundedCornerShape(20.dp),
+    contentScale: ContentScale = ContentScale.Crop
 ) {
-    val pickImageLauncher = rememberImagePicker(
-        mode = localImagePickerMode(Picker.Single)
-    ) { list ->
-        list.firstOrNull()?.let(onValueChange)
+    val imagePicker = rememberImagePicker(onSuccess = onValueChange)
+
+    var showOneTimeImagePickingDialog by rememberSaveable {
+        mutableStateOf(false)
     }
 
     PreferenceItemOverload(
-        title = stringResource(id = R.string.image),
+        title = title,
         subtitle = subtitle,
-        onClick = pickImageLauncher::pickImage,
+        onClick = imagePicker::pickImage,
+        onLongClick = {
+            showOneTimeImagePickingDialog = true
+        },
+        autoShadowElevation = autoShadowElevation,
         startIcon = {
             Picture(
-                contentScale = ContentScale.Inside,
+                contentScale = contentScale,
                 model = value,
                 shape = CloverShape,
                 modifier = Modifier.size(48.dp),
                 error = {
                     Icon(
                         imageVector = Icons.Outlined.AddPhotoAlternate,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CloverShape)
+                            .background(
+                                color = MaterialTheme.colorScheme.secondaryContainer
+                                    .copy(0.5f)
+                                    .compositeOver(color)
+                            )
+                            .padding(8.dp)
+                    )
+                }
+            )
+        },
+        endIcon = {
+            Icon(
+                imageVector = Icons.Rounded.MiniEdit,
+                contentDescription = stringResource(R.string.edit)
+            )
+        },
+        modifier = modifier,
+        shape = shape,
+        color = color,
+        drawStartIconContainer = false
+    )
+
+    OneTimeImagePickingDialog(
+        onDismiss = { showOneTimeImagePickingDialog = false },
+        picker = Picker.Single,
+        imagePicker = imagePicker,
+        visible = showOneTimeImagePickingDialog
+    )
+}
+
+@Composable
+fun FileSelector(
+    value: String?,
+    onValueChange: (Uri) -> Unit,
+    title: String = stringResource(id = R.string.pick_file),
+    subtitle: String?,
+    modifier: Modifier = Modifier,
+    autoShadowElevation: Dp = 1.dp,
+    color: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    shape: Shape = RoundedCornerShape(20.dp)
+) {
+    val pickFileLauncher = rememberFilePicker(onSuccess = onValueChange)
+
+    val context = LocalContext.current
+
+    PreferenceItemOverload(
+        title = title,
+        subtitle = if (subtitle == null && value != null) {
+            context.getFilename(value.toUri())
+        } else subtitle,
+        onClick = pickFileLauncher::pickFile,
+        autoShadowElevation = autoShadowElevation,
+        startIcon = {
+            Picture(
+                contentScale = ContentScale.Crop,
+                model = value,
+                shape = CloverShape,
+                modifier = Modifier.size(48.dp),
+                error = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.InsertDriveFile,
                         contentDescription = null,
                         modifier = Modifier
                             .fillMaxSize()

@@ -17,31 +17,25 @@
 
 package ru.tech.imageresizershrinker.core.filters.presentation.model
 
-import android.graphics.Bitmap
-import ru.tech.imageresizershrinker.core.filters.domain.model.BokehParams
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.FilterParam
 import ru.tech.imageresizershrinker.core.resources.R
 
 class UiBokehFilter(
-    override val value: BokehParams = BokehParams.Default
-) : UiFilter<BokehParams>(
+    override val value: Pair<Int, Int> = 6 to 6
+) : UiFilter<Pair<Int, Int>>(
     title = R.string.bokeh,
     value = value,
     paramsInfo = listOf(
         FilterParam(
-            title = R.string.radius,
-            valueRange = 1f..30f,
+            title = R.string.just_size,
+            valueRange = 1f..150f,
             roundTo = 0
         ),
         FilterParam(
             title = R.string.amount,
             valueRange = 3f..40f,
             roundTo = 0
-        ),
-        FilterParam(
-            title = R.string.scale,
-            valueRange = 0.01f..1f
         )
     )
-), Filter.Bokeh<Bitmap>
+), Filter.Bokeh

@@ -46,9 +46,10 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
-import ru.tech.imageresizershrinker.core.ui.shapes.CloverShape
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import ru.tech.imageresizershrinker.core.resources.shapes.CloverShape
 import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalImageLoader
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.shimmer
 
@@ -58,7 +59,6 @@ fun EmojiItem(
     modifier: Modifier = Modifier,
     fontSize: TextUnit = LocalTextStyle.current.fontSize,
     fontScale: Float,
-    isFullQuality: Boolean = true,
     onNoEmoji: @Composable (size: Dp) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -79,6 +79,7 @@ fun EmojiItem(
                     .data(emoji)
                     .memoryCacheKey(emoji)
                     .diskCacheKey(emoji)
+                    .size(512)
                     .listener(
                         onStart = {
                             shimmering = true
@@ -92,9 +93,7 @@ fun EmojiItem(
             }
         }.value,
         imageLoader = LocalImageLoader.current,
-        filterQuality = if (isFullQuality) {
-            FilterQuality.High
-        } else FilterQuality.None
+        filterQuality = FilterQuality.High
     )
 
     AnimatedContent(

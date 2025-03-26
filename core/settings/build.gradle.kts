@@ -26,8 +26,9 @@ android.namespace = "ru.tech.imageresizershrinker.core.settings"
 dependencies {
     implementation(libs.datastore.preferences.android)
     implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.coil)
 
-    implementation(libs.imageToolboxLibs)
+    implementation(libs.toolbox.dynamicTheme)
     implementation(projects.core.domain)
     implementation(projects.core.resources)
     implementation(projects.core.di)

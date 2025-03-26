@@ -35,7 +35,7 @@ import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItem
 @Composable
 fun PresetsSettingItem(
     shape: Shape = ContainerShapeDefaults.topShape,
-    modifier: Modifier = Modifier.padding(start = 8.dp, end = 8.dp)
+    modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
     val editPresetsController = LocalEditPresetsController.current
     val settingsState = LocalSettingsState.current

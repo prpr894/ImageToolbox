@@ -24,29 +24,42 @@ android.namespace = "ru.tech.imageresizershrinker.core.data"
 
 dependencies {
     api(libs.coil)
-    api(libs.coilCompose)
-    api(libs.coilGif)
-    api(libs.coilSvg)
+    api(libs.coilNetwork)
+    api(libs.ktor)
+    implementation(libs.coilGif)
+    implementation(libs.coilSvg)
+
+    implementation(libs.androidx.compose.ui.graphics)
+
     api(libs.datastore.preferences.android)
 
-    api(libs.avif.coder.coil) {
+    implementation(libs.avif.coder.coil) {
         exclude(module = "com.github.awxkee:avif-coder")
     }
-    api(libs.avif.coder)
-    api(libs.jxl.coder.coil) {
+    implementation(libs.avif.coder)
+    implementation(libs.jxl.coder.coil) {
         exclude(module = "com.github.awxkee:jxl-coder")
     }
-    api(libs.jxl.coder)
-    api(libs.aire)
+    implementation(libs.jxl.coder)
+
+    implementation(libs.aire)
+    implementation(libs.jpegli.coder)
+
+    implementation(libs.moshi)
 
     api(libs.androidx.exifinterface)
     api(libs.androidx.documentfile)
 
-    api(libs.tesseract)
+    api(libs.toolbox.logger)
 
-    api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0")
-
-    implementation(libs.imageToolboxLibs)
+    implementation(libs.toolbox.tiffDecoder)
+    implementation(libs.toolbox.qoiCoder)
+    implementation(libs.toolbox.jp2decoder)
+    implementation(libs.toolbox.awebp)
+    implementation(libs.toolbox.psd)
+    implementation(libs.toolbox.apng)
+    implementation(libs.toolbox.djvuCoder)
+    implementation(libs.trickle)
 
     implementation(projects.core.domain)
     implementation(projects.core.resources)

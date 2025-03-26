@@ -33,7 +33,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.FormatColorFill
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -59,20 +58,19 @@ import com.t8rin.dynamic.theme.rememberColorScheme
 import kotlinx.coroutines.delay
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 
-@ExperimentalMaterial3Api
 @Composable
 fun ColorTuplePicker(
     visible: Boolean,
     onDismiss: () -> Unit,
     colorTuple: ColorTuple,
     title: String = stringResource(R.string.color_scheme),
-    onColorChange: (ColorTuple) -> Unit
+    onColorChange: (ColorTuple) -> Unit,
 ) {
     val settingsState = LocalSettingsState.current
 
@@ -125,7 +123,7 @@ fun ColorTuplePicker(
         }
     }
 
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         visible = visible,
         onDismiss = {
             if (!it) onDismiss()
@@ -212,7 +210,8 @@ fun ColorTuplePicker(
                                         surface = Color(it).calculateSurfaceColor()
                                     }
                                     primary = it
-                                }
+                                },
+                                infoContainerColor = MaterialTheme.colorScheme.surface
                             )
                         }
                     }
@@ -229,7 +228,8 @@ fun ColorTuplePicker(
                                     color = secondary,
                                     onColorChange = {
                                         secondary = it
-                                    }
+                                    },
+                                    infoContainerColor = MaterialTheme.colorScheme.surface
                                 )
                             }
                         }
@@ -245,7 +245,8 @@ fun ColorTuplePicker(
                                     color = tertiary,
                                     onColorChange = {
                                         tertiary = it
-                                    }
+                                    },
+                                    infoContainerColor = MaterialTheme.colorScheme.surface
                                 )
                             }
                         }
@@ -261,7 +262,8 @@ fun ColorTuplePicker(
                                     color = surface,
                                     onColorChange = {
                                         surface = it
-                                    }
+                                    },
+                                    infoContainerColor = MaterialTheme.colorScheme.surface
                                 )
                             }
                         }

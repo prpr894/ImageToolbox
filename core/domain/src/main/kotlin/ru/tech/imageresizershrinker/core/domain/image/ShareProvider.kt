@@ -18,7 +18,7 @@
 package ru.tech.imageresizershrinker.core.domain.image
 
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageInfo
-import ru.tech.imageresizershrinker.core.domain.saving.Writeable
+import ru.tech.imageresizershrinker.core.domain.saving.io.Writeable
 
 interface ShareProvider<I> {
 
@@ -30,7 +30,8 @@ interface ShareProvider<I> {
 
     suspend fun cacheImage(
         image: I,
-        imageInfo: ImageInfo
+        imageInfo: ImageInfo,
+        filename: String? = null
     ): String?
 
     suspend fun shareImages(

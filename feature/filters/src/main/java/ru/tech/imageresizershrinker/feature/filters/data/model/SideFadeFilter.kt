@@ -26,6 +26,7 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.Shader
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import ru.tech.imageresizershrinker.core.data.utils.safeConfig
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.filters.domain.model.FadeSide
@@ -36,7 +37,7 @@ import kotlin.math.roundToInt
 
 internal class SideFadeFilter(
     override val value: SideFadeParams = SideFadeParams.Relative(FadeSide.Start, 0.5f),
-) : Transformation<Bitmap>, Filter.SideFade<Bitmap> {
+) : Transformation<Bitmap>, Filter.SideFade {
 
     override val cacheKey: String
         get() = value.hashCode().toString()
@@ -45,7 +46,7 @@ internal class SideFadeFilter(
         input: Bitmap,
         size: IntegerSize
     ): Bitmap {
-        val bitmap = input.copy(input.config, true).apply { setHasAlpha(true) }
+        val bitmap = input.copy(input.safeConfig, true).apply { setHasAlpha(true) }
         val fadeSize: Int = when (value) {
             is SideFadeParams.Absolute -> value.size
             is SideFadeParams.Relative -> {

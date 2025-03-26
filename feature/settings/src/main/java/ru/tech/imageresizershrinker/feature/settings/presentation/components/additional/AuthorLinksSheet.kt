@@ -18,7 +18,6 @@
 package ru.tech.imageresizershrinker.feature.settings.presentation.components.additional
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -33,19 +32,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import ru.tech.imageresizershrinker.core.domain.AUTHOR_LINK
 import ru.tech.imageresizershrinker.core.domain.AUTHOR_TG
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.Github
 import ru.tech.imageresizershrinker.core.resources.icons.Telegram
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils.shareText
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults.bottomShape
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults.centerShape
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults.topShape
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItem
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 
@@ -55,8 +57,9 @@ fun AuthorLinksSheet(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val linkHandler = LocalUriHandler.current
 
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         visible = visible,
         onDismiss = {
             if (!it) onDismiss()
@@ -82,12 +85,7 @@ fun AuthorLinksSheet(
                     PreferenceItem(
                         color = MaterialTheme.colorScheme.tertiaryContainer,
                         onClick = {
-                            context.startActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse(AUTHOR_TG)
-                                )
-                            )
+                            linkHandler.openUri(AUTHOR_TG)
                         },
                         endIcon = Icons.Rounded.Link,
                         shape = topShape,
@@ -99,10 +97,15 @@ fun AuthorLinksSheet(
                     PreferenceItem(
                         color = MaterialTheme.colorScheme.secondaryContainer,
                         onClick = {
-                            Intent(Intent.ACTION_SENDTO).apply {
-                                data =
-                                    Uri.parse("mailto:${context.getString(R.string.developer_email)}")
-                                context.startActivity(this)
+                            val mail = context.getString(R.string.developer_email)
+                            runCatching {
+                                context.startActivity(
+                                    Intent(Intent.ACTION_SENDTO).apply {
+                                        data = "mailto:$mail".toUri()
+                                    }
+                                )
+                            }.onFailure {
+                                context.shareText(mail)
                             }
                         },
                         shape = centerShape,
@@ -115,12 +118,7 @@ fun AuthorLinksSheet(
                     PreferenceItem(
                         color = MaterialTheme.colorScheme.primaryContainer,
                         onClick = {
-                            context.startActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse(AUTHOR_LINK)
-                                )
-                            )
+                            linkHandler.openUri(AUTHOR_LINK)
                         },
                         endIcon = Icons.Rounded.Link,
                         shape = bottomShape,

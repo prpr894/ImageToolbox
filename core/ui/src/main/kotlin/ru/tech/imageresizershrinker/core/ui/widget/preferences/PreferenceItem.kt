@@ -15,17 +15,18 @@
  * along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-@file:Suppress("LocalVariableName")
-
 package ru.tech.imageresizershrinker.core.ui.widget.preferences
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,9 +42,17 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+private val DefaultTransition: AnimatedContentTransitionScope<ImageVector>.() -> ContentTransform =
+    {
+        fadeIn() + scaleIn() + slideInVertically() togetherWith fadeOut() + scaleOut() + slideOutVertically() using SizeTransform(
+            clip = false
+        )
+    }
 
 @Composable
 fun PreferenceItem(
@@ -60,13 +69,9 @@ fun PreferenceItem(
     contentColor: Color = contentColorFor(backgroundColor = color),
     overrideIconShapeContentColor: Boolean = false,
     drawStartIconContainer: Boolean = true,
-    titleFontStyle: TextStyle = LocalTextStyle.current.copy(
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Medium,
-        lineHeight = 18.sp
-    ),
-    startIconTransitionSpec: AnimatedContentTransitionScope<ImageVector>.() -> ContentTransform = { fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut() },
-    endIconTransitionSpec: AnimatedContentTransitionScope<ImageVector>.() -> ContentTransform = { fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut() },
+    titleFontStyle: TextStyle = PreferenceItemDefaults.TitleFontStyle,
+    startIconTransitionSpec: AnimatedContentTransitionScope<ImageVector>.() -> ContentTransform = DefaultTransition,
+    endIconTransitionSpec: AnimatedContentTransitionScope<ImageVector>.() -> ContentTransform = DefaultTransition,
     onDisabledClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
         .fillMaxWidth()
@@ -116,4 +121,38 @@ fun PreferenceItem(
         onDisabledClick = onDisabledClick,
         drawStartIconContainer = drawStartIconContainer
     )
+}
+
+
+object PreferenceItemDefaults {
+
+    val TitleFontStyle: TextStyle
+        @Composable
+        get() = LocalTextStyle.current.copy(
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            lineHeight = 18.sp
+        )
+
+    val TitleFontStyleCentered: TextStyle
+        @Composable
+        get() = TitleFontStyle.copy(
+            textAlign = TextAlign.Center
+        )
+
+    val TitleFontStyleCenteredSmall: TextStyle
+        @Composable
+        get() = TitleFontStyleSmall.copy(
+            textAlign = TextAlign.Center
+        )
+
+    val TitleFontStyleSmall: TextStyle
+        @Composable
+        get() = LocalTextStyle.current.copy(
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            lineHeight = 16.sp,
+            textAlign = TextAlign.Start
+        )
+
 }

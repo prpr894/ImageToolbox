@@ -19,15 +19,18 @@ package ru.tech.imageresizershrinker.feature.filters.data.model
 
 import android.graphics.Bitmap
 import com.awxkee.aire.Aire
+import com.awxkee.aire.EdgeMode
+import com.awxkee.aire.MorphOp
+import com.awxkee.aire.MorphOpMode
+import com.awxkee.aire.Scalar
+import com.t8rin.trickle.TrickleUtils.checkHasAlpha
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
-import ru.tech.imageresizershrinker.core.filters.domain.model.BokehParams
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
-import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.createScaledBitmap
 
 internal class BokehFilter(
-    override val value: BokehParams = BokehParams.Default
-) : Transformation<Bitmap>, Filter.Bokeh<Bitmap> {
+    override val value: Pair<Int, Int> = 6 to 6
+) : Transformation<Bitmap>, Filter.Bokeh {
 
     override val cacheKey: String
         get() = value.hashCode().toString()
@@ -35,16 +38,19 @@ internal class BokehFilter(
     override suspend fun transform(
         input: Bitmap,
         size: IntegerSize
-    ): Bitmap = input.createScaledBitmap(
-        (input.width * value.scale).toInt(),
-        (input.height * value.scale).toInt()
-    ).let {
-        Aire.bokeh(
-            bitmap = it,
-            kernelSize = value.radius * 2 + 1,
-            sides = value.amount,
-            enhance = true
-        )
-    }.createScaledBitmap(input.width, input.height)
+    ): Bitmap = Aire.morphology(
+        bitmap = input,
+        kernel = Aire.getBokehKernel(
+            kernelSize = value.first,
+            sides = value.second
+        ),
+        morphOp = MorphOp.DILATE,
+        morphOpMode = if (input.checkHasAlpha()) MorphOpMode.RGBA
+        else MorphOpMode.RGB,
+        borderMode = EdgeMode.REFLECT_101,
+        kernelHeight = value.first,
+        kernelWidth = value.first,
+        borderScalar = Scalar.ZEROS
+    )
 
 }

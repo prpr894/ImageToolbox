@@ -17,58 +17,85 @@
 
 package ru.tech.imageresizershrinker.feature.draw.domain
 
-sealed class DrawPathMode(open val ordinal: Int) {
+sealed class DrawPathMode(
+    val ordinal: Int
+) {
 
-    data object Free : DrawPathMode(-1)
-    data object Line : DrawPathMode(0)
-    data object PointingArrow : DrawPathMode(1)
-    data object DoublePointingArrow : DrawPathMode(2)
-    data object LinePointingArrow : DrawPathMode(3)
-    data object DoubleLinePointingArrow : DrawPathMode(4)
-    data object Lasso : DrawPathMode(5)
-    data object OutlinedRect : DrawPathMode(6)
-    data object OutlinedOval : DrawPathMode(7)
-    data object Rect : DrawPathMode(8)
-    data object Oval : DrawPathMode(9)
-    data object Triangle : DrawPathMode(10)
-    data object OutlinedTriangle : DrawPathMode(11)
+    data object Free : DrawPathMode(0)
+    data object Line : DrawPathMode(1)
+
+    data class PointingArrow(
+        val sizeScale: Float = 3f,
+        val angle: Float = 150f
+    ) : DrawPathMode(2)
+
+    data class DoublePointingArrow(
+        val sizeScale: Float = 3f,
+        val angle: Float = 150f
+    ) : DrawPathMode(3)
+
+    data class LinePointingArrow(
+        val sizeScale: Float = 3f,
+        val angle: Float = 150f
+    ) : DrawPathMode(4)
+
+    data class DoubleLinePointingArrow(
+        val sizeScale: Float = 3f,
+        val angle: Float = 150f
+    ) : DrawPathMode(5)
+
+    data object Lasso : DrawPathMode(6)
+
+    data class OutlinedRect(
+        val rotationDegrees: Int = 0
+    ) : DrawPathMode(7)
+
+    data object OutlinedOval : DrawPathMode(8)
+
+    data class Rect(
+        val rotationDegrees: Int = 0
+    ) : DrawPathMode(9)
+
+    data object Oval : DrawPathMode(10)
+    data object Triangle : DrawPathMode(11)
+    data object OutlinedTriangle : DrawPathMode(12)
 
     data class Polygon(
         val vertices: Int = 5,
         val rotationDegrees: Int = 0,
         val isRegular: Boolean = false
-    ) : DrawPathMode(12)
+    ) : DrawPathMode(13)
 
     data class OutlinedPolygon(
         val vertices: Int = 5,
         val rotationDegrees: Int = 0,
         val isRegular: Boolean = false
-    ) : DrawPathMode(13)
+    ) : DrawPathMode(14)
 
     data class Star(
         val vertices: Int = 5,
         val rotationDegrees: Int = 0,
         val innerRadiusRatio: Float = 0.5f,
         val isRegular: Boolean = false
-    ) : DrawPathMode(14)
+    ) : DrawPathMode(15)
 
     data class OutlinedStar(
         val vertices: Int = 5,
         val rotationDegrees: Int = 0,
         val innerRadiusRatio: Float = 0.5f,
         val isRegular: Boolean = false
-    ) : DrawPathMode(15)
+    ) : DrawPathMode(16)
 
     val isStroke: Boolean
         get() = !isFilled
 
     val isFilled: Boolean
-        get() = listOf(Lasso, Rect, Oval, Triangle, Polygon(), Star()).any {
+        get() = listOf(Lasso, Rect(), Oval, Triangle, Polygon(), Star()).any {
             this::class.isInstance(it)
         }
 
     val isSharpEdge: Boolean
-        get() = listOf(OutlinedRect, OutlinedOval, Rect, Oval, Lasso).any {
+        get() = listOf(OutlinedRect(), OutlinedOval, Rect(), Oval, Lasso).any {
             this::class.isInstance(it)
         }
 
@@ -77,17 +104,17 @@ sealed class DrawPathMode(open val ordinal: Int) {
             listOf(
                 Free,
                 Line,
-                PointingArrow,
-                DoublePointingArrow,
-                LinePointingArrow,
-                DoubleLinePointingArrow,
+                PointingArrow(),
+                DoublePointingArrow(),
+                LinePointingArrow(),
+                DoubleLinePointingArrow(),
                 Lasso,
-                OutlinedRect,
+                OutlinedRect(),
                 OutlinedOval,
                 OutlinedTriangle,
                 OutlinedPolygon(),
                 OutlinedStar(),
-                Rect,
+                Rect(),
                 Oval,
                 Triangle,
                 Polygon(),
@@ -95,7 +122,9 @@ sealed class DrawPathMode(open val ordinal: Int) {
             )
         }
 
-        operator fun invoke(ordinal: Int) = entries.find {
+        fun fromOrdinal(
+            ordinal: Int
+        ): DrawPathMode = entries.find {
             it.ordinal == ordinal
         } ?: Free
     }

@@ -17,15 +17,13 @@
 
 package ru.tech.imageresizershrinker.feature.settings.presentation.components
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ru.tech.imageresizershrinker.core.domain.ISSUE_TRACKER
@@ -38,7 +36,7 @@ fun IssueTrackerSettingItem(
     shape: Shape = ContainerShapeDefaults.centerShape,
     modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
-    val context = LocalContext.current
+    val linkHandler = LocalUriHandler.current
     PreferenceItem(
         shape = shape,
         modifier = modifier,
@@ -46,12 +44,7 @@ fun IssueTrackerSettingItem(
         subtitle = stringResource(R.string.issue_tracker_sub),
         startIcon = Icons.Outlined.BugReport,
         onClick = {
-            context.startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse(ISSUE_TRACKER)
-                )
-            )
+            linkHandler.openUri(ISSUE_TRACKER)
         }
     )
 }

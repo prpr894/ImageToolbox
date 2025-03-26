@@ -18,14 +18,20 @@
 package ru.tech.imageresizershrinker.core.settings.domain
 
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageScaleMode
+import ru.tech.imageresizershrinker.core.domain.image.model.ResizeType
+import ru.tech.imageresizershrinker.core.domain.model.ColorModel
+import ru.tech.imageresizershrinker.core.domain.model.HashingType
 import ru.tech.imageresizershrinker.core.domain.model.PerformanceClass
+import ru.tech.imageresizershrinker.core.domain.model.SystemBarsVisibility
 import ru.tech.imageresizershrinker.core.settings.domain.model.ColorHarmonizer
 import ru.tech.imageresizershrinker.core.settings.domain.model.CopyToClipboardMode
 import ru.tech.imageresizershrinker.core.settings.domain.model.DomainFontFamily
+import ru.tech.imageresizershrinker.core.settings.domain.model.FastSettingsSide
 import ru.tech.imageresizershrinker.core.settings.domain.model.NightMode
+import ru.tech.imageresizershrinker.core.settings.domain.model.SliderType
 import ru.tech.imageresizershrinker.core.settings.domain.model.SwitchType
 
-interface SettingsInteractor : SimpleSettingInteractor {
+interface SettingsInteractor : SimpleSettingsInteractor {
 
     suspend fun toggleAddSequenceNumber()
 
@@ -45,7 +51,7 @@ interface SettingsInteractor : SimpleSettingInteractor {
 
     suspend fun setColorTuple(colorTuple: String)
 
-    suspend fun setPresets(newPresets: String)
+    suspend fun setPresets(newPresets: List<Int>)
 
     suspend fun toggleDynamicColors()
 
@@ -76,7 +82,7 @@ interface SettingsInteractor : SimpleSettingInteractor {
     suspend fun restoreFromBackupFile(
         backupFileUri: String,
         onSuccess: () -> Unit,
-        onFailure: (Throwable) -> Unit
+        onFailure: (Throwable) -> Unit,
     )
 
     suspend fun resetSettings()
@@ -103,8 +109,6 @@ interface SettingsInteractor : SimpleSettingInteractor {
 
     suspend fun toggleDrawFabShadows()
 
-    suspend fun registerAppOpen()
-
     suspend fun toggleLockDrawOrientation()
 
     suspend fun setThemeStyle(value: Int)
@@ -130,8 +134,6 @@ interface SettingsInteractor : SimpleSettingInteractor {
     suspend fun toggleExifWidgetInitialState()
 
     suspend fun setInitialOCRLanguageCodes(list: List<String>)
-
-    suspend fun getInitialOCRLanguageCodes(): List<String>
 
     suspend fun setScreensWithBrightnessEnforcement(data: String)
 
@@ -179,4 +181,54 @@ interface SettingsInteractor : SimpleSettingInteractor {
 
     suspend fun setColorBlindType(value: Int?)
 
+    suspend fun toggleFavoriteScreen(screenId: Int)
+
+    suspend fun toggleIsLinkPreviewEnabled()
+
+    suspend fun setDefaultDrawColor(color: ColorModel)
+
+    suspend fun setDefaultDrawPathMode(modeOrdinal: Int)
+
+    suspend fun toggleAddTimestampToFilename()
+
+    suspend fun toggleUseFormattedFilenameTimestamp()
+
+    suspend fun registerTelegramGroupOpen()
+
+    suspend fun setDefaultResizeType(resizeType: ResizeType)
+
+    suspend fun setSystemBarsVisibility(systemBarsVisibility: SystemBarsVisibility)
+
+    suspend fun toggleIsSystemBarsVisibleBySwipe()
+
+    suspend fun setInitialOcrMode(mode: Int)
+
+    suspend fun toggleUseCompactSelectorsLayout()
+
+    suspend fun setMainScreenTitle(title: String)
+
+    suspend fun setSliderType(type: SliderType)
+
+    suspend fun toggleIsCenterAlignDialogButtons()
+
+    suspend fun setFastSettingsSide(side: FastSettingsSide)
+
+    suspend fun setChecksumTypeForFilename(type: HashingType?)
+
+    suspend fun setCustomFonts(fonts: List<DomainFontFamily.Custom>)
+
+    suspend fun importCustomFont(uri: String): DomainFontFamily.Custom?
+
+    suspend fun removeCustomFont(font: DomainFontFamily.Custom)
+
+    suspend fun createCustomFontsExport(): ByteArray
+
+    suspend fun toggleEnableToolExitConfirmation()
+
+    suspend fun createLogsExport(): ByteArray
+
+    fun createLogsFilename(): String
 }
+
+fun SettingsInteractor.toSimpleSettingsInteractor(): SimpleSettingsInteractor =
+    object : SimpleSettingsInteractor by this {}

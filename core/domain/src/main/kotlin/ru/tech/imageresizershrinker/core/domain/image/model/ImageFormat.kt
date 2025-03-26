@@ -127,7 +127,7 @@ sealed class ImageFormat(
         data object Lossless : Avif(
             title = "AVIF Lossless",
             compressionTypes = listOf(
-                CompressionType.Effort(0..9)
+                CompressionType.Effort(0..10)
             )
         )
 
@@ -135,48 +135,54 @@ sealed class ImageFormat(
             title = "AVIF Lossy",
             compressionTypes = listOf(
                 CompressionType.Quality(1..100),
-                CompressionType.Effort(0..9)
+                CompressionType.Effort(0..10)
             )
         )
     }
 
     sealed class Heif(
         title: String,
-        canChangeCompressionValue: Boolean
+        compressionTypes: List<CompressionType>
     ) : ImageFormat(
         title = title,
         extension = "heif",
         mimeType = "image/heif",
-        canChangeCompressionValue = canChangeCompressionValue
+        compressionTypes = compressionTypes,
+        canChangeCompressionValue = compressionTypes.isNotEmpty()
     ) {
         data object Lossless : Heif(
             title = "HEIF Lossless",
-            canChangeCompressionValue = false
+            compressionTypes = listOf()
         )
 
         data object Lossy : Heif(
             title = "HEIF Lossy",
-            canChangeCompressionValue = true
+            compressionTypes = listOf(
+                CompressionType.Quality(0..100)
+            )
         )
     }
 
     sealed class Heic(
         title: String,
-        canChangeCompressionValue: Boolean
+        compressionTypes: List<CompressionType>
     ) : ImageFormat(
         title = title,
         extension = "heic",
         mimeType = "image/heic",
-        canChangeCompressionValue = canChangeCompressionValue
+        compressionTypes = compressionTypes,
+        canChangeCompressionValue = compressionTypes.isNotEmpty()
     ) {
-        data object Lossless : Heif(
+        data object Lossless : Heic(
             title = "HEIC Lossless",
-            canChangeCompressionValue = false
+            compressionTypes = listOf()
         )
 
-        data object Lossy : Heif(
+        data object Lossy : Heic(
             title = "HEIC Lossy",
-            canChangeCompressionValue = true
+            compressionTypes = listOf(
+                CompressionType.Quality(0..100)
+            )
         )
     }
 
@@ -193,7 +199,7 @@ sealed class ImageFormat(
         data object Lossless : Jxl(
             title = "JXL Lossless",
             compressionTypes = listOf(
-                CompressionType.Effort(0..9)
+                CompressionType.Effort(1..10)
             )
         )
 
@@ -201,28 +207,87 @@ sealed class ImageFormat(
             title = "JXL Lossy",
             compressionTypes = listOf(
                 CompressionType.Quality(1..100),
-                CompressionType.Effort(0..9)
+                CompressionType.Effort(1..10)
             )
         )
     }
 
+    sealed class Jpeg2000(
+        title: String,
+        extension: String
+    ) : ImageFormat(
+        title = title,
+        extension = extension,
+        mimeType = "image/jp2",
+        canChangeCompressionValue = true,
+        compressionTypes = listOf(
+            CompressionType.Quality(20..100)
+        )
+    ) {
+
+        data object Jp2 : Jpeg2000(
+            title = "JP2",
+            extension = "jp2"
+        )
+
+        data object J2k : Jpeg2000(
+            title = "J2K",
+            extension = "j2k"
+        )
+
+    }
+
+    data object Tiff : ImageFormat(
+        title = "TIFF",
+        extension = "tiff",
+        mimeType = "image/tiff",
+        canChangeCompressionValue = true,
+        compressionTypes = emptyList()
+    )
+
+    data object Tif : ImageFormat(
+        title = "TIF",
+        extension = "tif",
+        mimeType = "image/tiff",
+        canChangeCompressionValue = true,
+        compressionTypes = emptyList()
+    )
+
+    data object Qoi : ImageFormat(
+        title = "QOI",
+        extension = "qoi",
+        mimeType = "image/qoi",
+        canChangeCompressionValue = false
+    )
+
+    data object Ico : ImageFormat(
+        title = "ICO",
+        extension = "ico",
+        mimeType = "image/x-icon",
+        canChangeCompressionValue = false
+    )
+
+    sealed class CompressionType(
+        open val compressionRange: IntRange = 0..100
+    ) {
+        data class Quality(
+            override val compressionRange: IntRange = 0..100
+        ) : CompressionType(compressionRange)
+
+        data class Effort(
+            override val compressionRange: IntRange = 0..100
+        ) : CompressionType(compressionRange)
+    }
+
     companion object {
-        sealed class CompressionType(
-            open val compressionRange: IntRange = 0..100
-        ) {
-            data class Quality(
-                override val compressionRange: IntRange = 0..100
-            ) : CompressionType(compressionRange)
-
-            data class Effort(
-                override val compressionRange: IntRange = 0..100
-            ) : CompressionType(compressionRange)
-        }
-
-        fun Default(): ImageFormat = Jpg
+        val Default: ImageFormat by lazy { Jpg }
 
         operator fun get(typeString: String?): ImageFormat = when {
-            typeString == null -> Default()
+            typeString == null -> Default
+            typeString.contains("tiff") -> Tiff
+            typeString.contains("tif") -> Tif
+            typeString.contains("jp2") -> Jpeg2000.Jp2
+            typeString.contains("j2k") -> Jpeg2000.J2k
             typeString.contains("jxl") -> Jxl.Lossless
             typeString.contains("png") -> Png.Lossless
             typeString.contains("bmp") -> Bmp
@@ -232,7 +297,10 @@ sealed class ImageFormat(
             typeString.contains("avif") -> Avif.Lossless
             typeString.contains("heif") -> Heif.Lossless
             typeString.contains("heic") -> Heic.Lossless
-            else -> Default()
+            typeString.contains("qoi") -> Qoi
+            typeString.contains("ico") -> Ico
+            typeString.contains("svg") -> Png.Lossless
+            else -> Default
         }
 
         val highLevelFormats by lazy {
@@ -264,7 +332,13 @@ sealed class ImageFormat(
                 Heif.Lossless,
                 Heif.Lossy,
                 Jxl.Lossless,
-                Jxl.Lossy
+                Jxl.Lossy,
+                Tif,
+                Tiff,
+                Jpeg2000.Jp2,
+                Jpeg2000.J2k,
+                Qoi,
+                Ico
             )
         }
     }

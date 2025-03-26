@@ -17,12 +17,12 @@
 
 package ru.tech.imageresizershrinker.core.ui.widget.color_picker
 
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,37 +32,40 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Draw
+import androidx.compose.material.icons.outlined.Error
+import androidx.compose.material.icons.rounded.DoneAll
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import ru.tech.imageresizershrinker.core.resources.R
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.ui.theme.inverse
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils.pasteColorFromClipboard
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsCombinedClickable
+import ru.tech.imageresizershrinker.core.ui.widget.modifier.animateShape
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.fadingEdges
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.transparencyChecker
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
-import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
-import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
+import ru.tech.imageresizershrinker.core.ui.widget.other.LocalToastHostState
 
 @Composable
 fun ColorSelectionRow(
@@ -70,10 +73,13 @@ fun ColorSelectionRow(
     defaultColors: List<Color> = ColorSelectionRowDefaults.colorList,
     allowAlpha: Boolean = false,
     allowScroll: Boolean = true,
-    contentPadding: PaddingValues = PaddingValues(),
     value: Color,
-    onValueChange: (Color) -> Unit
+    onValueChange: (Color) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
+    val scope = rememberCoroutineScope()
+    val toastHostState = LocalToastHostState.current
+    val context = LocalContext.current
     var customColor by remember { mutableStateOf<Color?>(null) }
     var showColorPicker by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
@@ -84,39 +90,83 @@ fun ColorSelectionRow(
         }
     }
 
+    LaunchedEffect(Unit) {
+        delay(250)
+        if (value == customColor) {
+            listState.scrollToItem(0)
+        } else if (value in defaultColors) {
+            listState.scrollToItem(defaultColors.indexOf(value))
+        }
+    }
+
+    val itemSize = 42.dp
+
     LazyRow(
         state = listState,
         modifier = modifier
             .fillMaxWidth()
-            .height(1.2.dp * 40 + 32.dp)
+            .height(64.dp)
             .fadingEdges(listState),
         userScrollEnabled = allowScroll,
         contentPadding = contentPadding,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         item {
             val background = customColor ?: MaterialTheme.colorScheme.primary
+            val isSelected = customColor != null
+            val shape = animateShape(
+                if (isSelected) RoundedCornerShape(8.dp)
+                else RoundedCornerShape(itemSize / 2)
+            )
+
             Box(
                 Modifier
-                    .size(
-                        animateDpAsState(
-                            40.dp.times(
-                                if (customColor != null) 1.3f else 1f
-                            )
+                    .size(itemSize)
+                    .aspectRatio(1f)
+                    .scale(
+                        animateFloatAsState(
+                            targetValue = if (isSelected) 0.7f else 1f,
+                            animationSpec = tween(400)
                         ).value
                     )
-                    .aspectRatio(1f)
+                    .rotate(
+                        animateFloatAsState(
+                            targetValue = if (isSelected) 45f else 0f,
+                            animationSpec = tween(400)
+                        ).value
+                    )
                     .container(
-                        shape = CircleShape,
+                        shape = shape,
                         color = background,
                         resultPadding = 0.dp
                     )
                     .transparencyChecker()
-                    .background(background, CircleShape)
-                    .clickable {
-                        showColorPicker = true
-                    },
+                    .background(background, shape)
+                    .hapticsCombinedClickable(
+                        onLongClick = {
+                            context.pasteColorFromClipboard(
+                                onPastedColor = {
+                                    val color = if (allowAlpha) Color(it)
+                                    else Color(it).copy(1f)
+
+                                    onValueChange(color)
+                                    customColor = color
+                                },
+                                onPastedColorFailure = { message ->
+                                    scope.launch {
+                                        toastHostState.showToast(
+                                            message = message,
+                                            icon = Icons.Outlined.Error
+                                        )
+                                    }
+                                }
+                            )
+                        },
+                        onClick = {
+                            showColorPicker = true
+                        }
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -133,92 +183,95 @@ fun ColorSelectionRow(
                         .size(32.dp)
                         .background(
                             color = background.copy(alpha = 1f),
-                            shape = CircleShape
+                            shape = shape
                         )
                         .padding(4.dp)
+                        .rotate(
+                            animateFloatAsState(
+                                targetValue = if (isSelected) -45f else 0f,
+                                animationSpec = tween(400)
+                            ).value
+                        )
                 )
             }
         }
-        items(defaultColors) { color ->
+        items(
+            items = defaultColors,
+            key = { it.toArgb() }
+        ) { color ->
+            val isSelected = value == color && customColor == null
+            val shape = animateShape(
+                if (isSelected) RoundedCornerShape(8.dp)
+                else RoundedCornerShape(itemSize / 2)
+            )
+
             Box(
                 Modifier
-                    .size(
-                        animateDpAsState(
-                            40.dp.times(
-                                if (value == color && customColor == null) {
-                                    1.3f
-                                } else 1f
-                            )
+                    .size(itemSize)
+                    .aspectRatio(1f)
+                    .scale(
+                        animateFloatAsState(
+                            targetValue = if (isSelected) 0.7f else 1f,
+                            animationSpec = tween(400)
                         ).value
                     )
-                    .aspectRatio(1f)
+                    .rotate(
+                        animateFloatAsState(
+                            targetValue = if (isSelected) 45f else 0f,
+                            animationSpec = tween(400)
+                        ).value
+                    )
                     .container(
-                        shape = CircleShape,
+                        shape = shape,
                         color = color,
                         resultPadding = 0.dp
                     )
                     .transparencyChecker()
-                    .background(color, CircleShape)
-                    .clickable {
-                        onValueChange(color)
+                    .background(color, shape)
+                    .hapticsClickable {
+                        onValueChange(color.copy(if (allowAlpha) color.alpha else 1f))
                         customColor = null
-                    }
-            )
-        }
-    }
-    var tempColor by remember(showColorPicker) {
-        mutableIntStateOf(customColor?.toArgb() ?: 0)
-    }
-    SimpleSheet(
-        sheetContent = {
-            Box {
-                Column(
-                    Modifier
-                        .verticalScroll(rememberScrollState())
-                        .padding(start = 36.dp, top = 36.dp, end = 36.dp, bottom = 24.dp)
-                ) {
-                    if (allowAlpha) {
-                        AlphaColorSelection(
-                            color = tempColor,
-                            onColorChange = {
-                                tempColor = it
-                            }
-                        )
-                    } else {
-                        ColorSelection(
-                            color = tempColor,
-                            onColorChange = {
-                                tempColor = it
-                            }
-                        )
-                    }
-                }
-            }
-        },
-        visible = showColorPicker,
-        onDismiss = {
-            showColorPicker = it
-        },
-        title = {
-            TitleItem(
-                text = stringResource(R.string.color),
-                icon = Icons.Rounded.Draw
-            )
-        },
-        confirmButton = {
-            EnhancedButton(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                onClick = {
-                    onValueChange(Color(tempColor))
-                    customColor = Color(tempColor)
-                    showColorPicker = false
-                }
+                    },
+                contentAlignment = Alignment.Center
             ) {
-                AutoSizeText(stringResource(R.string.ok))
+                AnimatedVisibility(isSelected) {
+                    Icon(
+                        imageVector = Icons.Rounded.DoneAll,
+                        contentDescription = null,
+                        tint = color.inverse(
+                            fraction = {
+                                if (it) 0.8f
+                                else 0.5f
+                            },
+                            darkMode = color.luminance() < 0.3f
+                        ),
+                        modifier = Modifier
+                            .size(24.dp)
+                            .rotate(
+                                animateFloatAsState(
+                                    targetValue = if (isSelected) -45f else 0f,
+                                    animationSpec = tween(400)
+                                ).value
+                            )
+                    )
+                }
             }
         }
+    }
+
+    ColorPickerSheet(
+        visible = showColorPicker,
+        onDismiss = { showColorPicker = false },
+        color = customColor,
+        onColorSelected = {
+            val color = it.copy(if (allowAlpha) it.alpha else 1f)
+            onValueChange(color)
+            customColor = color
+        },
+        allowAlpha = allowAlpha
     )
 }
+
 
 object ColorSelectionRowDefaults {
     val colorList by lazy {

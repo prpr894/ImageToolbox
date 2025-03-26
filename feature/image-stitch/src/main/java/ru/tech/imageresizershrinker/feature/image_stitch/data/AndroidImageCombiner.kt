@@ -46,10 +46,12 @@ import ru.tech.imageresizershrinker.core.filters.domain.FilterProvider
 import ru.tech.imageresizershrinker.core.filters.domain.model.FadeSide
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.domain.model.SideFadeParams
+import ru.tech.imageresizershrinker.core.filters.domain.model.createFilter
 import ru.tech.imageresizershrinker.core.settings.domain.SettingsProvider
 import ru.tech.imageresizershrinker.core.settings.domain.model.SettingsState
 import ru.tech.imageresizershrinker.feature.image_stitch.domain.CombiningParams
 import ru.tech.imageresizershrinker.feature.image_stitch.domain.ImageCombiner
+import ru.tech.imageresizershrinker.feature.image_stitch.domain.StitchAlignment
 import ru.tech.imageresizershrinker.feature.image_stitch.domain.StitchMode
 import javax.inject.Inject
 import kotlin.math.absoluteValue
@@ -94,9 +96,10 @@ internal class AndroidImageCombiner @Inject constructor(
             )
 
             val bitmaps = images.map { image ->
-                if (combiningParams.scaleSmallImagesToLarge && image.shouldUpscale(
-                        isHorizontal,
-                        size
+                if (
+                    combiningParams.scaleSmallImagesToLarge && image.shouldUpscale(
+                        isHorizontal = isHorizontal,
+                        size = size
                     )
                 ) {
                     image.upscale(isHorizontal, size)
@@ -116,24 +119,22 @@ internal class AndroidImageCombiner @Inject constructor(
                 combiningParams.spacing.takeIf { it < 0 && combiningParams.fadingEdgesMode != null }
                     ?.let {
                         val space = combiningParams.spacing.absoluteValue
-                        val bottomFilter = object : Filter.SideFade<Bitmap> {
-                            override val value: SideFadeParams
-                                get() = SideFadeParams.Absolute(
-                                    side = if (isHorizontal) {
-                                        FadeSide.End
-                                    } else FadeSide.Bottom,
-                                    size = space
-                                )
-                        }
-                        val topFilter = object : Filter.SideFade<Bitmap> {
-                            override val value: SideFadeParams
-                                get() = SideFadeParams.Absolute(
-                                    side = if (isHorizontal) {
-                                        FadeSide.Start
-                                    } else FadeSide.Top,
-                                    size = space
-                                )
-                        }
+                        val bottomFilter = createFilter<SideFadeParams, Filter.SideFade>(
+                            SideFadeParams.Absolute(
+                                side = if (isHorizontal) {
+                                    FadeSide.End
+                                } else FadeSide.Bottom,
+                                size = space
+                            )
+                        )
+                        val topFilter = createFilter<SideFadeParams, Filter.SideFade>(
+                            SideFadeParams.Absolute(
+                                side = if (isHorizontal) {
+                                    FadeSide.Start
+                                } else FadeSide.Top,
+                                size = space
+                            )
+                        )
                         val filters = if (combiningParams.fadingEdgesMode == 0) {
                             when (i) {
                                 0 -> listOf()
@@ -156,13 +157,21 @@ internal class AndroidImageCombiner @Inject constructor(
                     canvas.drawBitmap(
                         bmp,
                         pos.toFloat(),
-                        0f,
+                        when (combiningParams.alignment) {
+                            StitchAlignment.Start -> 0f
+                            StitchAlignment.Center -> (canvas.height - bmp.height) / 2f
+                            StitchAlignment.End -> (canvas.height - bmp.height).toFloat()
+                        },
                         null
                     )
                 } else {
                     canvas.drawBitmap(
                         bmp,
-                        0f,
+                        when (combiningParams.alignment) {
+                            StitchAlignment.Start -> 0f
+                            StitchAlignment.Center -> (canvas.width - bmp.width) / 2f
+                            StitchAlignment.End -> (canvas.width - bmp.width).toFloat()
+                        },
                         pos.toFloat(),
                         null
                     )
@@ -181,7 +190,8 @@ internal class AndroidImageCombiner @Inject constructor(
                 imageScaleMode = ImageScaleMode.NotPresent
             ) to ImageInfo(
                 width = (size.width * imageScale).toInt(),
-                height = (size.height * imageScale).toInt()
+                height = (size.height * imageScale).toInt(),
+                imageFormat = ImageFormat.Png.Lossless
             )
         }
 
@@ -209,10 +219,12 @@ internal class AndroidImageCombiner @Inject constructor(
                 imageScale = imageScale,
                 onProgress = onProgress
             )
-        } else getImageData(
-            imagesUris = imageUris,
-            isHorizontal = combiningParams.stitchMode.isHorizontal()
-        )
+        } else {
+            getImageData(
+                imagesUris = imageUris,
+                isHorizontal = combiningParams.stitchMode.isHorizontal()
+            )
+        }
     }
 
     override suspend fun calculateCombinedImageDimensions(
@@ -254,7 +266,10 @@ internal class AndroidImageCombiner @Inject constructor(
                     }
                 }
             }
-            size
+            IntegerSize(
+                width = size.width.coerceAtLeast(1),
+                height = size.height.coerceAtLeast(1)
+            )
         }
     }
 
@@ -319,7 +334,10 @@ internal class AndroidImageCombiner @Inject constructor(
             w = maxWidth
         }
 
-        IntegerSize(w, h) to drawables
+        IntegerSize(
+            width = w.coerceAtLeast(1),
+            height = h.coerceAtLeast(1)
+        ) to drawables
     }
 
     private fun distributeImages(

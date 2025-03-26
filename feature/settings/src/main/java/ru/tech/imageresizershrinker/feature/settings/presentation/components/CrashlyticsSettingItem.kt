@@ -32,9 +32,9 @@ import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceRowSwit
 
 @Composable
 fun CrashlyticsSettingItem(
-    onClick: (Boolean) -> Unit,
+    onClick: () -> Unit,
     shape: Shape = ContainerShapeDefaults.topShape,
-    modifier: Modifier = Modifier.padding(start = 8.dp, end = 8.dp)
+    modifier: Modifier = Modifier.padding(horizontal = 8.dp)
 ) {
     val settingsState = LocalSettingsState.current
     PreferenceRowSwitch(
@@ -44,6 +44,8 @@ fun CrashlyticsSettingItem(
         subtitle = stringResource(id = R.string.crashlytics_sub),
         startIcon = Icons.Rounded.Crashlytics,
         checked = settingsState.allowCollectCrashlytics,
-        onClick = onClick
+        onClick = {
+            onClick()
+        }
     )
 }

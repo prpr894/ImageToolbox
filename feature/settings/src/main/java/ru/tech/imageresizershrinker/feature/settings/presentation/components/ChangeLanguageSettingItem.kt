@@ -30,13 +30,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,21 +53,24 @@ import ru.tech.imageresizershrinker.core.resources.icons.MiniEdit
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils.getCurrentLocaleString
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ContextUtils.getLanguages
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedBottomSheetDefaults
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedRadioButton
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItem
 import ru.tech.imageresizershrinker.core.ui.widget.preferences.PreferenceItemOverload
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 
 @Composable
 fun ChangeLanguageSettingItem(
-    modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(16.dp)
+    modifier: Modifier = Modifier.padding(horizontal = 8.dp),
+    shape: Shape = ContainerShapeDefaults.topShape
 ) {
     val context = LocalContext.current
     var showEmbeddedLanguagePicker by rememberSaveable { mutableStateOf(false) }
+
     Column(Modifier.animateContentSize()) {
         PreferenceItem(
             shape = shape,
@@ -129,7 +130,7 @@ private fun PickLanguageSheet(
     visible: Boolean,
     onDismiss: () -> Unit
 ) {
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         onDismiss = {
             if (!it) onDismiss()
         },
@@ -166,14 +167,14 @@ private fun PickLanguageSheet(
                                 if (isSelected) MaterialTheme
                                     .colorScheme
                                     .secondaryContainer
-                                else MaterialTheme.colorScheme.surfaceContainerHigh
+                                else EnhancedBottomSheetDefaults.containerColor
                             ).value,
                             shape = ContainerShapeDefaults.shapeForIndex(
                                 index = index,
                                 size = entries.size
                             ),
                             endIcon = {
-                                RadioButton(
+                                EnhancedRadioButton(
                                     selected = isSelected,
                                     onClick = {
                                         onSelect(locale.key)
@@ -191,7 +192,7 @@ private fun PickLanguageSheet(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 onClick = onDismiss
             ) {
-                AutoSizeText(stringResource(R.string.cancel))
+                AutoSizeText(stringResource(R.string.close))
             }
         },
         visible = visible

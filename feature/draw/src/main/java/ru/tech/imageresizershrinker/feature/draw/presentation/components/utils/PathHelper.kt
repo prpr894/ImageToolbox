@@ -28,16 +28,15 @@ import androidx.compose.ui.geometry.takeOrElse
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathMeasure
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
-import ru.tech.imageresizershrinker.core.ui.utils.helper.rotateVector
+import ru.tech.imageresizershrinker.core.domain.model.Pt
+import ru.tech.imageresizershrinker.core.ui.utils.helper.rotate
 import ru.tech.imageresizershrinker.feature.draw.domain.DrawPathMode
-import ru.tech.imageresizershrinker.feature.draw.domain.Pt
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
 
-@Suppress("MemberVisibilityCanBePrivate")
 data class PathHelper(
     val drawDownPosition: Offset,
     val currentDrawPosition: Offset,
@@ -53,29 +52,60 @@ data class PathHelper(
             override fun drawArrowsIfNeeded(
                 drawPath: Path,
             ) {
+                fun drawStartEndArrows(
+                    sizeScale: Float = 3f,
+                    angle: Float = 150f
+                ) {
+                    drawEndArrow(
+                        drawPath = drawPath,
+                        strokeWidth = strokeWidth,
+                        canvasSize = canvasSize,
+                        arrowSize = sizeScale,
+                        arrowAngle = angle.toDouble()
+                    )
+
+                    drawStartArrow(
+                        drawPath = drawPath,
+                        strokeWidth = strokeWidth,
+                        canvasSize = canvasSize,
+                        arrowSize = sizeScale,
+                        arrowAngle = angle.toDouble()
+                    )
+                }
+
+
                 when (drawPathMode) {
-                    DrawPathMode.DoublePointingArrow,
-                    DrawPathMode.DoubleLinePointingArrow -> {
-
-                        drawEndArrow(
-                            drawPath = drawPath,
-                            strokeWidth = strokeWidth,
-                            canvasSize = canvasSize
-                        )
-
-                        drawStartArrow(
-                            drawPath = drawPath,
-                            strokeWidth = strokeWidth,
-                            canvasSize = canvasSize
+                    is DrawPathMode.DoublePointingArrow -> {
+                        drawStartEndArrows(
+                            sizeScale = drawPathMode.sizeScale,
+                            angle = drawPathMode.angle
                         )
                     }
 
-                    DrawPathMode.PointingArrow,
-                    DrawPathMode.LinePointingArrow -> {
+                    is DrawPathMode.DoubleLinePointingArrow -> {
+                        drawStartEndArrows(
+                            sizeScale = drawPathMode.sizeScale,
+                            angle = drawPathMode.angle
+                        )
+                    }
+
+                    is DrawPathMode.PointingArrow -> {
                         drawEndArrow(
                             drawPath = drawPath,
                             strokeWidth = strokeWidth,
-                            canvasSize = canvasSize
+                            canvasSize = canvasSize,
+                            arrowSize = drawPathMode.sizeScale,
+                            arrowAngle = drawPathMode.angle.toDouble()
+                        )
+                    }
+
+                    is DrawPathMode.LinePointingArrow -> {
+                        drawEndArrow(
+                            drawPath = drawPath,
+                            strokeWidth = strokeWidth,
+                            canvasSize = canvasSize,
+                            arrowSize = drawPathMode.sizeScale,
+                            arrowAngle = drawPathMode.angle.toDouble()
                         )
                     }
 
@@ -87,23 +117,24 @@ data class PathHelper(
                 drawPath: Path,
                 strokeWidth: Pt,
                 canvasSize: IntegerSize,
+                arrowSize: Float = 3f,
+                arrowAngle: Double = 150.0
             ) {
                 val (preLastPoint, lastPoint) = PathMeasure().apply {
                     setPath(drawPath, false)
                 }.let {
                     Pair(
-                        it.getPosition(it.length - strokeWidth.toPx(canvasSize) * 3f)
+                        it.getPosition(it.length - strokeWidth.toPx(canvasSize) * arrowSize)
                             .takeOrElse { Offset.Zero },
                         it.getPosition(it.length).takeOrElse { Offset.Zero }
                     )
                 }
 
                 val arrowVector = lastPoint - preLastPoint
+
                 fun drawArrow() {
-
-                    val (rx1, ry1) = arrowVector.rotateVector(150.0)
-                    val (rx2, ry2) = arrowVector.rotateVector(210.0)
-
+                    val (rx1, ry1) = arrowVector.rotate(arrowAngle)
+                    val (rx2, ry2) = arrowVector.rotate(360 - arrowAngle)
 
                     drawPath.apply {
                         relativeLineTo(rx1, ry1)
@@ -112,9 +143,9 @@ data class PathHelper(
                     }
                 }
 
-                if (abs(arrowVector.x) < 3f * strokeWidth.toPx(canvasSize) && abs(
-                        arrowVector.y
-                    ) < 3f * strokeWidth.toPx(canvasSize) && preLastPoint != Offset.Zero
+                if (abs(arrowVector.x) < arrowSize * strokeWidth.toPx(canvasSize) &&
+                    abs(arrowVector.y) < arrowSize * strokeWidth.toPx(canvasSize) &&
+                    preLastPoint != Offset.Zero
                 ) {
                     drawArrow()
                 }
@@ -124,22 +155,24 @@ data class PathHelper(
                 drawPath: Path,
                 strokeWidth: Pt,
                 canvasSize: IntegerSize,
+                arrowSize: Float = 3f,
+                arrowAngle: Double = 150.0
             ) {
                 val (firstPoint, secondPoint) = PathMeasure().apply {
                     setPath(drawPath, false)
                 }.let {
                     Pair(
                         it.getPosition(0f).takeOrElse { Offset.Zero },
-                        it.getPosition(strokeWidth.toPx(canvasSize) * 3f).takeOrElse { Offset.Zero }
+                        it.getPosition(strokeWidth.toPx(canvasSize) * arrowSize)
+                            .takeOrElse { Offset.Zero }
                     )
                 }
 
                 val arrowVector = firstPoint - secondPoint
+
                 fun drawArrow() {
-
-                    val (rx1, ry1) = arrowVector.rotateVector(150.0)
-                    val (rx2, ry2) = arrowVector.rotateVector(210.0)
-
+                    val (rx1, ry1) = arrowVector.rotate(arrowAngle)
+                    val (rx2, ry2) = arrowVector.rotate(360 - arrowAngle)
 
                     drawPath.apply {
                         moveTo(firstPoint.x, firstPoint.y)
@@ -149,9 +182,9 @@ data class PathHelper(
                     }
                 }
 
-                if (abs(arrowVector.x) < 3f * strokeWidth.toPx(canvasSize) && abs(
-                        arrowVector.y
-                    ) < 3f * strokeWidth.toPx(canvasSize) && secondPoint != Offset.Zero
+                if (abs(arrowVector.x) < arrowSize * strokeWidth.toPx(canvasSize) &&
+                    abs(arrowVector.y) < arrowSize * strokeWidth.toPx(canvasSize) &&
+                    secondPoint != Offset.Zero
                 ) {
                     drawArrow()
                 }
@@ -179,7 +212,7 @@ data class PathHelper(
             val newPath = Path().apply {
                 if (isRegular) {
                     val angleStep = 360f / vertices
-                    val startAngle = rotationDegrees - 180.0
+                    val startAngle = rotationDegrees - 270.0
                     moveTo(
                         centerX + radius * cos(Math.toRadians(startAngle)).toFloat(),
                         centerY + radius * sin(Math.toRadians(startAngle)).toFloat()
@@ -193,7 +226,7 @@ data class PathHelper(
                     }
                 } else {
                     for (i in 0 until vertices) {
-                        val angle = i * (360f / vertices) + rotationDegrees
+                        val angle = i * (360f / vertices) + rotationDegrees - 270.0
                         val x =
                             centerX + width / 2f * cos(Math.toRadians(angle.toDouble())).toFloat()
                         val y =
@@ -234,7 +267,7 @@ data class PathHelper(
                     val innerRadius = outerRadius * innerRadiusRatio
 
                     val angleStep = 360f / (2 * vertices)
-                    val startAngle = rotationDegrees - 180.0
+                    val startAngle = rotationDegrees - 270.0
 
                     for (i in 0 until (2 * vertices)) {
                         val radius = if (i % 2 == 0) outerRadius else innerRadius
@@ -249,8 +282,7 @@ data class PathHelper(
                     }
                 } else {
                     for (i in 0 until (2 * vertices)) {
-                        val angle =
-                            i * (360f / (2 * vertices)) + rotationDegrees.toDouble()
+                        val angle = i * (360f / (2 * vertices)) + rotationDegrees - 270.0
                         val radiusX =
                             (if (i % 2 == 0) width else width * innerRadiusRatio) / 2f
                         val radiusY =
@@ -289,19 +321,40 @@ data class PathHelper(
         }
     }
 
-    fun drawRect() {
+    fun drawRect(
+        rotationDegrees: Int
+    ) {
         if (drawDownPosition.isSpecified && currentDrawPosition.isSpecified) {
             val top = max(drawDownPosition.y, currentDrawPosition.y)
             val left = min(drawDownPosition.x, currentDrawPosition.x)
             val bottom = min(drawDownPosition.y, currentDrawPosition.y)
             val right = max(drawDownPosition.x, currentDrawPosition.x)
 
+            val centerX = (left + right) / 2
+            val centerY = (top + bottom) / 2
+
+            val radians = Math.toRadians(rotationDegrees.toDouble())
+
+            val corners = listOf(
+                Offset(left, top),
+                Offset(right, top),
+                Offset(right, bottom),
+                Offset(left, bottom)
+            )
+
+            val rotatedCorners = corners.map { corner ->
+                val translatedX = corner.x - centerX
+                val translatedY = corner.y - centerY
+                val rotatedX = translatedX * cos(radians) - translatedY * sin(radians)
+                val rotatedY = translatedX * sin(radians) + translatedY * cos(radians)
+                Offset(rotatedX.toFloat() + centerX, rotatedY.toFloat() + centerY)
+            }
+
             val newPath = Path().apply {
-                moveTo(left, top)
-                lineTo(right, top)
-                lineTo(right, bottom)
-                lineTo(left, bottom)
-                lineTo(left, top)
+                moveTo(rotatedCorners[0].x, rotatedCorners[0].y)
+                lineTo(rotatedCorners[1].x, rotatedCorners[1].y)
+                lineTo(rotatedCorners[2].x, rotatedCorners[2].y)
+                lineTo(rotatedCorners[3].x, rotatedCorners[3].y)
                 close()
             }
             onPathChange(newPath)
@@ -353,15 +406,16 @@ data class PathHelper(
         onBaseDraw: () -> Unit,
     ) = if (!isEraserOn) {
         when (drawPathMode) {
-            DrawPathMode.PointingArrow,
-            DrawPathMode.DoublePointingArrow -> onDrawFreeArrow(drawArrowsScope)
+            is DrawPathMode.PointingArrow,
+            is DrawPathMode.DoublePointingArrow -> onDrawFreeArrow(drawArrowsScope)
 
-            DrawPathMode.DoubleLinePointingArrow,
+            is DrawPathMode.DoubleLinePointingArrow,
             DrawPathMode.Line,
-            DrawPathMode.LinePointingArrow -> drawLine()
+            is DrawPathMode.LinePointingArrow -> drawLine()
 
-            DrawPathMode.Rect,
-            DrawPathMode.OutlinedRect -> drawRect()
+            is DrawPathMode.Rect -> drawRect(drawPathMode.rotationDegrees)
+
+            is DrawPathMode.OutlinedRect -> drawRect(drawPathMode.rotationDegrees)
 
             DrawPathMode.Triangle,
             DrawPathMode.OutlinedTriangle -> drawTriangle()

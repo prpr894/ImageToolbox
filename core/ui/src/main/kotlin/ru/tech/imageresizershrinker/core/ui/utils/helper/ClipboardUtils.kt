@@ -18,6 +18,7 @@
 package ru.tech.imageresizershrinker.core.ui.utils.helper
 
 import android.content.ClipData
+import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
@@ -111,9 +112,13 @@ fun rememberClipboardText(): State<String> {
     return clip
 }
 
-fun ClipboardManager?.clipList(): List<Uri> = this?.primaryClip?.clipList() ?: emptyList()
+fun ClipboardManager?.clipList(): List<Uri> = runCatching {
+    this?.primaryClip?.clipList()
+}.getOrNull() ?: emptyList()
 
-fun ClipboardManager?.clipText(): String = this?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+fun ClipboardManager?.clipText(): String = runCatching {
+    this?.primaryClip?.getItemAt(0)?.text?.toString()
+}.getOrNull() ?: ""
 
 fun ClipData.clipList() = List(
     size = itemCount,
@@ -122,12 +127,36 @@ fun ClipData.clipList() = List(
     }
 ).filterNotNull()
 
+fun List<Uri>.toClipData(
+    description: String = "Images",
+    mimeTypes: Array<String> = arrayOf("image/*")
+): ClipData? {
+    if (this.isEmpty()) return null
+
+    return ClipData(
+        ClipDescription(
+            description,
+            mimeTypes
+        ),
+        ClipData.Item(this.first())
+    ).apply {
+        this@toClipData.drop(1).forEach {
+            addItem(ClipData.Item(it))
+        }
+    }
+}
+
+fun CharSequence.toClipData(
+    label: String = "plain text"
+): ClipData = ClipData.newPlainText(label, this)
+
 fun Uri.asClip(
-    context: Context
+    context: Context,
+    label: String = "Image"
 ): ClipEntry = ClipEntry(
     ClipData.newUri(
         context.contentResolver,
-        "IMAGE",
+        label,
         this
     )
 )

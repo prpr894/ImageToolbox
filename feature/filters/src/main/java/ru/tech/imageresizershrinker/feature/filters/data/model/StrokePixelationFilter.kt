@@ -18,11 +18,10 @@
 package ru.tech.imageresizershrinker.feature.filters.data.model
 
 import android.graphics.Bitmap
-import android.graphics.Matrix
-import android.graphics.Paint
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.core.graphics.applyCanvas
+import com.t8rin.trickle.Trickle
+import ru.tech.imageresizershrinker.core.data.image.utils.ColorUtils.toModel
+import ru.tech.imageresizershrinker.core.domain.model.ColorModel
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.transformation.Transformation
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
@@ -30,8 +29,8 @@ import ru.tech.imageresizershrinker.feature.filters.data.utils.Pixelate
 import ru.tech.imageresizershrinker.feature.filters.data.utils.PixelationLayer
 
 internal class StrokePixelationFilter(
-    override val value: Pair<Float, Color> = 20f to Color.Black,
-) : Filter.StrokePixelation<Bitmap, Color>, Transformation<Bitmap> {
+    override val value: Pair<Float, ColorModel> = 20f to Color.Black.toModel(),
+) : Transformation<Bitmap>, Filter.StrokePixelation {
     override val cacheKey: String
         get() = (value).hashCode().toString()
 
@@ -65,14 +64,10 @@ internal class StrokePixelationFilter(
                     .build()
             )
         ).let {
-            Bitmap.createBitmap(
-                it.width,
-                it.height,
-                it.config
-            ).applyCanvas {
-                drawColor(value.second.toArgb())
-                drawBitmap(it, Matrix(), Paint())
-            }
+            Trickle.drawColorBehind(
+                input = it,
+                color = value.second.colorInt
+            )
         }
     }
 }

@@ -15,14 +15,20 @@
  * along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-@file:Suppress("ObjectPropertyName")
-
 package ru.tech.imageresizershrinker.core.ui.widget.image
 
+import android.content.pm.ActivityInfo
+import android.graphics.Bitmap
+import android.os.Build
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -35,23 +41,33 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import coil.ImageLoader
-import coil.compose.AsyncImagePainter
-import coil.compose.SubcomposeAsyncImage
-import coil.compose.SubcomposeAsyncImageScope
-import coil.request.ImageRequest
-import coil.transform.Transformation
+import coil3.ImageLoader
+import coil3.compose.AsyncImageModelEqualityDelegate
+import coil3.compose.AsyncImagePainter
+import coil3.compose.LocalAsyncImageModelEqualityDelegate
+import coil3.compose.SubcomposeAsyncImage
+import coil3.compose.SubcomposeAsyncImageScope
+import coil3.request.ImageRequest
+import coil3.request.allowHardware
+import coil3.request.crossfade
+import coil3.request.transformations
+import coil3.toBitmap
+import coil3.transform.Transformation
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import ru.tech.imageresizershrinker.core.domain.transformation.GenericTransformation
+import ru.tech.imageresizershrinker.core.ui.utils.helper.toCoil
+import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalComponentActivity
 import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalImageLoader
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.shimmer
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.transparencyChecker
 
 @Composable
 fun Picture(
-    modifier: Modifier = Modifier,
     model: Any?,
-    transformations: List<Transformation> = emptyList(),
-    manualImageRequest: ImageRequest? = null,
+    modifier: Modifier = Modifier,
+    transformations: List<Transformation>? = null,
     manualImageLoader: ImageLoader? = null,
     contentDescription: String? = null,
     shape: Shape = RectangleShape,
@@ -71,9 +87,12 @@ fun Picture(
     crossfadeEnabled: Boolean = true,
     allowHardware: Boolean = true,
     showTransparencyChecker: Boolean = true,
-    isLoadingFromDifferentPlace: Boolean = false
+    isLoadingFromDifferentPlace: Boolean = false,
+    enableUltraHDRSupport: Boolean = false,
+    size: Int? = null,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
-    val context = LocalContext.current
+    val context = LocalComponentActivity.current
 
     var errorOccurred by rememberSaveable { mutableStateOf(false) }
 
@@ -81,48 +100,100 @@ fun Picture(
 
     val imageLoader = manualImageLoader ?: LocalImageLoader.current
 
-    val request = manualImageRequest ?: ImageRequest.Builder(context)
-        .data(model)
-        .crossfade(crossfadeEnabled)
-        .allowHardware(allowHardware)
-        .transformations(transformations)
-        .build()
+    val hdrTransformation = remember(context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && enableUltraHDRSupport) {
+            listOf(
+                GenericTransformation<Bitmap> { bitmap ->
+                    withContext(Dispatchers.Main.immediate) {
+                        delay(1000)
+                        context.window.colorMode = if (bitmap.hasGainmap()) {
+                            ActivityInfo.COLOR_MODE_HDR
+                        } else ActivityInfo.COLOR_MODE_DEFAULT
+                    }
+                    bitmap
+                }.toCoil()
+            )
+        } else emptyList()
+    }
 
-    SubcomposeAsyncImage(
-        model = request,
-        imageLoader = imageLoader,
-        contentDescription = contentDescription,
-        modifier = modifier
-            .clip(shape)
-            .then(if (showTransparencyChecker) Modifier.transparencyChecker() else Modifier)
-            .then(if (shimmerEnabled) Modifier.shimmer(shimmerVisible || isLoadingFromDifferentPlace) else Modifier),
-        contentScale = contentScale,
-        loading = {
-            if (loading != null) loading(it)
-            shimmerVisible = true
-        },
-        success = success,
-        error = error,
-        onSuccess = {
-            shimmerVisible = false
-            onSuccess?.invoke(it)
-            onState?.invoke(it)
-        },
-        onLoading = {
-            onLoading?.invoke(it)
-            onState?.invoke(it)
-        },
-        onError = {
-            if (error != null) shimmerVisible = false
-            onError?.invoke(it)
-            onState?.invoke(it)
-            errorOccurred = true
-        },
-        alignment = alignment,
-        alpha = alpha,
-        colorFilter = colorFilter,
-        filterQuality = filterQuality
-    )
+    val request = if (model !is ImageRequest) {
+        remember(
+            context,
+            model,
+            crossfadeEnabled,
+            allowHardware,
+            transformations,
+            hdrTransformation,
+            size
+        ) {
+            ImageRequest.Builder(context)
+                .data(model)
+                .crossfade(crossfadeEnabled)
+                .allowHardware(allowHardware)
+                .transformations(
+                    (transformations ?: emptyList()) + hdrTransformation
+                )
+                .apply {
+                    size?.let { size(it) }
+                }
+                .build()
+        }
+    } else model
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && enableUltraHDRSupport) {
+        DisposableEffect(model) {
+            onDispose {
+                context.window.colorMode = ActivityInfo.COLOR_MODE_DEFAULT
+            }
+        }
+    }
+
+    CompositionLocalProvider(
+        LocalAsyncImageModelEqualityDelegate provides AsyncImageModelEqualityDelegate.AllProperties
+    ) {
+        SubcomposeAsyncImage(
+            model = request,
+            imageLoader = imageLoader,
+            contentDescription = contentDescription,
+            modifier = modifier
+                .clip(shape)
+                .then(if (showTransparencyChecker) Modifier.transparencyChecker() else Modifier)
+                .then(if (shimmerEnabled) Modifier.shimmer(shimmerVisible || isLoadingFromDifferentPlace) else Modifier)
+                .padding(contentPadding),
+            contentScale = contentScale,
+            loading = {
+                if (loading != null) loading(it)
+                shimmerVisible = true
+            },
+            success = success,
+            error = error,
+            onSuccess = {
+                if (model is ImageRequest && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && enableUltraHDRSupport) {
+                    context.window.colorMode =
+                        if (it.result.image.toBitmap(400, 400).hasGainmap()) {
+                            ActivityInfo.COLOR_MODE_HDR
+                        } else ActivityInfo.COLOR_MODE_DEFAULT
+                }
+                shimmerVisible = false
+                onSuccess?.invoke(it)
+                onState?.invoke(it)
+            },
+            onLoading = {
+                onLoading?.invoke(it)
+                onState?.invoke(it)
+            },
+            onError = {
+                if (error != null) shimmerVisible = false
+                onError?.invoke(it)
+                onState?.invoke(it)
+                errorOccurred = true
+            },
+            alignment = alignment,
+            alpha = alpha,
+            colorFilter = colorFilter,
+            filterQuality = filterQuality
+        )
+    }
 
     //Needed for triggering recomposition
     LaunchedEffect(errorOccurred) {

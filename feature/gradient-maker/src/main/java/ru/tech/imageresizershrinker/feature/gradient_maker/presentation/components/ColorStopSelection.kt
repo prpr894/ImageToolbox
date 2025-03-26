@@ -17,11 +17,7 @@
 
 package ru.tech.imageresizershrinker.feature.gradient_maker.presentation.components
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,10 +31,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.Draw
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,7 +40,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -61,17 +54,19 @@ import kotlinx.coroutines.launch
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.MiniEdit
 import ru.tech.imageresizershrinker.core.ui.theme.mixedContainer
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
 import ru.tech.imageresizershrinker.core.ui.widget.color_picker.AlphaColorSelection
 import ru.tech.imageresizershrinker.core.ui.widget.color_picker.ColorInfo
-import ru.tech.imageresizershrinker.core.ui.widget.controls.EnhancedSlider
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedSlider
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
 import ru.tech.imageresizershrinker.core.ui.widget.other.ExpandableItem
 import ru.tech.imageresizershrinker.core.ui.widget.other.RevealDirection
 import ru.tech.imageresizershrinker.core.ui.widget.other.RevealValue
 import ru.tech.imageresizershrinker.core.ui.widget.other.SwipeToReveal
 import ru.tech.imageresizershrinker.core.ui.widget.other.rememberRevealState
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
+import ru.tech.imageresizershrinker.core.ui.widget.saver.ColorSaver
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 import ru.tech.imageresizershrinker.core.ui.widget.value.ValueDialog
@@ -87,21 +82,10 @@ fun ColorStopSelection(
 ) {
     var showColorPicker by rememberSaveable { mutableStateOf(false) }
 
-    val interactionSource = remember {
-        MutableInteractionSource()
-    }
-    val pressed by interactionSource.collectIsPressedAsState()
-
-    val cornerSize by animateDpAsState(
-        if (pressed) 8.dp
-        else 24.dp
-    )
-
     ExpandableItem(
         initialState = true,
         modifier = Modifier.padding(1.dp),
-        interactionSource = interactionSource,
-        shape = RoundedCornerShape(cornerSize),
+        shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
         visibleContent = {
             TitleItem(text = stringResource(R.string.color_stops))
@@ -145,10 +129,10 @@ fun ColorStopSelection(
         }
     )
 
-    var color by rememberSaveable {
+    var color by rememberSaveable(stateSaver = ColorSaver) {
         mutableStateOf(Color.Red)
     }
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         sheetContent = {
             Box {
                 Column(
@@ -172,7 +156,7 @@ fun ColorStopSelection(
         title = {
             TitleItem(
                 text = stringResource(R.string.color),
-                icon = Icons.Rounded.Draw
+                icon = Icons.Rounded.Palette
             )
         },
         confirmButton = {
@@ -189,7 +173,6 @@ fun ColorStopSelection(
     )
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun ColorStopSelectionItem(
     value: Float,
@@ -215,7 +198,7 @@ private fun ColorStopSelectionItem(
                         autoShadowElevation = 0.dp,
                         resultPadding = 0.dp
                     )
-                    .clickable {
+                    .hapticsClickable {
                         scope.launch {
                             state.animateTo(RevealValue.Default)
                         }
@@ -308,7 +291,7 @@ private fun ColorStopSelectionItem(
         }
     )
 
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         sheetContent = {
             Box {
                 Column(

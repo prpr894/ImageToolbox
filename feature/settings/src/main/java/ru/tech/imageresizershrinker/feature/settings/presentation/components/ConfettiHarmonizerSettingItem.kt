@@ -29,7 +29,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ColorLens
-import androidx.compose.material.icons.rounded.Draw
+import androidx.compose.material.icons.rounded.ColorLens
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,6 +47,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -57,12 +58,13 @@ import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSet
 import ru.tech.imageresizershrinker.core.ui.theme.blend
 import ru.tech.imageresizershrinker.core.ui.theme.inverse
 import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedButton
-import ru.tech.imageresizershrinker.core.ui.widget.buttons.EnhancedChip
 import ru.tech.imageresizershrinker.core.ui.widget.color_picker.ColorSelection
+import ru.tech.imageresizershrinker.core.ui.widget.color_picker.RecentAndFavoriteColorsCard
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedChip
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
-import ru.tech.imageresizershrinker.core.ui.widget.sheets.SimpleSheet
 import ru.tech.imageresizershrinker.core.ui.widget.text.AutoSizeText
 import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 
@@ -112,12 +114,12 @@ fun ConfettiHarmonizerSettingItem(
 
             FlowRow(
                 verticalArrangement = Arrangement.spacedBy(
-                    8.dp,
-                    Alignment.CenterVertically
+                    space = 8.dp,
+                    alignment = Alignment.CenterVertically
                 ),
                 horizontalArrangement = Arrangement.spacedBy(
-                    8.dp,
-                    Alignment.CenterHorizontally
+                    space = 8.dp,
+                    alignment = Alignment.CenterHorizontally
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -186,21 +188,24 @@ fun ConfettiHarmonizerSettingItem(
             (settingsState.confettiColorHarmonizer as? ColorHarmonizer.Custom)?.color ?: 0
         )
     }
-    SimpleSheet(
+    EnhancedModalBottomSheet(
         sheetContent = {
-            Box {
-                Column(
-                    Modifier
-                        .verticalScroll(rememberScrollState())
-                        .padding(start = 36.dp, top = 36.dp, end = 36.dp, bottom = 24.dp)
-                ) {
-                    ColorSelection(
-                        color = tempColor,
-                        onColorChange = {
-                            tempColor = it
-                        }
-                    )
-                }
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp)
+            ) {
+                RecentAndFavoriteColorsCard(
+                    onRecentColorClick = { tempColor = it.toArgb() },
+                    onFavoriteColorClick = { tempColor = it.toArgb() }
+                )
+
+                ColorSelection(
+                    color = tempColor,
+                    onColorChange = {
+                        tempColor = it
+                    }
+                )
             }
         },
         visible = showColorPicker,
@@ -210,7 +215,7 @@ fun ConfettiHarmonizerSettingItem(
         title = {
             TitleItem(
                 text = stringResource(R.string.color),
-                icon = Icons.Rounded.Draw
+                icon = Icons.Rounded.ColorLens
             )
         },
         confirmButton = {

@@ -35,13 +35,19 @@ interface GifConverter {
     suspend fun createGifFromImageUris(
         imageUris: List<String>,
         params: GifParams,
-        onError: (Throwable) -> Unit,
+        onFailure: (Throwable) -> Unit,
         onProgress: () -> Unit
     ): ByteArray?
 
     suspend fun convertGifToJxl(
         gifUris: List<String>,
         quality: Quality.Jxl,
+        onProgress: suspend (String, ByteArray) -> Unit
+    )
+
+    suspend fun convertGifToWebp(
+        gifUris: List<String>,
+        quality: Quality.Base,
         onProgress: suspend (String, ByteArray) -> Unit
     )
 
