@@ -42,8 +42,10 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -106,21 +108,20 @@ internal fun MediaPickerHavePermissions(
             var showAlbumThumbnail by rememberSaveable {
                 mutableStateOf(false)
             }
-            val listState = rememberLazyListState()
             Row(
                 modifier = Modifier
                     .drawHorizontalStroke()
                     .background(MaterialTheme.colorScheme.surfaceContainer)
             ) {
-                LazyRow(
+                LazyVerticalGrid(
                     modifier = Modifier
                         .weight(1f)
-                        .fadingEdges(listState)
+                        .height(when {
+                            showAlbumThumbnail -> 300.dp
+                            else -> 100.dp
+                        } )
                         .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        space = 8.dp,
-                        alignment = Alignment.CenterHorizontally
-                    ),
+                    columns = GridCells.Fixed(3),
                     contentPadding = PaddingValues(
                         start = WindowInsets.displayCutout
                             .asPaddingValues()
@@ -129,12 +130,11 @@ internal fun MediaPickerHavePermissions(
                             .asPaddingValues()
                             .calculateEndPadding(layoutDirection) + 8.dp
                     ),
-                    state = listState
                 ) {
                     items(
                         items = albumsState.albums,
                         key = Album::toString
-                    ) {
+                    ) { it ->
                         val selected = selectedAlbumIndex == it.id
                         val isImageVisible = showAlbumThumbnail && it.uri.isNotEmpty()
                         EnhancedChip(
