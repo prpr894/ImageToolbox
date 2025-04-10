@@ -19,7 +19,6 @@ package ru.tech.imageresizershrinker.core.data.image
 
 import android.graphics.Bitmap
 import android.os.Build
-import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -42,7 +41,7 @@ import kotlin.math.roundToInt
 
 internal class AndroidImagePreviewCreator @Inject constructor(
     private val imageCompressor: ImageCompressor<Bitmap>,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val imageTransformer: ImageTransformer<Bitmap>,
     private val imageScaler: ImageScaler<Bitmap>,
     settingsProvider: SettingsProvider,

@@ -25,7 +25,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import com.arkivanov.decompose.ComponentContext
 import com.t8rin.collages.CollageType
 import dagger.assisted.Assisted
@@ -86,6 +85,9 @@ class CollageMakerComponent @AssistedInject internal constructor(
     private val _collageBitmap = mutableStateOf<Bitmap?>(null)
     private val collageBitmap by _collageBitmap
 
+    private val _outputScaleRatio = mutableFloatStateOf(2f)
+    val outputScaleRatio by _outputScaleRatio
+
     private val _uris = mutableStateOf<List<Uri>?>(null)
     val uris by _uris
 
@@ -129,6 +131,11 @@ class CollageMakerComponent @AssistedInject internal constructor(
         registerChanges()
     }
 
+    fun setOutputScaleRatio(ratio: Float) {
+        _outputScaleRatio.update { ratio }
+        registerChanges()
+    }
+
     private var savingJob: Job? by smartJob {
         _isSaving.update { false }
     }
@@ -150,7 +157,7 @@ class CollageMakerComponent @AssistedInject internal constructor(
                         imageFormat = imageFormat
                     )
                     val result = fileController.save(
-                        saveTarget = ImageSaveTarget<ExifInterface>(
+                        saveTarget = ImageSaveTarget(
                             imageInfo = imageInfo,
                             originalUri = "",
                             sequenceNumber = null,

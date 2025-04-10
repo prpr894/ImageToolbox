@@ -39,6 +39,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesomeMosaic
 import androidx.compose.material.icons.rounded.FormatColorFill
 import androidx.compose.material.icons.rounded.FormatLineSpacing
+import androidx.compose.material.icons.rounded.PhotoSizeSelectSmall
 import androidx.compose.material.icons.rounded.RoundedCorner
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Icon
@@ -120,12 +121,11 @@ fun CollageMakerContent(
 
     LaunchedEffect(component.initialUris) {
         component.initialUris?.takeIf { it.isNotEmpty() }?.let {
-            if (it.size in 2..10) {
+            if (it.size in 1..10) {
                 component.updateUris(it)
             } else {
                 essentials.showToast(
-                    message = if (it.size > 10) context.getString(R.string.pick_up_to_ten_images)
-                    else context.getString(R.string.pick_at_least_two_images),
+                    message = context.getString(R.string.pick_up_to_ten_images),
                     icon = Icons.Outlined.AutoAwesomeMosaic
                 )
             }
@@ -133,7 +133,7 @@ fun CollageMakerContent(
     }
 
     val imagePicker = rememberImagePicker { uris: List<Uri> ->
-        if (uris.size in 2..10) {
+        if (uris.size in 1..10) {
             component.updateUris(uris)
         } else {
             essentials.showToast(
@@ -184,7 +184,6 @@ fun CollageMakerContent(
             )
         },
         onGoBack = onBack,
-        isPortrait = isPortrait,
         shouldDisableBackHandler = !component.haveChanges,
         actions = { scaffoldState ->
             var editSheetData by remember {
@@ -307,8 +306,8 @@ fun CollageMakerContent(
                                 backgroundColor = component.backgroundColor,
                                 spacing = component.spacing,
                                 cornerRadius = component.cornerRadius,
-                                aspectRatio = 1f / component.aspectRatio.value,
-                                outputScaleRatio = 2f
+                                aspectRatio = component.aspectRatio.value,
+                                outputScaleRatio = component.outputScaleRatio
                             )
                         }
                     }
@@ -432,6 +431,25 @@ fun CollageMakerContent(
                     icon = Icons.Rounded.RoundedCorner,
                     shape = RoundedCornerShape(24.dp)
                 )
+                EnhancedSliderItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = component.outputScaleRatio,
+                    title = stringResource(R.string.output_image_scale),
+                    valueRange = 0.5f..4f,
+                    internalStateTransformation = {
+                        it.roundToTwoDigits()
+                    },
+                    onValueChange = component::setOutputScaleRatio,
+                    sliderModifier = Modifier
+                        .padding(
+                            top = 14.dp,
+                            start = 12.dp,
+                            end = 12.dp,
+                            bottom = 10.dp
+                        ),
+                    icon = Icons.Rounded.PhotoSizeSelectSmall,
+                    shape = RoundedCornerShape(24.dp)
+                )
                 QualitySelector(
                     imageFormat = component.imageFormat,
                     quality = component.quality,
@@ -456,7 +474,7 @@ fun CollageMakerContent(
                 mutableStateOf(false)
             }
             BottomButtonsBlock(
-                targetState = (component.uris.isNullOrEmpty()) to isPortrait,
+                isNoData = component.uris.isNullOrEmpty(),
                 onSecondaryButtonClick = pickImage,
                 onPrimaryButtonClick = {
                     saveBitmaps(null)

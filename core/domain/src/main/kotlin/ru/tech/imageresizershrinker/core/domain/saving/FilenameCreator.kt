@@ -22,7 +22,8 @@ import ru.tech.imageresizershrinker.core.domain.saving.model.ImageSaveTarget
 interface FilenameCreator {
 
     fun constructImageFilename(
-        saveTarget: ImageSaveTarget<*>,
+        saveTarget: ImageSaveTarget,
+        oneTimePrefix: String? = null,
         forceNotAddSizeInFilename: Boolean = false
     ): String
 
@@ -30,5 +31,7 @@ interface FilenameCreator {
         extension: String,
         length: Int = 32
     ): String
+
+    fun getFilename(uri: String): String
 
 }

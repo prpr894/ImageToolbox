@@ -25,7 +25,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.exifinterface.media.ExifInterface
 import com.arkivanov.decompose.ComponentContext
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -47,14 +46,12 @@ import ru.tech.imageresizershrinker.core.domain.saving.model.SaveResult
 import ru.tech.imageresizershrinker.core.domain.saving.model.SaveTarget
 import ru.tech.imageresizershrinker.core.domain.saving.model.onSuccess
 import ru.tech.imageresizershrinker.core.domain.utils.smartJob
+import ru.tech.imageresizershrinker.core.domain.utils.timestamp
 import ru.tech.imageresizershrinker.core.ui.utils.BaseComponent
 import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
 import ru.tech.imageresizershrinker.core.ui.utils.state.update
 import ru.tech.imageresizershrinker.feature.jxl_tools.domain.AnimatedJxlParams
 import ru.tech.imageresizershrinker.feature.jxl_tools.domain.JxlConverter
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class JxlToolsComponent @AssistedInject internal constructor(
     @Assisted componentContext: ComponentContext,
@@ -64,7 +61,7 @@ class JxlToolsComponent @AssistedInject internal constructor(
     private val fileController: FileController,
     private val filenameCreator: FilenameCreator,
     private val shareProvider: ShareProvider<Bitmap>,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val imageCompressor: ImageCompressor<Bitmap>,
     dispatchersHolder: DispatchersHolder
 ) : BaseComponent(dispatchersHolder, componentContext) {
@@ -270,7 +267,7 @@ class JxlToolsComponent @AssistedInject internal constructor(
 
                                 results.add(
                                     fileController.save(
-                                        saveTarget = ImageSaveTarget<ExifInterface>(
+                                        saveTarget = ImageSaveTarget(
                                             imageInfo = imageInfo,
                                             originalUri = uri,
                                             sequenceNumber = _done.value + 1,
@@ -359,7 +356,7 @@ class JxlToolsComponent @AssistedInject internal constructor(
         uri: String,
         format: ImageFormat
     ): String = filenameCreator.constructImageFilename(
-        ImageSaveTarget<ExifInterface>(
+        ImageSaveTarget(
             imageInfo = ImageInfo(
                 imageFormat = format,
                 originalUri = uri
@@ -461,14 +458,9 @@ class JxlToolsComponent @AssistedInject internal constructor(
                                 onFailure(it)
                             }
                         )?.also { byteArray ->
-                            val timeStamp = SimpleDateFormat(
-                                "yyyy-MM-dd_HH-mm-ss",
-                                Locale.getDefault()
-                            ).format(Date())
-                            val jxlName = "JXL_$timeStamp"
                             shareProvider.shareByteArray(
                                 byteArray = byteArray,
-                                filename = "$jxlName.jxl",
+                                filename = "JXL_${timestamp()}.jxl",
                                 onComplete = onComplete
                             )
                         }

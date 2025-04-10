@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
+@file:Suppress("UnnecessaryVariable")
+
 package ru.tech.imageresizershrinker.feature.watermarking.data
 
 import android.content.Context
@@ -27,14 +29,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.applyCanvas
-import androidx.exifinterface.media.ExifInterface
 import coil3.transform.RoundedCornersTransformation
 import com.watermark.androidwm.WatermarkBuilder
 import com.watermark.androidwm.bean.WatermarkImage
 import com.watermark.androidwm.bean.WatermarkText
+import com.watermark.androidwm.listener.BuildFinishListener
 import com.watermark.androidwm.utils.BitmapUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import ru.tech.imageresizershrinker.core.data.image.utils.drawBitmap
 import ru.tech.imageresizershrinker.core.data.image.utils.toAndroidBlendMode
@@ -48,20 +51,20 @@ import ru.tech.imageresizershrinker.core.domain.image.model.BlendingMode
 import ru.tech.imageresizershrinker.core.domain.image.model.ResizeType
 import ru.tech.imageresizershrinker.core.domain.model.IntegerSize
 import ru.tech.imageresizershrinker.core.domain.model.Position
+import ru.tech.imageresizershrinker.core.domain.utils.timestamp
 import ru.tech.imageresizershrinker.core.settings.domain.model.FontType
+import ru.tech.imageresizershrinker.feature.watermarking.domain.DigitalParams
 import ru.tech.imageresizershrinker.feature.watermarking.domain.TextParams
 import ru.tech.imageresizershrinker.feature.watermarking.domain.WatermarkApplier
 import ru.tech.imageresizershrinker.feature.watermarking.domain.WatermarkParams
 import ru.tech.imageresizershrinker.feature.watermarking.domain.WatermarkingType
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
+import kotlin.coroutines.resume
 import kotlin.math.roundToInt
 
 internal class AndroidWatermarkApplier @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val imageScaler: ImageScaler<Bitmap>,
     private val imageTransformer: ImageTransformer<Bitmap>,
     dispatchersHolder: DispatchersHolder,
@@ -116,7 +119,7 @@ internal class AndroidWatermarkApplier @Inject constructor(
                             )
                         }
                     }
-                    ?.watermark?.outputImage
+                    .generateImage(type.digitalParams)
             }
 
             is WatermarkingType.Image -> {
@@ -151,7 +154,7 @@ internal class AndroidWatermarkApplier @Inject constructor(
                                 )
                             }
                         }
-                        ?.watermark?.outputImage
+                        .generateImage(type.digitalParams)
                 }
             }
 
@@ -168,19 +171,33 @@ internal class AndroidWatermarkApplier @Inject constructor(
             }
 
             is WatermarkingType.Stamp.Time -> {
-                val timestamp = SimpleDateFormat(type.format, Locale.getDefault()).format(Date())
-
                 drawStamp(
                     image = image,
                     alpha = params.alpha,
                     overlayMode = params.overlayMode,
                     position = type.position,
                     params = type.params,
-                    text = timestamp,
+                    text = timestamp(type.format),
                     padding = type.padding
                 )
             }
         }
+    }
+
+    private suspend fun WatermarkBuilder.generateImage(
+        params: DigitalParams
+    ): Bitmap? = if (params.isInvisible) {
+        suspendCancellableCoroutine { cont ->
+            setInvisibleWMListener(
+                params.isLSB,
+                object : BuildFinishListener<Bitmap> {
+                    override fun onSuccess(image: Bitmap) = cont.resume(image)
+                    override fun onFailure(reason: String) = cont.resume(null)
+                }
+            )
+        }
+    } else {
+        watermark?.outputImage
     }
 
     private suspend fun drawStamp(

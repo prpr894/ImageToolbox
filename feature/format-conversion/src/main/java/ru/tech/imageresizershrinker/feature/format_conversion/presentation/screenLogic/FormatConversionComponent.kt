@@ -24,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import com.arkivanov.decompose.ComponentContext
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -65,7 +64,7 @@ class FormatConversionComponent @AssistedInject internal constructor(
     private val imageTransformer: ImageTransformer<Bitmap>,
     private val imagePreviewCreator: ImagePreviewCreator<Bitmap>,
     private val imageCompressor: ImageCompressor<Bitmap>,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val imageScaler: ImageScaler<Bitmap>,
     private val shareProvider: ShareProvider<Bitmap>,
     private val imageInfoTransformationFactory: ImageInfoTransformation.Factory,
@@ -194,7 +193,7 @@ class FormatConversionComponent @AssistedInject internal constructor(
         }
     }
 
-    private fun setImageData(imageData: ImageData<Bitmap, ExifInterface>) {
+    private fun setImageData(imageData: ImageData<Bitmap>) {
         job = componentScope.launch {
             _isImageLoading.update { true }
             val bitmap = imageData.image

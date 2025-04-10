@@ -29,8 +29,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.applyCanvas
+import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import com.arkivanov.decompose.ComponentContext
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -71,7 +71,7 @@ class MarkupLayersComponent @AssistedInject internal constructor(
     dispatchersHolder: DispatchersHolder,
     private val fileController: FileController,
     private val imageCompressor: ImageCompressor<Bitmap>,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val imageScaler: ImageScaler<Bitmap>,
     private val shareProvider: ShareProvider<Bitmap>,
 ) : BaseComponent(dispatchersHolder, componentContext) {
@@ -204,7 +204,7 @@ class MarkupLayersComponent @AssistedInject internal constructor(
             getDrawingBitmap().let { localBitmap ->
                 onComplete(
                     fileController.save(
-                        saveTarget = ImageSaveTarget<ExifInterface>(
+                        saveTarget = ImageSaveTarget(
                             imageInfo = ImageInfo(
                                 imageFormat = imageFormat,
                                 width = localBitmap.width,
@@ -277,8 +277,7 @@ class MarkupLayersComponent @AssistedInject internal constructor(
     private suspend fun Bitmap.overlay(overlay: Bitmap): Bitmap {
         val image = this
         val config = image.safeConfig.toSoftware()
-        val finalBitmap =
-            Bitmap.createBitmap(image.width, image.height, config)
+        val finalBitmap = createBitmap(image.width, image.height, config)
         val canvas = Canvas(finalBitmap)
         canvas.drawBitmap(image, Matrix(), null)
         canvas.drawBitmap(

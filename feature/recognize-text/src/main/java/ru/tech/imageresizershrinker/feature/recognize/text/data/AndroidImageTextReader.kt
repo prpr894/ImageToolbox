@@ -20,7 +20,6 @@ package ru.tech.imageresizershrinker.feature.recognize.text.data
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import com.googlecode.tesseract.android.TessBaseAPI
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.isActive
@@ -56,11 +55,11 @@ import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 
 internal class AndroidImageTextReader @Inject constructor(
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     @ApplicationContext private val context: Context,
     private val shareProvider: ShareProvider<Bitmap>,
     dispatchersHolder: DispatchersHolder
-) : DispatchersHolder by dispatchersHolder, ImageTextReader<Bitmap> {
+) : DispatchersHolder by dispatchersHolder, ImageTextReader {
 
     init {
         RecognitionType.entries.forEach {
@@ -74,29 +73,19 @@ internal class AndroidImageTextReader @Inject constructor(
         segmentationMode: SegmentationMode,
         ocrEngineMode: OcrEngineMode,
         parameters: TessParams,
-        imageUri: String,
-        onProgress: (Int) -> Unit
-    ): TextRecognitionResult = getTextFromImage(
-        type = type,
-        languageCode = languageCode,
-        segmentationMode = segmentationMode,
-        ocrEngineMode = ocrEngineMode,
-        parameters = parameters,
-        image = imageGetter.getImage(imageUri)?.image,
-        onProgress = onProgress
-    )
-
-    override suspend fun getTextFromImage(
-        type: RecognitionType,
-        languageCode: String,
-        segmentationMode: SegmentationMode,
-        ocrEngineMode: OcrEngineMode,
-        parameters: TessParams,
-        image: Bitmap?,
+        model: Any?,
         onProgress: (Int) -> Unit
     ): TextRecognitionResult = withContext(defaultDispatcher) {
+        val empty = TextRecognitionResult.Success(RecognitionData("", 0))
 
-        if (image == null) return@withContext TextRecognitionResult.Success(RecognitionData("", 0))
+        if (model == null) return@withContext empty
+
+        val image = if (model is Bitmap) {
+            model
+        } else {
+            imageGetter.getImage(model) ?: return@withContext empty
+        }
+
 
         val needToDownload = getNeedToDownloadLanguages(type, languageCode)
 

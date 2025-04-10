@@ -22,7 +22,6 @@ import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import com.t8rin.awebp.decoder.AnimatedWebpDecoder
 import com.t8rin.awebp.encoder.AnimatedWebpEncoder
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -48,7 +47,7 @@ import javax.inject.Inject
 
 
 internal class AndroidWebpConverter @Inject constructor(
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val imageShareProvider: ShareProvider<Bitmap>,
     private val imageScaler: ImageScaler<Bitmap>,
     @ApplicationContext private val context: Context,

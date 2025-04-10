@@ -23,7 +23,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import com.arkivanov.decompose.ComponentContext
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -31,7 +30,10 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Job
 import ru.tech.imageresizershrinker.core.domain.dispatchers.DispatchersHolder
 import ru.tech.imageresizershrinker.core.domain.image.ImageGetter
+import ru.tech.imageresizershrinker.core.domain.image.Metadata
 import ru.tech.imageresizershrinker.core.domain.image.ShareProvider
+import ru.tech.imageresizershrinker.core.domain.image.clearAllAttributes
+import ru.tech.imageresizershrinker.core.domain.image.clearAttribute
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageFormat
 import ru.tech.imageresizershrinker.core.domain.image.model.MetadataTag
 import ru.tech.imageresizershrinker.core.domain.saving.FileController
@@ -51,7 +53,7 @@ class EditExifComponent @AssistedInject internal constructor(
     @Assisted val onGoBack: () -> Unit,
     @Assisted val onNavigate: (Screen) -> Unit,
     private val fileController: FileController,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val shareProvider: ShareProvider<Bitmap>,
     private val filenameCreator: FilenameCreator,
     dispatchersHolder: DispatchersHolder
@@ -63,7 +65,7 @@ class EditExifComponent @AssistedInject internal constructor(
         }
     }
 
-    private val _exif: MutableState<ExifInterface?> = mutableStateOf(null)
+    private val _exif: MutableState<Metadata?> = mutableStateOf(null)
     val exif by _exif
 
     private val _imageFormat: MutableState<ImageFormat> = mutableStateOf(ImageFormat.Default)
@@ -160,34 +162,23 @@ class EditExifComponent @AssistedInject internal constructor(
     }
 
     fun clearExif() {
-        val tempExif = _exif.value
-        MetadataTag.entries.forEach {
-            tempExif?.setAttribute(it.key, null)
-        }
-        _exif.update {
-            tempExif
-        }
-        registerChanges()
+        updateExif(_exif.value?.clearAllAttributes())
     }
 
-    private fun updateExif(exifInterface: ExifInterface?) {
-        _exif.update { exifInterface }
+    private fun updateExif(metadata: Metadata?) {
+        _exif.update { metadata }
         registerChanges()
     }
 
     fun removeExifTag(tag: MetadataTag) {
-        val exifInterface = _exif.value
-        exifInterface?.setAttribute(tag.key, null)
-        updateExif(exifInterface)
+        updateExif(_exif.value?.clearAttribute(tag))
     }
 
     fun updateExifByTag(
         tag: MetadataTag,
         value: String,
     ) {
-        val exifInterface = _exif.value
-        exifInterface?.setAttribute(tag.key, value)
-        updateExif(exifInterface)
+        updateExif(_exif.value?.setAttribute(tag, value))
     }
 
     fun cancelSaving() {

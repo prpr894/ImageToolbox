@@ -18,7 +18,6 @@
 package ru.tech.imageresizershrinker.core.data.di
 
 import android.graphics.Bitmap
-import androidx.exifinterface.media.ExifInterface
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -63,7 +62,7 @@ internal interface ImageModule {
     @Binds
     fun provideImageGetter(
         getter: AndroidImageGetter
-    ): ImageGetter<Bitmap, ExifInterface>
+    ): ImageGetter<Bitmap>
 
     @Singleton
     @Binds

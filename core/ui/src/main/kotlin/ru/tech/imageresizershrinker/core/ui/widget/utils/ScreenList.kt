@@ -116,7 +116,9 @@ internal fun List<Uri>.screenList(
                     type = Screen.Filter.Type.Basic(uris)
                 ),
                 Screen.Draw(uris.firstOrNull()),
-                Screen.RecognizeText(uris.firstOrNull()),
+                Screen.RecognizeText(
+                    Screen.RecognizeText.Type.Extraction(uris.firstOrNull())
+                ),
                 Screen.EraseBackground(uris.firstOrNull()),
                 Screen.Filter(
                     type = Screen.Filter.Type.Masking(uris.firstOrNull())
@@ -184,15 +186,25 @@ internal fun List<Uri>.screenList(
                 Screen.FormatConversion(uris),
                 Screen.Filter(
                     type = Screen.Filter.Type.Basic(uris)
-                )
+                ),
             ).apply {
                 add(Screen.ImageStitching(uris))
                 add(Screen.PdfTools(Screen.PdfTools.Type.ImagesToPdf(uris)))
                 if (uris.size == 2) add(Screen.Compare(uris))
-                if (uris.size in 2..10) {
+                if (uris.size in 1..10) {
                     add(Screen.CollageMaker(uris))
                 }
                 add(Screen.GradientMaker(uris))
+                add(
+                    Screen.RecognizeText(
+                        Screen.RecognizeText.Type.WriteToFile(uris)
+                    )
+                )
+                add(
+                    Screen.RecognizeText(
+                        Screen.RecognizeText.Type.WriteToMetadata(uris)
+                    )
+                )
                 add(Screen.Watermarking(uris))
                 add(
                     Screen.GifTools(

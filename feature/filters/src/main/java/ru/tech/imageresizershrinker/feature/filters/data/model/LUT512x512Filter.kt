@@ -18,7 +18,6 @@
 package ru.tech.imageresizershrinker.feature.filters.data.model
 
 import android.graphics.Bitmap
-import androidx.exifinterface.media.ExifInterface
 import com.t8rin.trickle.Trickle
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -35,7 +34,7 @@ import ru.tech.imageresizershrinker.core.resources.R
 
 internal class LUT512x512Filter @AssistedInject internal constructor(
     @Assisted override val value: Pair<Float, ImageModel> = 1f to ImageModel(R.drawable.lookup),
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val imageScaler: ImageScaler<Bitmap>
 ) : Transformation<Bitmap>, Filter.LUT512x512 {
 

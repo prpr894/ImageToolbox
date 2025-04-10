@@ -58,12 +58,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.exifinterface.media.ExifInterface
+import ru.tech.imageresizershrinker.core.domain.image.Metadata
 import ru.tech.imageresizershrinker.core.domain.image.model.MetadataTag
+import ru.tech.imageresizershrinker.core.domain.image.toMap
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.Exif
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.localizedName
-import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.toMap
 import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedAlertDialog
 import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedBottomSheetDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
@@ -78,7 +78,7 @@ import ru.tech.imageresizershrinker.core.ui.widget.text.TitleItem
 fun EditExifSheet(
     visible: Boolean,
     onDismiss: () -> Unit,
-    exif: ExifInterface?,
+    exif: Metadata?,
     onClearExif: () -> Unit,
     onUpdateTag: (MetadataTag, String) -> Unit,
     onRemoveTag: (MetadataTag) -> Unit

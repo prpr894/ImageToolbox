@@ -18,7 +18,6 @@
 package ru.tech.imageresizershrinker.feature.filters.data.model
 
 import android.graphics.Bitmap
-import androidx.exifinterface.media.ExifInterface
 import com.t8rin.trickle.Trickle
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -32,7 +31,7 @@ import ru.tech.imageresizershrinker.core.resources.R
 
 internal class PaletteTransferFilter @AssistedInject internal constructor(
     @Assisted override val value: Pair<Float, ImageModel> = 1f to ImageModel(R.drawable.filter_preview_source_2),
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>
+    private val imageGetter: ImageGetter<Bitmap>
 ) : Transformation<Bitmap>, Filter.PaletteTransfer {
 
     override val cacheKey: String

@@ -30,7 +30,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.TileMode
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import coil3.transform.Transformation
 import com.arkivanov.decompose.ComponentContext
 import dagger.assisted.Assisted
@@ -72,7 +71,7 @@ class GradientMakerComponent @AssistedInject internal constructor(
     private val fileController: FileController,
     private val imageCompressor: ImageCompressor<Bitmap>,
     private val shareProvider: ShareProvider<Bitmap>,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val gradientMaker: GradientMaker<Bitmap, ShaderBrush, Size, Color, TileMode, Offset>,
     dispatchersHolder: DispatchersHolder
 ) : BaseComponent(dispatchersHolder, componentContext) {
@@ -213,7 +212,7 @@ class GradientMakerComponent @AssistedInject internal constructor(
                     )
                     onStandaloneGradientSaveResult(
                         fileController.save(
-                            saveTarget = ImageSaveTarget<ExifInterface>(
+                            saveTarget = ImageSaveTarget(
                                 imageInfo = imageInfo,
                                 originalUri = "Gradient",
                                 sequenceNumber = null,
@@ -244,7 +243,7 @@ class GradientMakerComponent @AssistedInject internal constructor(
                         )
                         results.add(
                             fileController.save(
-                                saveTarget = ImageSaveTarget<ExifInterface>(
+                                saveTarget = ImageSaveTarget(
                                     imageInfo = imageInfo,
                                     originalUri = uri.toString(),
                                     sequenceNumber = _done.value + 1,

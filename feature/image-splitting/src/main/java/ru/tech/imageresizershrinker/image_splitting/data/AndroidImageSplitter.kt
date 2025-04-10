@@ -18,7 +18,6 @@
 package ru.tech.imageresizershrinker.image_splitting.data
 
 import android.graphics.Bitmap
-import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -33,7 +32,7 @@ import ru.tech.imageresizershrinker.image_splitting.domain.SplitParams
 import javax.inject.Inject
 
 internal class AndroidImageSplitter @Inject constructor(
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val shareProvider: ShareProvider<Bitmap>,
     dispatchersHolder: DispatchersHolder
 ) : ImageSplitter, DispatchersHolder by dispatchersHolder {

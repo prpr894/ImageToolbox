@@ -1,14 +1,14 @@
 [versions]
 androidMinSdk = "21"
-androidTargetSdk = "35"
-androidCompileSdk = "35"
+androidTargetSdk = "36"
+androidCompileSdk = "36"
 
 versionName = "3.2.1-alpha02"
 versionCode = "173"
 
 jvmTarget = "17"
 
-imageToolboxLibs = "3.5.0"
+imageToolboxLibs = "3.5.4"
 trickle = "1.2.2"
 evaluator = "1.0.0"
 quickie = "1.14.0"
@@ -24,17 +24,16 @@ jxlCoderCoil = "2.4.0.7"
 jpegliCoder = "1.0.1"
 
 tesseract = "4.8.0"
-material3 = "1.4.0-alpha10"
-composeVersion = "1.8.0-rc01"
+material3 = "1.4.0-alpha11"
+composeVersion = "1.8.0-rc02"
 materialIconsExtended = "1.7.8"
-androidx-datastorePreferencesAndroid = "1.1.3"
+androidx-datastorePreferencesAndroid = "1.2.0-alpha01"
 appUpdateKtx = "2.1.0"
 appUpdate = "2.1.0"
 shadowGadgets = "2.3.1"
 firebaseCrashlyticsKtx = "19.4.2"
 konfettiCompose = "2.0.5"
 shadowsPlus = "1.0.4"
-exifinterface = "1.4.0"
 firebaseAnalyticsKtx = "22.4.0"
 google-segmentationSelfie = "16.0.0-beta6"
 google-subjectSegmentation = "16.0.0-beta1"
@@ -43,17 +42,17 @@ detektCompose = "0.4.22"
 decompose = "3.3.0"
 
 kotlin = "2.1.20"
-agp = "8.8.2"
-hilt = "2.56"
+agp = "8.9.1"
+hilt = "2.56.1"
 gms = "4.4.2"
 
-ktor = "3.1.1"
+ktor = "3.1.2"
 coil = "3.1.0"
 appCompat = "1.7.0"
-androidxCore = "1.16.0-beta01"
-androidxLifecycle = "2.9.0-alpha12"
+androidxCore = "1.16.0-rc01"
+androidxLifecycle = "2.9.0-alpha13"
 desugaring = "2.1.5"
-activityCompose = "1.11.0-alpha01"
+activityCompose = "1.11.0-alpha02"
 kotlinxCollectionsImmutable = "0.3.8"
 scrollbar = "2.2.0"
 reorderable = "2.4.3"
@@ -61,12 +60,12 @@ reviewKtx = "2.0.2"
 splashScreen = "1.2.0-beta01"
 
 espresso = "3.6.1"
-ksp = "2.1.20-1.0.31"
+ksp = "2.1.20-1.0.32"
 
 androidx-test-ext-junit = "1.2.1"
 documentfile = "1.0.1"
 uiautomator = "2.3.0"
-androidxMacroBenchmark = "1.4.0-alpha09"
+androidxMacroBenchmark = "1.4.0-alpha10"
 
 material = "1.13.0-alpha12"
 jsoup = "1.19.1"
@@ -81,7 +80,7 @@ bouncycastle = "1.80"
 ffmpeg-metadata-retriever = "1.0.19"
 
 firebaseCrashlyticsGradle = "3.0.3"
-aboutlibrariesGradle = "12.0.0-a04"
+aboutlibrariesGradle = "12.0.0-a05"
 moduleGraphGradle = "0.12.0"
 
 [libraries]
@@ -131,11 +130,11 @@ toolbox-histogram = { module = "com.github.T8RIN.ImageToolboxLibs:histogram", ve
 toolbox-uCrop = { module = "com.github.T8RIN.ImageToolboxLibs:ucrop", version.ref = "imageToolboxLibs" }
 toolbox-opencvTools = { module = "com.github.T8RIN.ImageToolboxLibs:opencv-tools", version.ref = "imageToolboxLibs" }
 toolbox-curves = { module = "com.github.T8RIN.ImageToolboxLibs:curves", version.ref = "imageToolboxLibs" }
+toolbox-exif = { module = "com.github.T8RIN.ImageToolboxLibs:exif", version.ref = "imageToolboxLibs" }
 
 aire = { module = "com.github.awxkee:aire", version.ref = "aire" }
 jpegli-coder = { module = "com.github.awxkee:jpegli-coder", version.ref = "jpegliCoder" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
-androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
 androidx-compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics", version.ref = "composeVersion" }
 app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "appUpdateKtx" }

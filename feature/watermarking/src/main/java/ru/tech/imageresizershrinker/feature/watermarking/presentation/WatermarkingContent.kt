@@ -32,8 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import coil3.request.ImageRequest
-import coil3.toBitmap
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.resources.icons.ImageReset
 import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.Picker
@@ -41,7 +39,6 @@ import ru.tech.imageresizershrinker.core.ui.utils.content_pickers.rememberImageP
 import ru.tech.imageresizershrinker.core.ui.utils.helper.asClip
 import ru.tech.imageresizershrinker.core.ui.utils.helper.isPortraitOrientationAsState
 import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalComponentActivity
-import ru.tech.imageresizershrinker.core.ui.utils.provider.LocalImageLoader
 import ru.tech.imageresizershrinker.core.ui.utils.provider.rememberLocalEssentials
 import ru.tech.imageresizershrinker.core.ui.widget.AdaptiveLayoutScreen
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.BottomButtonsBlock
@@ -85,14 +82,8 @@ fun WatermarkingContent(
     val essentials = rememberLocalEssentials()
     val showConfetti: () -> Unit = essentials::showConfetti
 
-    val imageLoader = LocalImageLoader.current
     AutoContentBasedColors(
-        model = component.selectedUri,
-        selector = {
-            imageLoader.execute(
-                ImageRequest.Builder(context).data(it).build()
-            ).image?.toBitmap()
-        }
+        model = component.selectedUri
     )
 
     val imagePicker = rememberImagePicker { uris: List<Uri> ->
@@ -257,7 +248,7 @@ fun WatermarkingContent(
                 mutableStateOf(false)
             }
             BottomButtonsBlock(
-                targetState = (component.uris.isEmpty()) to isPortrait,
+                isNoData = component.uris.isEmpty(),
                 onSecondaryButtonClick = pickImage,
                 onPrimaryButtonClick = {
                     saveBitmaps(null)
@@ -288,7 +279,6 @@ fun WatermarkingContent(
         noDataControls = {
             ImageNotPickedWidget(onPickImage = pickImage)
         },
-        isPortrait = isPortrait,
         canShowScreenData = component.uris.isNotEmpty()
     )
 

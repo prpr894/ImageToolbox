@@ -23,7 +23,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.childContext
 import com.smarttoolfactory.cropper.model.AspectRatio
@@ -44,7 +43,10 @@ import ru.tech.imageresizershrinker.core.domain.image.ImageGetter
 import ru.tech.imageresizershrinker.core.domain.image.ImagePreviewCreator
 import ru.tech.imageresizershrinker.core.domain.image.ImageScaler
 import ru.tech.imageresizershrinker.core.domain.image.ImageTransformer
+import ru.tech.imageresizershrinker.core.domain.image.Metadata
 import ru.tech.imageresizershrinker.core.domain.image.ShareProvider
+import ru.tech.imageresizershrinker.core.domain.image.clearAllAttributes
+import ru.tech.imageresizershrinker.core.domain.image.clearAttribute
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageData
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageFormat
 import ru.tech.imageresizershrinker.core.domain.image.model.ImageInfo
@@ -87,7 +89,7 @@ class SingleEditComponent @AssistedInject internal constructor(
     private val imageTransformer: ImageTransformer<Bitmap>,
     private val imagePreviewCreator: ImagePreviewCreator<Bitmap>,
     private val imageCompressor: ImageCompressor<Bitmap>,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val imageScaler: ImageScaler<Bitmap>,
     private val autoBackgroundRemover: AutoBackgroundRemover<Bitmap>,
     private val shareProvider: ShareProvider<Bitmap>,
@@ -165,7 +167,7 @@ class SingleEditComponent @AssistedInject internal constructor(
         mutableStateOf(ImageCurvesEditorState.Default)
     val imageCurvesEditorState: ImageCurvesEditorState by _imageCurvesEditorState
 
-    private val _exif: MutableState<ExifInterface?> = mutableStateOf(null)
+    private val _exif: MutableState<Metadata?> = mutableStateOf(null)
     val exif by _exif
 
     private val _uri: MutableState<Uri> = mutableStateOf(Uri.EMPTY)
@@ -486,7 +488,7 @@ class SingleEditComponent @AssistedInject internal constructor(
         )
     }
 
-    private fun setImageData(imageData: ImageData<Bitmap, ExifInterface>) {
+    private fun setImageData(imageData: ImageData<Bitmap>) {
         job = componentScope.launch {
             _isImageLoading.update { true }
             _exif.update { imageData.metadata }
@@ -563,34 +565,23 @@ class SingleEditComponent @AssistedInject internal constructor(
     }
 
     fun clearExif() {
-        val tempExif = _exif.value
-        MetadataTag.entries.forEach {
-            tempExif?.setAttribute(it.key, null)
-        }
-        _exif.update {
-            tempExif
-        }
-        registerChanges()
+        updateExif(_exif.value?.clearAllAttributes())
     }
 
-    private fun updateExif(exifInterface: ExifInterface?) {
-        _exif.update { exifInterface }
+    private fun updateExif(metadata: Metadata?) {
+        _exif.update { metadata }
         registerChanges()
     }
 
     fun removeExifTag(tag: MetadataTag) {
-        val exifInterface = _exif.value
-        exifInterface?.setAttribute(tag.key, null)
-        updateExif(exifInterface)
+        updateExif(_exif.value?.clearAttribute(tag))
     }
 
     fun updateExifByTag(
         tag: MetadataTag,
         value: String,
     ) {
-        val exifInterface = _exif.value
-        exifInterface?.setAttribute(tag.key, value)
-        updateExif(exifInterface)
+        updateExif(_exif.value?.setAttribute(tag, value))
     }
 
     fun setCropAspectRatio(

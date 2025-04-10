@@ -24,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import com.arkivanov.decompose.ComponentContext
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -35,6 +34,7 @@ import ru.tech.imageresizershrinker.core.domain.dispatchers.DispatchersHolder
 import ru.tech.imageresizershrinker.core.domain.image.ImageGetter
 import ru.tech.imageresizershrinker.core.domain.image.ImageScaler
 import ru.tech.imageresizershrinker.core.domain.image.ShareProvider
+import ru.tech.imageresizershrinker.core.domain.image.clearAttributes
 import ru.tech.imageresizershrinker.core.domain.image.model.MetadataTag
 import ru.tech.imageresizershrinker.core.domain.saving.FileController
 import ru.tech.imageresizershrinker.core.domain.saving.FilenameCreator
@@ -54,7 +54,7 @@ class DeleteExifComponent @AssistedInject internal constructor(
     @Assisted val onGoBack: () -> Unit,
     @Assisted val onNavigate: (Screen) -> Unit,
     private val fileController: FileController,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val imageScaler: ImageScaler<Bitmap>,
     private val shareProvider: ShareProvider<Bitmap>,
     private val filenameCreator: FilenameCreator,
@@ -156,12 +156,8 @@ class DeleteExifComponent @AssistedInject internal constructor(
                 runSuspendCatching {
                     imageGetter.getImage(uri.toString())
                 }.getOrNull()?.let {
-                    val metadata: ExifInterface? = if (selectedTags.isNotEmpty()) {
-                        it.metadata?.apply {
-                            selectedTags.forEach { tag ->
-                                setAttribute(tag.key, null)
-                            }
-                        }
+                    val metadata = if (selectedTags.isNotEmpty()) {
+                        it.metadata?.clearAttributes(selectedTags)
                     } else null
 
                     results.add(
@@ -254,13 +250,10 @@ class DeleteExifComponent @AssistedInject internal constructor(
                 imageGetter.getImage(
                     uri.toString()
                 )?.let {
-                    val metadata: ExifInterface? = if (selectedTags.isNotEmpty()) {
-                        it.metadata?.apply {
-                            selectedTags.forEach { tag ->
-                                setAttribute(tag.key, null)
-                            }
-                        }
+                    val metadata = if (selectedTags.isNotEmpty()) {
+                        it.metadata?.clearAttributes(selectedTags)
                     } else null
+
                     shareProvider.cacheData(
                         writeData = { w ->
                             w.writeBytes(

@@ -1,6 +1,6 @@
 /*
  * ImageToolbox is an image editor for android
- * Copyright (c) 2024 T8RIN (Malik Mukhametzyanov)
+ * Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,17 @@
  * along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package ru.tech.imageresizershrinker.core.ui.utils.provider
+package ru.tech.imageresizershrinker.core.filters.presentation.model
 
-import androidx.compose.runtime.compositionLocalOf
-import coil3.ImageLoader
+import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
+import ru.tech.imageresizershrinker.core.resources.R
 
-val LocalImageLoader = compositionLocalOf<ImageLoader> { error("No ImageLoader provided") }
+class UiAutoRemoveRedEyesFilter(
+    override val value: Float = 150f
+) : UiFilter<Float>(
+    title = R.string.auto_remove_red_eyes,
+    value = value,
+    paramsInfo = listOf(
+        R.string.threshold paramTo 0f..255f
+    )
+), Filter.AutoRemoveRedEyes

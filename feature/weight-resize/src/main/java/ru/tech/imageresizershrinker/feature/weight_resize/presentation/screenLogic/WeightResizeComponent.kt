@@ -25,7 +25,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import com.arkivanov.decompose.ComponentContext
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -62,7 +61,7 @@ class WeightResizeComponent @AssistedInject internal constructor(
     @Assisted val onNavigate: (Screen) -> Unit,
     private val fileController: FileController,
     private val filenameCreator: FilenameCreator,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val imageCompressor: ImageCompressor<Bitmap>,
     private val imageScaler: WeightImageScaler<Bitmap>,
     private val shareProvider: ShareProvider<Bitmap>,
@@ -238,7 +237,7 @@ class WeightResizeComponent @AssistedInject internal constructor(
 
                         results.add(
                             fileController.save(
-                                ImageSaveTarget<ExifInterface>(
+                                ImageSaveTarget(
                                     imageInfo = imageInfo,
                                     originalUri = uri.toString(),
                                     sequenceNumber = _done.value + 1,
@@ -344,7 +343,7 @@ class WeightResizeComponent @AssistedInject internal constructor(
         _isImageLoading.update { false }
     }
 
-    private fun setImageData(imageData: ImageData<Bitmap, ExifInterface>) {
+    private fun setImageData(imageData: ImageData<Bitmap>) {
         job = componentScope.launch {
             _isImageLoading.value = true
             imageScaler.scaleUntilCanShow(imageData.image)?.let {
@@ -403,7 +402,7 @@ class WeightResizeComponent @AssistedInject internal constructor(
                     shareProvider.cacheByteArray(
                         byteArray = image,
                         filename = filenameCreator.constructImageFilename(
-                            ImageSaveTarget<ExifInterface>(
+                            ImageSaveTarget(
                                 imageInfo = imageInfo,
                                 originalUri = uri,
                                 sequenceNumber = _done.value + 1,
@@ -451,7 +450,7 @@ class WeightResizeComponent @AssistedInject internal constructor(
                     shareProvider.cacheByteArray(
                         byteArray = image,
                         filename = filenameCreator.constructImageFilename(
-                            ImageSaveTarget<ExifInterface>(
+                            ImageSaveTarget(
                                 imageInfo = imageInfo,
                                 originalUri = uri.toString(),
                                 sequenceNumber = _done.value + 1,

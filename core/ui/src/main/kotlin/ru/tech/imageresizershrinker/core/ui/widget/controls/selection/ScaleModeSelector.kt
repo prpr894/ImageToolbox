@@ -28,18 +28,19 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.LazyHorizontalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material3.Badge
@@ -70,11 +71,14 @@ import ru.tech.imageresizershrinker.core.domain.image.model.ScaleColorSpace
 import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.settings.presentation.provider.LocalSettingsState
 import ru.tech.imageresizershrinker.core.ui.theme.outlineVariant
+import ru.tech.imageresizershrinker.core.ui.theme.takeColorFromScheme
 import ru.tech.imageresizershrinker.core.ui.utils.confetti.LocalConfettiHostState
+import ru.tech.imageresizershrinker.core.ui.utils.provider.SafeLocalContainerColor
 import ru.tech.imageresizershrinker.core.ui.widget.buttons.SupportingButton
 import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedButton
 import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedChip
 import ru.tech.imageresizershrinker.core.ui.widget.enhanced.EnhancedModalBottomSheet
+import ru.tech.imageresizershrinker.core.ui.widget.enhanced.hapticsClickable
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.ContainerShapeDefaults
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.animateShape
 import ru.tech.imageresizershrinker.core.ui.widget.modifier.container
@@ -261,23 +265,40 @@ fun ScaleModeSelector(
 
     EnhancedModalBottomSheet(
         sheetContent = {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(8.dp),
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                entries.forEachIndexed { index, item ->
+                itemsIndexed(entries) { index, item ->
+                    val selected by remember(value, item) {
+                        derivedStateOf {
+                            value::class.isInstance(item)
+                        }
+                    }
+                    val containerColor = takeColorFromScheme {
+                        if (selected) secondaryContainer
+                        else SafeLocalContainerColor
+                    }
+                    val contentColor = takeColorFromScheme {
+                        if (selected) onSecondaryContainer
+                        else onSurface
+                    }
+
                     Column(
-                        Modifier
+                        modifier = Modifier
                             .fillMaxWidth()
                             .container(
+                                color = containerColor,
                                 shape = ContainerShapeDefaults.shapeForIndex(
                                     index = index,
                                     size = entries.size
                                 ),
                                 resultPadding = 0.dp
                             )
+                            .hapticsClickable {
+                                onValueChange(item)
+                            }
                     ) {
                         TitleItem(text = stringResource(id = item.title))
                         Text(
@@ -288,7 +309,8 @@ fun ScaleModeSelector(
                                 bottom = 16.dp
                             ),
                             fontSize = 14.sp,
-                            lineHeight = 18.sp
+                            lineHeight = 18.sp,
+                            color = contentColor
                         )
                     }
                 }

@@ -47,11 +47,11 @@ dependencies {
 
     implementation(libs.moshi)
 
-    api(libs.androidx.exifinterface)
     api(libs.androidx.documentfile)
 
     api(libs.toolbox.logger)
 
+    implementation(libs.toolbox.exif)
     implementation(libs.toolbox.tiffDecoder)
     implementation(libs.toolbox.qoiCoder)
     implementation(libs.toolbox.jp2decoder)

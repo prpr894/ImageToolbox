@@ -22,7 +22,7 @@ import android.graphics.Canvas
 import android.graphics.PorterDuff
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.exifinterface.media.ExifInterface
+import androidx.core.graphics.createBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -59,7 +59,7 @@ import kotlin.math.max
 
 internal class AndroidImageCombiner @Inject constructor(
     private val imageScaler: ImageScaler<Bitmap>,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val imageTransformer: ImageTransformer<Bitmap>,
     private val shareProvider: ShareProvider<Bitmap>,
     private val filterProvider: FilterProvider<Bitmap>,
@@ -106,7 +106,7 @@ internal class AndroidImageCombiner @Inject constructor(
                 } else image
             }
 
-            val bitmap = Bitmap.createBitmap(size.width, size.height, getSuitableConfig())
+            val bitmap = createBitmap(size.width, size.height, getSuitableConfig())
             val canvas = Canvas(bitmap).apply {
                 drawColor(Color.Transparent.toArgb(), PorterDuff.Mode.CLEAR)
                 drawColor(combiningParams.backgroundColor)

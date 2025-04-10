@@ -25,7 +25,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import coil3.transform.Transformation
 import com.arkivanov.decompose.ComponentContext
 import com.t8rin.opencv_tools.image_comparison.ImageDiffTool
@@ -62,7 +61,7 @@ class CompareComponent @AssistedInject internal constructor(
     @Assisted val onGoBack: () -> Unit,
     private val imageCompressor: ImageCompressor<Bitmap>,
     private val imageTransformer: ImageTransformer<Bitmap>,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val fileController: FileController,
     private val shareProvider: ShareProvider<Bitmap>,
     dispatchersHolder: DispatchersHolder
@@ -204,7 +203,7 @@ class CompareComponent @AssistedInject internal constructor(
             getResultImage()?.let { localBitmap ->
                 onComplete(
                     fileController.save(
-                        saveTarget = ImageSaveTarget<ExifInterface>(
+                        saveTarget = ImageSaveTarget(
                             imageInfo = ImageInfo(
                                 imageFormat = imageFormat,
                                 width = localBitmap.width,

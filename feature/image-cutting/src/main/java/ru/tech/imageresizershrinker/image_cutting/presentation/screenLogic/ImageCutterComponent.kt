@@ -24,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
-import androidx.exifinterface.media.ExifInterface
 import coil3.transform.Transformation
 import com.arkivanov.decompose.ComponentContext
 import dagger.assisted.Assisted
@@ -62,7 +61,7 @@ class ImageCutterComponent @AssistedInject internal constructor(
     @Assisted val onNavigate: (Screen) -> Unit,
     private val fileController: FileController,
     private val imageCompressor: ImageCompressor<Bitmap>,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val shareProvider: ShareProvider<Bitmap>,
     private val imageCutter: ImageCutter<Bitmap>,
     private val imagePreviewCreator: ImagePreviewCreator<Bitmap>,
@@ -324,11 +323,11 @@ class ImageCutterComponent @AssistedInject internal constructor(
         else null
 
     fun getCutTransformation(): List<Transformation> = listOf(
-        GenericTransformation<Bitmap> {
+        GenericTransformation { image: Bitmap ->
             val bitmap = imageCutter.cutAndMerge(
-                image = it,
+                image = image,
                 params = params
-            ) ?: it
+            ) ?: image
 
             imagePreviewCreator.createPreview(
                 image = bitmap,
@@ -340,7 +339,7 @@ class ImageCutterComponent @AssistedInject internal constructor(
                 ),
                 transformations = emptyList(),
                 onGetByteCount = {}
-            ) ?: it
+            ) ?: image
         }.toCoil()
     )
 

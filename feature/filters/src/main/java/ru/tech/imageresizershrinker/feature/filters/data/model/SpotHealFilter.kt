@@ -18,7 +18,6 @@
 package ru.tech.imageresizershrinker.feature.filters.data.model
 
 import android.graphics.Bitmap
-import androidx.exifinterface.media.ExifInterface
 import com.t8rin.opencv_tools.spot_heal.SpotHealer
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -31,7 +30,7 @@ import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 
 internal class SpotHealFilter @AssistedInject internal constructor(
     @Assisted override val value: Triple<ImageModel, Float, Int>,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>
+    private val imageGetter: ImageGetter<Bitmap>
 ) : Transformation<Bitmap>, Filter.SpotHeal {
 
     override val cacheKey: String

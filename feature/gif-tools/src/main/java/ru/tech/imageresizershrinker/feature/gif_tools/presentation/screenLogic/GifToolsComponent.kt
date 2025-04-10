@@ -25,7 +25,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.exifinterface.media.ExifInterface
 import com.arkivanov.decompose.ComponentContext
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -48,21 +47,19 @@ import ru.tech.imageresizershrinker.core.domain.saving.model.SaveResult
 import ru.tech.imageresizershrinker.core.domain.saving.model.SaveTarget
 import ru.tech.imageresizershrinker.core.domain.saving.model.onSuccess
 import ru.tech.imageresizershrinker.core.domain.utils.smartJob
+import ru.tech.imageresizershrinker.core.domain.utils.timestamp
 import ru.tech.imageresizershrinker.core.ui.utils.BaseComponent
 import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
 import ru.tech.imageresizershrinker.core.ui.utils.state.update
 import ru.tech.imageresizershrinker.feature.gif_tools.domain.GifConverter
 import ru.tech.imageresizershrinker.feature.gif_tools.domain.GifParams
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class GifToolsComponent @AssistedInject internal constructor(
     @Assisted componentContext: ComponentContext,
     @Assisted val initialType: Screen.GifTools.Type?,
     @Assisted val onGoBack: () -> Unit,
     private val imageCompressor: ImageCompressor<Bitmap>,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
+    private val imageGetter: ImageGetter<Bitmap>,
     private val fileController: FileController,
     private val filenameCreator: FilenameCreator,
     private val gifConverter: GifConverter,
@@ -256,7 +253,7 @@ class GifToolsComponent @AssistedInject internal constructor(
                                 )
                                 results.add(
                                     fileController.save(
-                                        saveTarget = ImageSaveTarget<ExifInterface>(
+                                        saveTarget = ImageSaveTarget(
                                             imageInfo = imageInfo,
                                             originalUri = uri,
                                             sequenceNumber = _done.value + 1,
@@ -295,12 +292,7 @@ class GifToolsComponent @AssistedInject internal constructor(
                                 onResult(listOf(SaveResult.Error.Exception(it)))
                             }
                         )?.also {
-                            val timeStamp = SimpleDateFormat(
-                                "yyyy-MM-dd_HH-mm-ss",
-                                Locale.getDefault()
-                            ).format(Date())
-                            val gifName = "GIF_$timeStamp"
-                            onGifSaveResult(gifName)
+                            onGifSaveResult("GIF_${timestamp()}")
                         }
                     }
                 }
@@ -382,7 +374,7 @@ class GifToolsComponent @AssistedInject internal constructor(
     private fun webpFilename(
         uri: String
     ): String = filenameCreator.constructImageFilename(
-        ImageSaveTarget<ExifInterface>(
+        ImageSaveTarget(
             imageInfo = ImageInfo(
                 imageFormat = ImageFormat.Webp.Lossless,
                 originalUri = uri
@@ -398,7 +390,7 @@ class GifToolsComponent @AssistedInject internal constructor(
     private fun jxlFilename(
         uri: String
     ): String = filenameCreator.constructImageFilename(
-        ImageSaveTarget<ExifInterface>(
+        ImageSaveTarget(
             imageInfo = ImageInfo(
                 imageFormat = ImageFormat.Jxl.Lossless,
                 originalUri = uri
@@ -494,14 +486,9 @@ class GifToolsComponent @AssistedInject internal constructor(
                             },
                             onFailure = { }
                         )?.also { byteArray ->
-                            val timeStamp = SimpleDateFormat(
-                                "yyyy-MM-dd_HH-mm-ss",
-                                Locale.getDefault()
-                            ).format(Date())
-                            val gifName = "GIF_$timeStamp"
                             shareProvider.shareByteArray(
                                 byteArray = byteArray,
-                                filename = "$gifName.gif",
+                                filename = "GIF_${timestamp()}.gif",
                                 onComplete = onComplete
                             )
                         }

@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
+@file:Suppress("FunctionName")
+
 package ru.tech.imageresizershrinker.feature.recognize.text.presentation.screenLogic
 
 import android.graphics.Bitmap
@@ -24,7 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.exifinterface.media.ExifInterface
 import com.arkivanov.decompose.ComponentContext
 import com.smarttoolfactory.cropper.model.AspectRatio
 import com.smarttoolfactory.cropper.model.OutlineType
@@ -45,18 +46,31 @@ import ru.tech.imageresizershrinker.core.domain.image.ImageGetter
 import ru.tech.imageresizershrinker.core.domain.image.ImageScaler
 import ru.tech.imageresizershrinker.core.domain.image.ImageTransformer
 import ru.tech.imageresizershrinker.core.domain.image.ShareProvider
+import ru.tech.imageresizershrinker.core.domain.image.model.ImageInfo
+import ru.tech.imageresizershrinker.core.domain.image.model.MetadataTag
 import ru.tech.imageresizershrinker.core.domain.model.DomainAspectRatio
+import ru.tech.imageresizershrinker.core.domain.resource.ResourceManager
 import ru.tech.imageresizershrinker.core.domain.saving.FileController
+import ru.tech.imageresizershrinker.core.domain.saving.FilenameCreator
+import ru.tech.imageresizershrinker.core.domain.saving.model.FileSaveTarget
+import ru.tech.imageresizershrinker.core.domain.saving.model.ImageSaveTarget
 import ru.tech.imageresizershrinker.core.domain.saving.model.SaveResult
+import ru.tech.imageresizershrinker.core.domain.saving.model.SaveTarget
+import ru.tech.imageresizershrinker.core.domain.saving.model.onSuccess
+import ru.tech.imageresizershrinker.core.domain.utils.ListUtils.toggle
+import ru.tech.imageresizershrinker.core.domain.utils.runSuspendCatching
 import ru.tech.imageresizershrinker.core.domain.utils.smartJob
+import ru.tech.imageresizershrinker.core.domain.utils.timestamp
 import ru.tech.imageresizershrinker.core.filters.domain.FilterProvider
 import ru.tech.imageresizershrinker.core.filters.domain.model.Filter
 import ru.tech.imageresizershrinker.core.filters.presentation.model.UiContrastFilter
 import ru.tech.imageresizershrinker.core.filters.presentation.model.UiSharpenFilter
 import ru.tech.imageresizershrinker.core.filters.presentation.model.UiThresholdFilter
+import ru.tech.imageresizershrinker.core.resources.R
 import ru.tech.imageresizershrinker.core.settings.domain.SettingsManager
 import ru.tech.imageresizershrinker.core.ui.utils.BaseComponent
 import ru.tech.imageresizershrinker.core.ui.utils.helper.ImageUtils.safeAspectRatio
+import ru.tech.imageresizershrinker.core.ui.utils.navigation.Screen
 import ru.tech.imageresizershrinker.core.ui.utils.state.update
 import ru.tech.imageresizershrinker.feature.recognize.text.domain.DownloadData
 import ru.tech.imageresizershrinker.feature.recognize.text.domain.ImageTextReader
@@ -67,25 +81,26 @@ import ru.tech.imageresizershrinker.feature.recognize.text.domain.RecognitionTyp
 import ru.tech.imageresizershrinker.feature.recognize.text.domain.SegmentationMode
 import ru.tech.imageresizershrinker.feature.recognize.text.domain.TessParams
 import ru.tech.imageresizershrinker.feature.recognize.text.domain.TextRecognitionResult
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import ru.tech.imageresizershrinker.feature.recognize.text.presentation.components.UiDownloadData
+import ru.tech.imageresizershrinker.feature.recognize.text.presentation.components.toUi
 import coil3.transform.Transformation as CoilTransformation
 
 class RecognizeTextComponent @AssistedInject internal constructor(
     @Assisted componentContext: ComponentContext,
-    @Assisted val initialUri: Uri?,
-    @Assisted val onGoBack: () -> Unit,
-    private val imageGetter: ImageGetter<Bitmap, ExifInterface>,
-    private val imageTextReader: ImageTextReader<Bitmap>,
+    @Assisted val initialType: Screen.RecognizeText.Type?,
+    @Assisted onGoBack: () -> Unit,
+    private val imageGetter: ImageGetter<Bitmap>,
+    private val imageTextReader: ImageTextReader,
     private val settingsManager: SettingsManager,
     private val imageTransformer: ImageTransformer<Bitmap>,
     private val filterProvider: FilterProvider<Bitmap>,
     private val imageScaler: ImageScaler<Bitmap>,
     private val shareProvider: ShareProvider<Bitmap>,
     private val fileController: FileController,
+    private val filenameCreator: FilenameCreator,
+    resourceManager: ResourceManager,
     dispatchersHolder: DispatchersHolder
-) : BaseComponent(dispatchersHolder, componentContext) {
+) : BaseComponent(dispatchersHolder, componentContext), ResourceManager by resourceManager {
 
     private val _segmentationMode: MutableState<SegmentationMode> =
         mutableStateOf(SegmentationMode.PSM_AUTO_OSD)
@@ -104,11 +119,28 @@ class RecognizeTextComponent @AssistedInject internal constructor(
     private val _recognitionType = mutableStateOf(RecognitionType.Standard)
     val recognitionType by _recognitionType
 
-    private val _uri = mutableStateOf<Uri?>(null)
-    val uri by _uri
+    private val _type = mutableStateOf<Screen.RecognizeText.Type?>(null)
+    val type by _type
+
+    val uris: List<Uri>
+        get() = when (val target = type) {
+            is Screen.RecognizeText.Type.WriteToFile -> target.uris ?: emptyList()
+            is Screen.RecognizeText.Type.WriteToMetadata -> target.uris ?: emptyList()
+            else -> emptyList()
+        }
+
+    val onGoBack: () -> Unit = {
+        if (type == null) onGoBack()
+        else _type.update { null }
+    }
 
     private val _recognitionData = mutableStateOf<RecognitionData?>(null)
     val recognitionData by _recognitionData
+
+    val text: String? get() = recognitionData?.text?.takeIf { it.isNotEmpty() }
+
+    private val _editedText = mutableStateOf(text)
+    val editedText by _editedText
 
     private val _textLoadingProgress: MutableState<Int> = mutableIntStateOf(-1)
     val textLoadingProgress by _textLoadingProgress
@@ -161,6 +193,15 @@ class RecognizeTextComponent @AssistedInject internal constructor(
     private val _isExporting: MutableState<Boolean> = mutableStateOf(false)
     val isExporting by _isExporting
 
+    private val _done: MutableState<Int> = mutableIntStateOf(0)
+    val done by _done
+
+    private val _left: MutableState<Int> = mutableIntStateOf(-1)
+    val left by _left
+
+    private val _isSaving: MutableState<Boolean> = mutableStateOf(false)
+    val isSaving by _isSaving
+
     private var languagesJob: Job? by smartJob {
         _isExporting.update { false }
     }
@@ -169,6 +210,24 @@ class RecognizeTextComponent @AssistedInject internal constructor(
         get() = textLoadingProgress in 0..100
 
     private var loadingJob: Job? by smartJob()
+
+    private val _selectionSheetData = mutableStateOf(emptyList<Uri>())
+    val selectionSheetData by _selectionSheetData
+
+    private val _downloadDialogData = mutableStateOf<List<UiDownloadData>>(emptyList())
+    val downloadDialogData by _downloadDialogData
+
+    fun clearDownloadDialogData() {
+        _downloadDialogData.update { emptyList() }
+    }
+
+    fun showSelectionTypeSheet(uris: List<Uri>) {
+        _selectionSheetData.update { uris }
+    }
+
+    fun hideSelectionTypeSheet() {
+        _selectionSheetData.update { emptyList() }
+    }
 
     private fun loadLanguages(
         onComplete: suspend () -> Unit = {}
@@ -183,15 +242,15 @@ class RecognizeTextComponent @AssistedInject internal constructor(
             }
             val data = imageTextReader.getLanguages(recognitionType)
             _selectedLanguages.update { ocrLanguages ->
-                val list = ocrLanguages.toMutableList()
-                data.forEach { ocrLanguage ->
-                    ocrLanguages.indexOfFirst {
-                        it.code == ocrLanguage.code
-                    }.takeIf { it != -1 }?.let { index ->
-                        list[index] = ocrLanguage
+                ocrLanguages.toMutableList().also { oldList ->
+                    data.forEach { ocrLanguage ->
+                        ocrLanguages.indexOfFirst {
+                            it.code == ocrLanguage.code
+                        }.takeIf { it != -1 }?.let { index ->
+                            oldList[index] = ocrLanguage
+                        }
                     }
                 }
-                list
             }
             _languages.update { data }
             onComplete()
@@ -214,19 +273,162 @@ class RecognizeTextComponent @AssistedInject internal constructor(
         filterProvider.filterToTransformation(it).toCoil()
     }
 
-    fun updateUri(
-        uri: Uri?,
+    fun updateType(
+        type: Screen.RecognizeText.Type?,
         onImageSet: () -> Unit
     ) {
-        _uri.update { uri }
-        uri?.let {
+        type?.let {
             componentScope.launch {
                 _isImageLoading.value = true
-                imageGetter.getImage(data = uri, false)?.let {
-                    updateBitmap(it, onImageSet)
+                _type.update { type }
+                if (type is Screen.RecognizeText.Type.Extraction) {
+                    imageGetter.getImage(
+                        data = type.uri ?: "",
+                        originalSize = false
+                    )?.let {
+                        updateBitmap(it, onImageSet)
+                    }
                 }
                 _isImageLoading.value = false
             }
+        }
+    }
+
+    fun save(
+        oneTimeSaveLocationUri: String?,
+        onResult: (List<SaveResult>) -> Unit,
+    ) {
+        recognitionJob = componentScope.launch {
+            delay(400)
+            _isSaving.update { true }
+            when (type) {
+                is Screen.RecognizeText.Type.WriteToFile -> {
+                    val txtString = StringBuilder()
+
+                    _left.update { uris.size }
+
+                    uris.forEach { uri ->
+                        uri.readText().appendToStringBuilder(
+                            builder = txtString,
+                            uri = uri,
+                            onRequestDownload = { data ->
+                                _downloadDialogData.update { data.map(DownloadData::toUi) }
+                                return@launch
+                            }
+                        )
+                        _done.update { it + 1 }
+                    }
+
+                    onResult(
+                        listOf(
+                            fileController.save(
+                                saveTarget = TxtSaveTarget(
+                                    txtBytes = txtString.toString().toByteArray()
+                                ),
+                                keepOriginalMetadata = true,
+                                oneTimeSaveLocationUri = oneTimeSaveLocationUri
+                            ).onSuccess(::registerSave)
+                        )
+                    )
+                }
+
+                is Screen.RecognizeText.Type.WriteToMetadata -> {
+                    val results = mutableListOf<SaveResult>()
+
+                    _left.update { uris.size }
+
+                    uris.forEach { uri ->
+                        runSuspendCatching {
+                            imageGetter.getImage(uri.toString())
+                        }.getOrNull()?.let { data ->
+                            val txtString = when (val result = data.image.readText()) {
+                                is TextRecognitionResult.Error -> {
+                                    result.throwable.message ?: ""
+                                }
+
+                                is TextRecognitionResult.NoData -> {
+                                    _downloadDialogData.update { result.data.map(DownloadData::toUi) }
+                                    return@launch
+                                }
+
+                                is TextRecognitionResult.Success -> {
+                                    result.data.text.ifEmpty { getString(R.string.picture_has_no_text) }
+                                }
+                            }
+
+                            results.add(
+                                fileController.save(
+                                    ImageSaveTarget(
+                                        imageInfo = data.imageInfo,
+                                        originalUri = uri.toString(),
+                                        sequenceNumber = null,
+                                        metadata = data.metadata?.apply {
+                                            setAttribute(
+                                                MetadataTag.UserComment,
+                                                txtString.takeIf { it.isNotEmpty() }
+                                            )
+                                        },
+                                        data = ByteArray(0),
+                                        readFromUriInsteadOfData = true
+                                    ),
+                                    keepOriginalMetadata = false,
+                                    oneTimeSaveLocationUri = oneTimeSaveLocationUri
+                                )
+                            )
+                            _done.update { it + 1 }
+                        }
+                    }
+
+                    onResult(results.onSuccess(::registerSave))
+                }
+
+                else -> return@launch
+            }
+        }.apply {
+            invokeOnCompletion {
+                _isSaving.update { false }
+            }
+        }
+    }
+
+    private fun TxtSaveTarget(
+        txtBytes: ByteArray
+    ): SaveTarget = FileSaveTarget(
+        originalUri = "",
+        filename = filenameCreator.constructImageFilename(
+            ImageSaveTarget(
+                imageInfo = ImageInfo(),
+                originalUri = "",
+                sequenceNumber = null,
+                metadata = null,
+                data = ByteArray(0),
+                extension = "txt"
+            ),
+            oneTimePrefix = "OCR_images(${uris.size})",
+            forceNotAddSizeInFilename = true
+        ),
+        data = txtBytes,
+        mimeType = "text/plain",
+        extension = "txt"
+    )
+
+    fun removeUri(uri: Uri) {
+        when (type) {
+            is Screen.RecognizeText.Type.WriteToFile -> {
+                updateType(
+                    type = Screen.RecognizeText.Type.WriteToFile(uris - uri),
+                    onImageSet = {}
+                )
+            }
+
+            is Screen.RecognizeText.Type.WriteToMetadata -> {
+                updateType(
+                    type = Screen.RecognizeText.Type.WriteToMetadata(uris - uri),
+                    onImageSet = {}
+                )
+            }
+
+            else -> Unit
         }
     }
 
@@ -245,45 +447,30 @@ class RecognizeTextComponent @AssistedInject internal constructor(
 
     private var recognitionJob: Job? by smartJob {
         _textLoadingProgress.update { -1 }
+        _isSaving.update { false }
     }
 
     fun startRecognition(
-        onFailure: (Throwable) -> Unit,
-        onRequestDownload: (List<DownloadData>) -> Unit
+        onFailure: (Throwable) -> Unit
     ) {
         recognitionJob = componentScope.launch {
-            if (uri == null) return@launch
+            val type = _type.value
+            if (type !is Screen.RecognizeText.Type.Extraction) return@launch
             delay(400L)
             _textLoadingProgress.update { 0 }
-            imageTextReader.getTextFromImage(
-                type = recognitionType,
-                languageCode = selectedLanguages.joinToString("+") { it.code },
-                segmentationMode = segmentationMode,
-                image = previewBitmap?.let { bitmap ->
-                    imageTransformer.transform(
-                        transformations = getTransformations().map {
-                            it.asDomain()
-                        },
-                        image = bitmap
-                    )
-                },
-                parameters = params,
-                ocrEngineMode = ocrEngineMode,
-                onProgress = { progress ->
-                    _textLoadingProgress.update { progress }
-                }
-            ).also { result ->
+            type.uri?.readText()?.also { result ->
                 when (result) {
                     is TextRecognitionResult.Error -> {
                         onFailure(result.throwable)
                     }
 
                     is TextRecognitionResult.NoData -> {
-                        onRequestDownload(result.data)
+                        _downloadDialogData.update { result.data.map(DownloadData::toUi) }
                     }
 
                     is TextRecognitionResult.Success -> {
                         _recognitionData.update { result.data }
+                        _editedText.update { text }
                     }
                 }
             }
@@ -336,6 +523,7 @@ class RecognizeTextComponent @AssistedInject internal constructor(
             }
             _selectedLanguages.update { ocrLanguages }
             _recognitionData.update { null }
+            _editedText.update { null }
             recognitionJob?.cancel()
             _textLoadingProgress.update { -1 }
         }
@@ -396,8 +584,8 @@ class RecognizeTextComponent @AssistedInject internal constructor(
         domainAspectRatio: DomainAspectRatio,
         aspectRatio: AspectRatio
     ) {
-        _cropProperties.update {
-            it.copy(
+        _cropProperties.update { properties ->
+            properties.copy(
                 aspectRatio = aspectRatio.takeIf {
                     domainAspectRatio != DomainAspectRatio.Original
                 } ?: _previewBitmap.value?.let {
@@ -410,30 +598,26 @@ class RecognizeTextComponent @AssistedInject internal constructor(
     }
 
     fun setCropMask(cropOutlineProperty: CropOutlineProperty) {
-        _cropProperties.value =
-            _cropProperties.value.copy(cropOutlineProperty = cropOutlineProperty)
+        _cropProperties.update { it.copy(cropOutlineProperty = cropOutlineProperty) }
     }
 
     suspend fun loadImage(uri: Uri): Bitmap? = imageGetter.getImage(data = uri)
 
     fun toggleContrastFilter() {
         _filtersAdded.update {
-            if (contrastFilterInstance in it) it - contrastFilterInstance
-            else it + contrastFilterInstance
+            it.toggle(contrastFilterInstance)
         }
     }
 
     fun toggleThresholdFilter() {
         _filtersAdded.update {
-            if (thresholdFilterInstance in it) it - thresholdFilterInstance
-            else it + thresholdFilterInstance
+            it.toggle(thresholdFilterInstance)
         }
     }
 
     fun toggleSharpnessFilter() {
         _filtersAdded.update {
-            if (sharpenFilterInstance in it) it - sharpenFilterInstance
-            else it + sharpenFilterInstance
+            it.toggle(sharpenFilterInstance)
         }
     }
 
@@ -441,15 +625,160 @@ class RecognizeTextComponent @AssistedInject internal constructor(
         _ocrEngineMode.update { mode }
     }
 
-    fun shareText(
-        text: String?,
+    fun shareEditedText(
         onComplete: () -> Unit
     ) {
-        text?.let {
+        editedText?.let {
             shareProvider.shareText(
                 value = it,
                 onComplete = onComplete
             )
+        }
+    }
+
+    fun updateEditedText(text: String) {
+        _editedText.update { text }
+    }
+
+    fun shareData(
+        onComplete: () -> Unit
+    ) {
+        recognitionJob = componentScope.launch {
+            delay(400)
+            _isSaving.update { true }
+            when (type) {
+                is Screen.RecognizeText.Type.WriteToFile -> {
+                    val txtString = StringBuilder()
+
+                    _left.update { uris.size }
+
+                    uris.forEach { uri ->
+                        uri.readText().also { result ->
+                            result.appendToStringBuilder(
+                                builder = txtString,
+                                uri = uri,
+                                onRequestDownload = { data ->
+                                    _downloadDialogData.update { data.map(DownloadData::toUi) }
+                                    return@launch
+                                }
+                            )
+                            _done.update { it + 1 }
+                        }
+                    }
+
+                    val saveTarget = TxtSaveTarget(
+                        txtBytes = txtString.toString().toByteArray()
+                    )
+
+                    shareProvider.shareByteArray(
+                        byteArray = saveTarget.data,
+                        filename = saveTarget.filename ?: "",
+                        onComplete = onComplete
+                    )
+                }
+
+                is Screen.RecognizeText.Type.WriteToMetadata -> {
+                    val cachedUris = mutableListOf<String>()
+
+                    _left.update { uris.size }
+
+                    uris.forEach { uri ->
+                        runSuspendCatching {
+                            imageGetter.getImage(uri.toString())
+                        }.getOrNull()?.let { data ->
+                            data.image.readText().also { result ->
+                                val txtString = when (result) {
+                                    is TextRecognitionResult.Error -> {
+                                        result.throwable.message ?: ""
+                                    }
+
+                                    is TextRecognitionResult.NoData -> {
+                                        _downloadDialogData.update { result.data.map(DownloadData::toUi) }
+                                        return@launch
+                                    }
+
+                                    is TextRecognitionResult.Success -> {
+                                        result.data.text.ifEmpty { getString(R.string.picture_has_no_text) }
+                                    }
+                                }
+
+                                val exif = data.metadata?.apply {
+                                    setAttribute(
+                                        MetadataTag.UserComment,
+                                        txtString.takeIf { it.isNotEmpty() }
+                                    )
+                                }
+
+                                shareProvider.cacheData(
+                                    writeData = { w ->
+                                        w.writeBytes(
+                                            fileController.readBytes(uri.toString())
+                                        )
+                                    },
+                                    filename = filenameCreator.constructImageFilename(
+                                        saveTarget = ImageSaveTarget(
+                                            imageInfo = data.imageInfo.copy(originalUri = uri.toString()),
+                                            originalUri = uri.toString(),
+                                            metadata = exif,
+                                            sequenceNumber = null,
+                                            data = ByteArray(0)
+                                        )
+                                    )
+                                )?.let { uri ->
+                                    fileController.writeMetadata(
+                                        imageUri = uri,
+                                        metadata = exif
+                                    )
+
+                                    cachedUris.add(uri)
+                                }
+
+                                _done.update { it + 1 }
+                            }
+                        }
+                    }
+
+                    shareProvider.shareUris(cachedUris)
+                }
+
+                else -> return@launch
+            }
+        }.apply {
+            invokeOnCompletion {
+                _isSaving.update { false }
+            }
+        }
+    }
+
+    private inline fun TextRecognitionResult.appendToStringBuilder(
+        builder: StringBuilder,
+        uri: Uri,
+        onRequestDownload: (List<DownloadData>) -> Unit
+    ) {
+        when (this) {
+            is TextRecognitionResult.Error -> {
+                builder.apply {
+                    append("${done + 1} - ")
+                    append("[${filenameCreator.getFilename(uri.toString())}]")
+                    append("\n\n")
+                    append(throwable.message)
+                    append("\n\n")
+                }
+            }
+
+            is TextRecognitionResult.NoData -> onRequestDownload(data)
+
+            is TextRecognitionResult.Success -> {
+                builder.apply {
+                    append("${done + 1} - ")
+                    append("[${filenameCreator.getFilename(uri.toString())}]")
+                    append(" ")
+                    append(getString(R.string.accuracy, data.accuracy))
+                    append("\n\n")
+                    append(data.text.ifEmpty { getString(R.string.picture_has_no_text) })
+                    append("\n\n")
+                }
+            }
         }
     }
 
@@ -464,26 +793,14 @@ class RecognizeTextComponent @AssistedInject internal constructor(
                     uri = uri.toString(),
                     block = { it.writeBytes(fileController.readBytes(zipUri)) }
                 ).also(onResult).onSuccess(::registerSave)
-                _isExporting.value = false
             }
+            _isExporting.value = false
         }
     }
 
-    fun generateExportFilename(): String {
-        val timeStamp = SimpleDateFormat(
-            "yyyy-MM-dd_HH-mm-ss",
-            Locale.getDefault()
-        ).format(Date())
-        return "image_toolbox_ocr_languages_$timeStamp.zip"
-    }
+    fun generateExportFilename(): String = "image_toolbox_ocr_languages_${timestamp()}.zip"
 
-    fun generateTextFilename(): String {
-        val timeStamp = SimpleDateFormat(
-            "yyyy-MM-dd_HH-mm-ss",
-            Locale.getDefault()
-        ).format(Date())
-        return "OCR_$timeStamp.txt"
-    }
+    fun generateTextFilename(): String = "OCR_${timestamp()}.txt"
 
     fun importLanguagesFrom(
         uri: Uri,
@@ -523,11 +840,38 @@ class RecognizeTextComponent @AssistedInject internal constructor(
         _params.update { newParams }
     }
 
+    fun cancelSaving() {
+        recognitionJob?.cancel()
+        recognitionJob = null
+        _isSaving.update { false }
+    }
+
+    private suspend fun Any.readText(): TextRecognitionResult {
+        return imageTextReader.getTextFromImage(
+            type = recognitionType,
+            languageCode = selectedLanguages.joinToString("+") { it.code },
+            segmentationMode = segmentationMode,
+            model = imageGetter.getImage(this)?.let { bitmap ->
+                imageTransformer.transform(
+                    transformations = getTransformations().map(CoilTransformation::asDomain),
+                    image = bitmap
+                )
+            },
+            parameters = params,
+            ocrEngineMode = ocrEngineMode,
+            onProgress = { progress ->
+                _textLoadingProgress.update { progress }
+            }
+        ).also {
+            _textLoadingProgress.update { -1 }
+        }
+    }
+
     @AssistedFactory
     fun interface Factory {
         operator fun invoke(
             componentContext: ComponentContext,
-            initialUri: Uri?,
+            initialType: Screen.RecognizeText.Type?,
             onGoBack: () -> Unit,
         ): RecognizeTextComponent
     }
