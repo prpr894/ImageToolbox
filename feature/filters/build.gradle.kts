@@ -22,7 +22,7 @@ plugins {
     alias(libs.plugins.image.toolbox.compose)
 }
 
-android.namespace = "ru.tech.imageresizershrinker.feature.filters"
+android.namespace = "com.t8rin.imagetoolbox.feature.filters"
 
 dependencies {
     api(projects.core.filters)
@@ -34,4 +34,7 @@ dependencies {
     implementation(libs.trickle)
     implementation(libs.toolbox.gpuimage)
     implementation(libs.toolbox.opencvTools)
+    implementation(libs.toolbox.curves)
+    implementation(libs.toolbox.jhlabs)
+    implementation(libs.toolbox.ascii)
 }

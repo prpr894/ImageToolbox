@@ -21,11 +21,13 @@ plugins {
     alias(libs.plugins.image.toolbox.hilt)
 }
 
-android.namespace = "ru.tech.imageresizershrinker.core.filters"
+android.namespace = "com.t8rin.imagetoolbox.core.filters"
 
 dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.ui)
     implementation(projects.core.resources)
     implementation(libs.kotlin.reflect)
+    implementation(libs.toolbox.curves)
+    implementation(libs.toolbox.ascii)
 }

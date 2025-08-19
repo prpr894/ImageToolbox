@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<!--
+  ~ ImageToolbox is an image editor for android
+  ~ Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  ~ You should have received a copy of the Apache License
+  ~ along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+  --><resources xmlns:tools="http://schemas.android.com/tools">
     <string name="restart_app">Restart app</string>
     <string name="about_app">About app</string>
     <string name="no_updates">No poboljšati pronađen</string>
@@ -115,7 +130,7 @@
     <string name="explicit">Explicit</string>
     <string name="flexible">Fleksibilan</string>
     <string name="pick_image_alt">Izabrati mage.</string>
-    <string name="app_closing_sub">Biti free tada want to close the app\?</string>
+    <string name="app_closing_sub">Biti free tada want to close the app?</string>
     <string name="app_closing">App zatvaranje</string>
     <string name="stay">Boravak</string>
     <string name="close">Close</string>
@@ -246,8 +261,7 @@
     <string name="draw">Драв</string>
     <string name="file_size">Величина фајла</string>
     <string name="file_proceed">Фајл обрађен</string>
-    <string name="file_size_sub">Максимална величина датотеке је ограничена Андроид ОС-ом и доступном меморијом, што очигледно зависи од вашег уређаја.
-\nИмајте на уму: меморија није складиште.</string>
+    <string name="file_size_sub">Максимална величина датотеке је ограничена Андроид ОС-ом и доступном меморијом, што очигледно зависи од вашег уређаја. \nИмајте на уму: меморија није складиште.</string>
     <string name="cache">Цацхе</string>
     <string name="paint_color">Боја боје</string>
     <string name="paint_alpha">Паинт алпха</string>
@@ -727,8 +741,7 @@
     <string name="standard">Стандард</string>
     <string name="best">Најбољи</string>
     <string name="no_data">Нема података</string>
-    <string name="download_description">За правилно функционисање Тессерацт ОЦР-а потребно је да се на ваш уређај преузму додатни подаци за обуку (%1$s).
-\nДа ли желите да преузмете %2$s податке?</string>
+    <string name="download_description">За правилно функционисање Тессерацт ОЦР-а потребно је да се на ваш уређај преузму додатни подаци за обуку (%1$s). \nДа ли желите да преузмете %2$s податке?</string>
     <string name="download">Преузимање</string>
     <string name="no_connection">Нема везе, проверите и покушајте поново да бисте преузели моделе возова</string>
     <string name="downloaded_languages">Преузети језици</string>

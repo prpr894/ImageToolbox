@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<!--
+  ~ ImageToolbox is an image editor for android
+  ~ Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  ~ You should have received a copy of the Apache License
+  ~ along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+  --><resources xmlns:tools="http://schemas.android.com/tools">
     <string name="pick_image">Выберыце малюнак для пачатку</string>
     <string name="height">Вышыня %1$s</string>
     <string name="explicit">Спецыфічны</string>
@@ -335,8 +350,7 @@
     <string name="lanczos_sub">Метад паўторнай выбаркі, які падтрымлівае высакаякасную інтэрпаляцыю шляхам прымянення ўзважанай функцыі sinc да значэнняў пікселяў</string>
     <string name="hann_sub">Функцыя вокнаў часта прымяняецца пры апрацоўцы сігналаў для мінімізацыі спектральнай уцечкі і павышэння дакладнасці частотнага аналізу шляхам звужэння краёў сігналу</string>
     <string name="hermite_sub">Тэхніка матэматычнай інтэрпаляцыі, якая выкарыстоўвае значэнні і вытворныя ў канчатковых кропках сегмента крывой для стварэння гладкай і бесперапыннай крывой</string>
-    <string name="download_description">Для належнага функцыянавання Tesseract OCR дадатковыя навучальныя даныя (%1$s) неабходна загрузіць на вашу прыладу.
-\nВы хочаце спампаваць даныя %2$s?</string>
+    <string name="download_description">Для належнага функцыянавання Tesseract OCR дадатковыя навучальныя даныя (%1$s) неабходна загрузіць на вашу прыладу. \nВы хочаце спампаваць даныя %2$s?</string>
     <string name="mitchell_sub">Метад паўторнай выбаркі, які выкарыстоўвае канвертацыйны фільтр з наладжвальнымі параметрамі для дасягнення балансу паміж рэзкасцю і згладжваннем у маштабаванай выяве</string>
     <string name="spline_sub">Выкарыстоўвае шматчленныя функцыі для плыўнай інтэрпаляцыі і апраксімацыі крывой або паверхні, гнуткае і бесперапыннае прадстаўленне формы</string>
     <string name="no_data">Даных няма</string>
@@ -582,8 +596,7 @@
     <string name="features">Асаблівасці</string>
     <string name="implementation">Рэалізацыя</string>
     <string name="compatibility">Сумяшчальнасць</string>
-    <string name="file_size_sub">The maximum file size is restricted by the Android OS and available memory, which is device dependent.
-\nPlease note: memory is not storage.</string>
+    <string name="file_size_sub">The maximum file size is restricted by the Android OS and available memory, which is device dependent. \nPlease note: memory is not storage.</string>
     <string name="compatibility_sub">Калі ласка, звярніце ўвагу, што сумяшчальнасць з іншымі праграмамі або службамі шыфравання файлаў не гарантуецца. Крыху іншая апрацоўка ключа або канфігурацыя шыфра могуць выклікаць несумяшчальнасць.</string>
     <string name="cache">Кэш</string>
     <string name="image_size_warning">Спроба захаваць малюнак з зададзенай шырынёй і вышынёй можа выклікаць памылку OOM. Рабіце гэта на свой страх і рызыку, і не кажыце, што я вас не папярэджваў!</string>
@@ -705,7 +718,7 @@
     <string name="allow_betas">Дазволіць бэта-версіі</string>
     <string name="erase_background">Сцерці фон</string>
     <string name="create_issue">Стварыць выпуск</string>
-    <string name="something_went_wrong_emphasis">Ой... Нешта пайшло не так. Вы можаце напісаць мне, выкарыстоўваючы параметры ніжэй, і я паспрабую знайсці рашэнне</string>
+    <string name="something_went_wrong_emphasis">Ой… Нешта пайшло не так. Вы можаце напісаць мне, выкарыстоўваючы параметры ніжэй, і я паспрабую знайсці рашэнне</string>
     <string name="resize_and_convert">Змяніць памер і канвертаваць</string>
     <string name="resize_and_convert_sub">Змяняйце памер дадзеных малюнкаў або канвертуйце іх у іншыя фарматы. Метададзеныя EXIF таксама можна рэдагаваць тут, выбраўшы адну выяву.</string>
     <string name="draw_arrows_sub">Калі ўключана, шлях малявання будзе паказаны ў выглядзе стрэлкі</string>

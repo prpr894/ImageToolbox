@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<!--
+  ~ ImageToolbox is an image editor for android
+  ~ Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  ~ You should have received a copy of the Apache License
+  ~ along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+  --><resources xmlns:tools="http://schemas.android.com/tools">
     <string name="language">اللغة</string>
     <string name="amoled_mode">وضع Amoled</string>
     <string name="amoled_mode_sub">إذا تم تمكين لون الأسطح فسيتم ضبطه على الظلام المطلق في الوضع الليلي</string>
@@ -7,14 +22,14 @@
     <string name="color_red">أحمر</string>
     <string name="color_green">أخضر</string>
     <string name="color_blue">أزرق</string>
-    <string name="clipboard_paste_invalid_color_code">قم يلصق كود aRGB صالح.</string>
+    <string name="clipboard_paste_invalid_color_code">قم بلصق كود aRGB صالح</string>
     <string name="clipboard_paste_invalid_empty">لا شيئ للصقه</string>
-    <string name="cannot_change_palette_while_dynamic_colors_applied">لا يمكن تغيير نظام ألوان التطبيق أثناء تشغيل الألوان الديناميكية</string>
+    <string name="cannot_change_palette_while_dynamic_colors_applied">لا يمكن تغيير مخطط ألوان التطبيق أثناء تشغيل الألوان الديناميكية</string>
     <string name="pick_accent_color">سيعتمد مظهر التطبيق على اللون الذي ستختاره</string>
     <string name="smth_went_wrong">حدث خطأ ما: %1$s</string>
     <string name="size">الحجم %1$s</string>
     <string name="loading">تحميل…</string>
-    <string name="image_too_large_preview">الصورة كبيرة جدًا لا يمكن معاينتها ، ولكن ستتم محاولة حفظها على أي حال</string>
+    <string name="image_too_large_preview">الصورة كبيرة جدًا لا يمكن معاينتها، ولكن ستتم محاولة حفظها على أي حال</string>
     <string name="pick_image">اختر صورة للبدء</string>
     <string name="width">العرض %1$s</string>
     <string name="height">الارتفاع %1$s</string>
@@ -24,7 +39,7 @@
     <string name="explicit">واضح</string>
     <string name="flexible">مرن</string>
     <string name="pick_image_alt">اختر صورة</string>
-    <string name="app_closing_sub">هل تريد حقًا إغلاق التطبيق؟</string>
+    <string name="app_closing_sub">هل تريد تأكيد إغلاق التطبيق؟</string>
     <string name="app_closing">جارى إغلاق التطبيق</string>
     <string name="stay">ابق</string>
     <string name="close">اغلاق</string>
@@ -51,9 +66,9 @@
     <string name="image_not_saved_sub">ستفقد جميع التغييرات غير المحفوظة ، إذا غادرت الآن</string>
     <string name="check_source_code">الكود المصدري</string>
     <string name="check_source_code_sub">احصل على آخر التحديثات وناقش المشكلات البرمجية والمزيد</string>
-    <string name="single_edit">تعديل واحد</string>
-    <string name="single_edit_sub">تغيير مواصفات صورة واحدة معينة</string>
-    <string name="pick_color">اختر اللون</string>
+    <string name="single_edit">تعديل وحيد</string>
+    <string name="single_edit_sub">تعديل، تحجيم وتعديل صورة واحدة</string>
+    <string name="pick_color">منتقي الألوان</string>
     <string name="pick_color_sub">اختر لونًا من الصورة, انسخ أو شارك</string>
     <string name="image">صورة</string>
     <string name="color">اللون</string>
@@ -65,7 +80,7 @@
     <string name="change_preview">تغيير المعاينة</string>
     <string name="remove">ازالة</string>
     <string name="palette_sub">إنشاء لوحة ألوان من صورة معينة</string>
-    <string name="generate_palette">إنشاء لوحة ألوان</string>
+    <string name="generate_palette">توليد لوحة ألوان</string>
     <string name="palette">لوحة ألوان</string>
     <string name="update">تحديث</string>
     <string name="new_version">نسخة جديدة %1$s</string>
@@ -164,18 +179,18 @@
     <string name="threshold">عتبة</string>
     <string name="replace_sequence_number">استبدل رقم التسلسل</string>
     <string name="replace_sequence_number_sub">في حالة التمكين ، يستبدل الطابع الزمني strandard برقم تسلسل الصورة إذا كنت تستخدم معالجة الدُفعات</string>
-    <string name="load_image_from_net">تحميل الصورة من النت</string>
+    <string name="load_image_from_net">تحميل الصورة من الانترنت</string>
     <string name="load_image_from_net_sub">قم بتحميل أي نموذج صورة على الإنترنت ، وقم بمعاينته ، وقم بالتكبير / التصغير ، وقم أيضًا بحفظه أو تحريره إذا كنت تريد ذلك</string>
     <string name="no_image">لا توجد صورة</string>
     <string name="image_link">رابط الصورة</string>
     <string name="fill">يملأ</string>
     <string name="fit">ملائمة</string>
-    <string name="explicit_description">يجبر كل صورة على صورة معطاة بواسطة معلمة العرض والارتفاع - قد يغير نسبة العرض إلى الارتفاع</string>
-    <string name="flexible_description">يغير حجم الصور إلى صور ذات جانب طويل محدد بواسطة معلمة العرض أو الارتفاع ، وسيتم إجراء جميع حسابات الحجم بعد الحفظ - يحافظ على نسبة العرض إلى الارتفاع</string>
+    <string name="explicit_description">تغيير حجم الصور إلى العرض واﻹرتفاع المٌعطى. قد تتغير نسبة العرض إلى الارتفاع للصور.</string>
+    <string name="flexible_description">يغير حجم الصور ذات جانب طويل إلى العرض أو الارتفاع المٌعطى.سيتم إجراء جميع حسابات الحجم بعد الحفظ. سيتم الحفاظ على نسبة العرض إلى الارتفاع.</string>
     <string name="saturation">التشبع</string>
     <string name="add_filter">أضف عامل تصفية</string>
     <string name="filter">المرشح</string>
-    <string name="filter_sub">قم بتطبيق أي سلسلة تصفية على صور معينة</string>
+    <string name="filter_sub">تطبيق سلسلة فلاتر على الصور</string>
     <string name="filters">المرشحات</string>
     <string name="light_aka_illumination">ضوء</string>
     <string name="color_filter">مرشح اللون</string>
@@ -220,7 +235,7 @@
     <string name="glass_sphere_refraction">انكسار الكرة الزجاجية</string>
     <string name="color_matrix">مصفوفة الألوان</string>
     <string name="opacity">التعتيم</string>
-    <string name="limits_resize">يحد من تغيير الحجم</string>
+    <string name="limits_resize">تغيير الحجم بحدود الصورة</string>
     <string name="limits_resize_sub">قم بتغيير حجم الصور المحددة لتتبع حدود العرض والارتفاع المحددة مع حفظ نسبة العرض إلى الارتفاع</string>
     <string name="quantizationLevels">مستويات التكميم</string>
     <string name="smooth_toon">السلس تون</string>
@@ -254,7 +269,7 @@
     <string name="draw_on_background_sub">اختر لون الخلفية وارسم فوقه</string>
     <string name="background_color">لون الخلفية</string>
     <string name="cipher">الشفرة</string>
-    <string name="cipher_sub">تشفير وفك تشفير أي ملف (ليس فقط الصورة) بناءً على تشفير AES algorithm</string>
+    <string name="cipher_sub">تشفير وفك تشفير أي ملف (ليس فقط الصورة) بناءً على تشفير خوارزمية AES</string>
     <string name="pick_file">اختر الملف</string>
     <string name="encrypt">تشفير</string>
     <string name="decrypt">فك تشفير</string>
@@ -271,8 +286,7 @@
     <string name="features_sub">تشفير الملفات على أساس كلمة المرور. يمكن تخزين الملفات التي تمت متابعتها في دليل Crypto أو مشاركتها. يمكن أيضًا فتح الملفات التي تم فك تشفيرها مباشرة.</string>
     <string name="implementation_sub">AES-256 ، وضع GCM ، بدون حشوة ، 12 بايت عشوائية IVs. تُستخدم المفاتيح كتجزئة SHA-3 (256 بت).</string>
     <string name="file_size">حجم الملف</string>
-    <string name="file_size_sub">الحد الأقصى لحجم الملف مقيد بنظام التشغيل Android والذاكرة المتاحة ، والتي تعتمد بشكل واضح على جهازك.
-\nيرجى ملاحظة: الذاكرة ليست تخزين.</string>
+    <string name="file_size_sub">الحد الأقصى لحجم الملف مقيد بنظام التشغيل Android والذاكرة المتاحة ، والتي تعتمد بشكل واضح على جهازك. \nيرجى ملاحظة: الذاكرة ليست تخزين.</string>
     <string name="group_options_by_type_sub">خيارات المجموعات على الشاشة الرئيسية من نوعها بدلاً من ترتيب القائمة المخصص</string>
     <string name="create">انشئ</string>
     <string name="image_size_warning">قد تتسبب محاولة حفظ الصورة بالعرض والارتفاع المحددين في حدوث خطأ OOM ، قم بذلك على مسؤوليتك الخاصة ، ولا تقل أنني لم أحذرك!</string>
@@ -304,7 +318,7 @@
     <string name="font_scale">مقياس الخط</string>
     <string name="restore">استعادة</string>
     <string name="tg_chat_sub">ناقش حول التطبيق واحصل على تعليقات من المستخدمين الآخرين، ويمكنك هنا أيضًا الحصول على تحديثات تجريبية</string>
-    <string name="alphabet_and_numbers">Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz 0123456789 !\?</string>
+    <string name="alphabet_and_numbers">Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz 0123456789 !?</string>
     <string name="delete">حذف</string>
     <string name="aspect_ratio">نسبة الأبعاد</string>
     <string name="delete_color_scheme_warn">أنت على وشك حذف نظام الألوان المحدد، لا يمكن التراجع عن هذه العملية</string>
@@ -742,8 +756,7 @@
     <string name="fast">سريع</string>
     <string name="standard">معيار</string>
     <string name="best">أفضل</string>
-    <string name="download_description">للحصول على أداء سليم لـ Tesseract OCR، يجب تنزيل بيانات التدريب الإضافية (%1$s) على جهازك.
-\nهل تريد تنزيل بيانات %2$s؟</string>
+    <string name="download_description">للحصول على أداء سليم لـ Tesseract OCR، يجب تنزيل بيانات التدريب الإضافية (%1$s) على جهازك. \nهل تريد تنزيل بيانات %2$s؟</string>
     <string name="download">تحميل</string>
     <string name="no_connection">لا يوجد اتصال، تحقق منه وحاول مرة أخرى لتنزيل نماذج القطارات</string>
     <string name="downloaded_languages">اللغات التي تم تنزيلها</string>

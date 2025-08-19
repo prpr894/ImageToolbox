@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<!--
+  ~ ImageToolbox is an image editor for android
+  ~ Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  ~ You should have received a copy of the Apache License
+  ~ along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+  --><resources xmlns:tools="http://schemas.android.com/tools">
     <string name="size">Laki %1$s</string>
     <string name="loading">Ikinakarga…</string>
     <string name="pick_image">Pumili ng larawan para magsimula</string>
@@ -27,7 +42,7 @@
     <string name="add_tag">Magdagdag ng tag</string>
     <string name="smth_went_wrong">Nagkaproblema: %1$s</string>
     <string name="image_too_large_preview">Masyadong malaki ang larawan para maipasilip, pero susubukan pa rin itong i-save</string>
-    <string name="app_closing_sub">Sigurado ka bang gusto mong umalis sa app\?</string>
+    <string name="app_closing_sub">Sigurado ka bang gusto mong umalis sa app?</string>
     <string name="no_exif">Walang nakitang EXIF na datos</string>
     <string name="save">I-save</string>
     <string name="cancel">Kanselahin</string>
@@ -279,8 +294,7 @@
     <string name="encrypt">I-encrypt</string>
     <string name="decrypt">I-decrypt</string>
     <string name="key">Susi</string>
-    <string name="file_size_sub">Ang maximum na laki ng file ay pinaghihigpitan ng Android OS at ang memorya na magagamit, na halatang nakadepende sa iyong device.
-\nMangyaring tandaan: ang memorya ay hindi imbakan.</string>
+    <string name="file_size_sub">Ang maximum na laki ng file ay pinaghihigpitan ng Android OS at ang memorya na magagamit, na halatang nakadepende sa iyong device. \nMangyaring tandaan: ang memorya ay hindi imbakan.</string>
     <string name="cipher">Cipher</string>
     <string name="cipher_sub">I-encrypt at I-decrypt ang anumang file (hindi lamang ang imahe) batay sa AES crypto algorithm</string>
     <string name="pick_file_to_start">Pumili ng file upang magsimula</string>
@@ -715,8 +729,7 @@
     <string name="standard">Pamantayan</string>
     <string name="best">Pinakamahusay</string>
     <string name="no_data">Walang Data</string>
-    <string name="download_description">Para sa wastong paggana ng Tesseract OCR, kailangang ma-download ang karagdagang data ng pagsasanay (%1$s) sa iyong device.
-\nGusto mo bang mag-download ng %2$s data?</string>
+    <string name="download_description">Para sa wastong paggana ng Tesseract OCR, kailangang ma-download ang karagdagang data ng pagsasanay (%1$s) sa iyong device. \nGusto mo bang mag-download ng %2$s data?</string>
     <string name="download">I-download</string>
     <string name="no_connection">Walang koneksyon, suriin ito at subukang muli upang mag-download ng mga modelo ng tren</string>
     <string name="downloaded_languages">Mga Na-download na Wika</string>

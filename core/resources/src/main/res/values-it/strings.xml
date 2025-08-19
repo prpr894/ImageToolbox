@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<!--
+  ~ ImageToolbox is an image editor for android
+  ~ Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  ~ You should have received a copy of the Apache License
+  ~ along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+  --><resources xmlns:tools="http://schemas.android.com/tools">
     <string name="smth_went_wrong">Qualcosa non ha funzionato: %1$s</string>
     <string name="size">Dimensione %1$s</string>
     <string name="loading">Caricamento…</string>
@@ -250,8 +265,7 @@
     <string name="fallback_option">Opzione di riserva</string>
     <string name="decrypt">Decrittare</string>
     <string name="features_sub">Crittografia dei file basata su password. I file ottenuti possono essere archiviati nella directory selezionata o condivisi. I file decifrati possono anche essere aperti direttamente.</string>
-    <string name="file_size_sub">La dimensione massima del file è limitata dal sistema operativo Android e dalla memoria disponibile, che dipende dal dispositivo.
-\nNota: per memoria non si intende quella di archiviazione.</string>
+    <string name="file_size_sub">La dimensione massima del file è limitata dal sistema operativo Android e dalla memoria disponibile, che dipende dal dispositivo. \nNota: per memoria non si intende quella di archiviazione.</string>
     <string name="cache_size">Dimensione della cache</string>
     <string name="tools">Utensili</string>
     <string name="group_options_by_type_sub">Raggruppa le opzioni sulla schermata principale per tipologia invece di usare la disposizione personalizzata</string>
@@ -308,7 +322,7 @@
     <string name="restore">Ripristina</string>
     <string name="trim_image_sub">Gli spazi trasparenti intorno all\'immagine saranno sbarrati</string>
     <string name="tg_chat_sub">Discuti dell\'app e ricevi feedback da altri utenti. Puoi anche ottenere aggiornamenti e approfondimenti sulla versione beta.</string>
-    <string name="alphabet_and_numbers">Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz 0123456789 !\?</string>
+    <string name="alphabet_and_numbers">Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz 0123456789 !?</string>
     <string name="erase_background">Cancella sfondo</string>
     <string name="restore_image">Ripristina l\'immagine</string>
     <string name="delete">Elimina</string>
@@ -738,8 +752,7 @@
     <string name="standard">Standard</string>
     <string name="best">Migliore</string>
     <string name="no_data">Nessun dato</string>
-    <string name="download_description">Per il corretto funzionamento di Tesseract OCR è necessario scaricare sul dispositivo dati di allenamento aggiuntivi (%1$s).
-\nVuoi scaricare i dati %2$s?</string>
+    <string name="download_description">Per il corretto funzionamento di Tesseract OCR è necessario scaricare sul dispositivo dati di allenamento aggiuntivi (%1$s). \nVuoi scaricare i dati %2$s?</string>
     <string name="download">Scaricamento</string>
     <string name="no_connection">Nessuna connessione, controlla e riprova per scaricare i modelli dei treni</string>
     <string name="downloaded_languages">Lingue scaricate</string>
@@ -905,4 +918,11 @@
     <string name="convert_sub">Converti i batch di immagini nel formato specificato</string>
     <string name="images_to_svg_sub">Traccia le immagini fornite in immagini SVG</string>
     <string name="cupertino_switch_sub">Utilizza uno switch simile ad iOS basato sul cupertino design system</string>
+    <string name="gradient">Gradiente</string>
+    <string name="ascii">ASCII</string>
+    <string name="rays">Raggi</string>
+    <string name="sparkle">Scintilla</string>
+    <string name="spread_angle">Angolo di Apertura</string>
+    <string name="arc">Arco</string>
+    <string name="refraction_index">Indice di rifrazione</string>
 </resources>

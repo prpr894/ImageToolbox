@@ -21,7 +21,7 @@ plugins {
     alias(libs.plugins.image.toolbox.compose)
 }
 
-android.namespace = "ru.tech.imageresizershrinker.core.ui"
+android.namespace = "com.t8rin.imagetoolbox.core.ui"
 
 dependencies {
     api(projects.core.resources)
@@ -37,7 +37,6 @@ dependencies {
     api(libs.activityCompose)
     api(libs.splashScreen)
     api(libs.appCompat)
-    api(libs.androidx.lifecycle.viewmodel.compose)
     api(libs.androidx.documentfile)
 
     //Konfetti
@@ -90,7 +89,7 @@ dependencies {
     "marketImplementation"(libs.app.update.ktx)
 
     "marketImplementation"(libs.mlkit.document.scanner)
-    "fossImplementation"(libs.documentscanner)
+    "fossImplementation"(libs.toolbox.documentscanner)
 
     "marketImplementation"(libs.quickie.bundled)
     "fossImplementation"(libs.quickie.foss)

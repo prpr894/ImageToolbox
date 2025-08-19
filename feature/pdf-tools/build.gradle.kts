@@ -22,4 +22,9 @@ plugins {
     alias(libs.plugins.image.toolbox.compose)
 }
 
-android.namespace = "ru.tech.imageresizershrinker.feature.pdf_tools"
+android.namespace = "com.t8rin.imagetoolbox.feature.pdf_tools"
+
+dependencies {
+    implementation(libs.androidx.pdfviewer.fragment)
+    implementation(libs.androidx.fragment.compose)
+}

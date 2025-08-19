@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<!--
+  ~ ImageToolbox is an image editor for android
+  ~ Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  ~ You should have received a copy of the Apache License
+  ~ along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+  --><resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="smth_went_wrong">ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ: %1$s</string>
     <string name="size">ਆਕਾਰ %1$s</string>
     <string name="loading">Loading…</string>
@@ -13,7 +28,7 @@
     <string name="explicit">ਸਪਸ਼ਟ</string>
     <string name="flexible">ਲਚਕੀਲਾ</string>
     <string name="pick_image_alt">ਚਿੱਤਰ ਚੁਣੋ</string>
-    <string name="app_closing_sub">ਕੀ ਤੁਸੀਂ ਅਸਲ ਵਿੱਚ ਐਪ ਨੂੰ ਬੰਦ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ\?</string>
+    <string name="app_closing_sub">ਕੀ ਤੁਸੀਂ ਅਸਲ ਵਿੱਚ ਐਪ ਨੂੰ ਬੰਦ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
     <string name="app_closing">ਐਪ ਬੰਦ ਹੋ ਰਿਹਾ ਹੈ</string>
     <string name="stay">ਰਹੋ</string>
     <string name="close">ਬੰਦ ਕਰੋ</string>
@@ -271,8 +286,7 @@
     <string name="features_sub">ਫਾਈਲਾਂ ਦੀ ਪਾਸਵਰਡ-ਅਧਾਰਿਤ ਏਨਕ੍ਰਿਪਸ਼ਨ। ਅੱਗੇ ਵਧੀਆਂ ਫਾਈਲਾਂ ਨੂੰ ਚੁਣੀ ਗਈ ਡਾਇਰੈਕਟਰੀ ਵਿੱਚ ਸਟੋਰ ਕੀਤਾ ਜਾ ਸਕਦਾ ਹੈ ਜਾਂ ਸਾਂਝਾ ਕੀਤਾ ਜਾ ਸਕਦਾ ਹੈ। ਡੀਕ੍ਰਿਪਟਡ ਫਾਈਲਾਂ ਨੂੰ ਸਿੱਧੇ ਵੀ ਖੋਲ੍ਹਿਆ ਜਾ ਸਕਦਾ ਹੈ.</string>
     <string name="implementation_sub">AES-256, GCM ਮੋਡ, ਕੋਈ ਪੈਡਿੰਗ ਨਹੀਂ, 12 ਬਾਈਟ ਬੇਤਰਤੀਬੇ IVs। ਕੁੰਜੀਆਂ SHA-3 ਹੈਸ਼ਾਂ (256 ਬਿੱਟ) ਵਜੋਂ ਵਰਤੀਆਂ ਜਾਂਦੀਆਂ ਹਨ।</string>
     <string name="file_size">ਫ਼ਾਈਲ ਦਾ ਆਕਾਰ</string>
-    <string name="file_size_sub">The maximum file size is restricted by the Android OS and available memory, which is device dependent.
-\nPlease note: memory is not storage.</string>
+    <string name="file_size_sub">The maximum file size is restricted by the Android OS and available memory, which is device dependent. \nPlease note: memory is not storage.</string>
     <string name="compatibility_sub">ਕਿਰਪਾ ਕਰਕੇ ਨੋਟ ਕਰੋ ਕਿ ਹੋਰ ਫਾਈਲ ਐਨਕ੍ਰਿਪਸ਼ਨ ਸੌਫਟਵੇਅਰ ਜਾਂ ਸੇਵਾਵਾਂ ਲਈ ਅਨੁਕੂਲਤਾ ਦੀ ਗਰੰਟੀ ਨਹੀਂ ਹੈ। ਇੱਕ ਥੋੜ੍ਹਾ ਵੱਖਰਾ ਕੁੰਜੀ ਇਲਾਜ ਜਾਂ ਸਿਫਰ ਕੌਂਫਿਗਰੇਸ਼ਨ ਅਸੰਗਤਤਾ ਦਾ ਕਾਰਨ ਬਣ ਸਕਦੀ ਹੈ।</string>
     <string name="invalid_password_or_not_encrypted">ਅਵੈਧ ਪਾਸਵਰਡ ਜਾਂ ਚੁਣੀ ਗਈ ਫਾਈਲ ਐਨਕ੍ਰਿਪਟਡ ਨਹੀਂ ਹੈ</string>
     <string name="image_size_warning">ਦਿੱਤੀ ਗਈ ਚੌੜਾਈ ਅਤੇ ਉਚਾਈ ਦੇ ਨਾਲ ਚਿੱਤਰ ਨੂੰ ਸੁਰੱਖਿਅਤ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਨ ਨਾਲ ਇੱਕ OOM ਗਲਤੀ ਹੋ ਸਕਦੀ ਹੈ। ਇਹ ਆਪਣੇ ਜੋਖਮ \'ਤੇ ਕਰੋ, ਅਤੇ ਇਹ ਨਾ ਕਹੋ ਕਿ ਮੈਂ ਤੁਹਾਨੂੰ ਚੇਤਾਵਨੀ ਨਹੀਂ ਦਿੱਤੀ!</string>
@@ -539,7 +553,7 @@
     <string name="recognize_text">OCR (ਟੈਕਸਟ ਪਛਾਣੋ)</string>
     <string name="recognize_text_sub">ਦਿੱਤੇ ਚਿੱਤਰ ਤੋਂ ਟੈਕਸਟ ਨੂੰ ਪਛਾਣੋ, 120+ ਭਾਸ਼ਾਵਾਂ ਸਮਰਥਿਤ ਹਨ</string>
     <string name="picture_has_no_text">ਤਸਵੀਰ ਵਿੱਚ ਕੋਈ ਟੈਕਸਟ ਨਹੀਂ ਹੈ, ਜਾਂ ਐਪ ਨੇ ਇਸਨੂੰ ਨਹੀਂ ਲੱਭਿਆ</string>
-    <string name="accuracy">"Accuracy: %1$d"</string>
+    <string name="accuracy">Accuracy: %1$d</string>
     <string name="recognition_type">ਪਛਾਣ ਦੀ ਕਿਸਮ</string>
     <string name="fast">ਤੇਜ਼</string>
     <string name="standard">ਮਿਆਰੀ</string>

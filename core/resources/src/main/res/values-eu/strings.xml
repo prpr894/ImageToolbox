@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<!--
+  ~ ImageToolbox is an image editor for android
+  ~ Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  ~ You should have received a copy of the Apache License
+  ~ along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+  --><resources xmlns:tools="http://schemas.android.com/tools">
     <string name="size">Tamaina %1$s</string>
     <string name="smth_went_wrong">Zerbait gaizki atera da: %1$s</string>
     <string name="loading">Kargatzen…</string>
@@ -15,7 +30,7 @@
     <string name="pick_image_alt">Aukeratu Irudia</string>
     <string name="app_closing">Aplikazioa ixten</string>
     <string name="stay">Geratu</string>
-    <string name="app_closing_sub">Ziur aplikazioa itxi nahi duzula\?</string>
+    <string name="app_closing_sub">Ziur aplikazioa itxi nahi duzula?</string>
     <string name="close">Itxi</string>
     <string name="reset_image">Berrezarri irudia</string>
     <string name="reset">Berrezarri</string>
@@ -281,8 +296,7 @@
     <string name="implementation">Ezarpena</string>
     <string name="compatibility">Bateragarritasuna</string>
     <string name="file_size">Fitxategiaren tamaina</string>
-    <string name="file_size_sub">Fitxategien gehienezko tamaina Android sistema eragileak eta eskuragarri dagoen memoriak mugatzen du, hau da, jakina, zure gailuaren araberakoa.
-\nKontuan izan: memoria ez da biltegiratzea.</string>
+    <string name="file_size_sub">Fitxategien gehienezko tamaina Android sistema eragileak eta eskuragarri dagoen memoriak mugatzen du, hau da, jakina, zure gailuaren araberakoa. \nKontuan izan: memoria ez da biltegiratzea.</string>
     <string name="compatibility_sub">Kontuan izan fitxategiak enkriptatzeko beste software edo zerbitzu batzuekin bateragarritasuna ez dagoela bermatuta. Gako-tratamendu edo zifratze-konfigurazio apur bat desberdina bateraezintasunaren arrazoia izan daiteke.</string>
     <string name="features_sub">Fitxategien pasahitzetan oinarritutako enkriptatzea. Jarraitutako fitxategiak hautatutako direktorioan gorde edo partekatu daitezke. Deszifratutako fitxategiak ere zuzenean ireki daitezke.</string>
     <string name="fallback_option">Atzerako aukera</string>
@@ -374,7 +388,7 @@
     <string name="blur_radius">Lausotze erradioa</string>
     <string name="pipette">Pipeta</string>
     <string name="create_issue">Sortu alea</string>
-    <string name="something_went_wrong_emphasis">Aupa... Arazoren bat izan da. Beheko aukerak erabiliz idatz diezadazu eta irtenbidea bilatzen saiatuko naiz</string>
+    <string name="something_went_wrong_emphasis">Aupa… Arazoren bat izan da. Beheko aukerak erabiliz idatz diezadazu eta irtenbidea bilatzen saiatuko naiz</string>
     <string name="resize_and_convert_sub">Emandako irudien tamaina aldatu edo beste formatu batzuetara bihurtu. EXIF metadatuak hemen ere edita daitezke irudi bakarra hautatuz gero.</string>
     <string name="crashlytics_sub">Horri esker, aplikazioak hutsegiteen txostenak eskuz bil ditzake</string>
     <string name="analytics">Analitika</string>
@@ -731,8 +745,7 @@
     <string name="standard">Estandarra</string>
     <string name="best">Onena</string>
     <string name="no_data">Ez dago daturik</string>
-    <string name="download_description">Tesseract OCR prestakuntza-datu osagarriak (%1$s) behar bezala funtzionatzeko zure gailura deskargatu behar dira.
-\n%2$s datuak deskargatu nahi dituzu?</string>
+    <string name="download_description">Tesseract OCR prestakuntza-datu osagarriak (%1$s) behar bezala funtzionatzeko zure gailura deskargatu behar dira. \n%2$s datuak deskargatu nahi dituzu?</string>
     <string name="download">Deskargatu</string>
     <string name="no_connection">Ez dago konexiorik, egiaztatu eta saiatu berriro tren-ereduak deskargatzeko</string>
     <string name="downloaded_languages">Deskargatutako hizkuntzak</string>

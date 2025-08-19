@@ -22,7 +22,7 @@ plugins {
     alias(libs.plugins.image.toolbox.compose)
 }
 
-android.namespace = "ru.tech.imageresizershrinker.feature.root"
+android.namespace = "com.t8rin.imagetoolbox.feature.root"
 
 dependencies {
     implementation(projects.feature.main)
@@ -70,4 +70,5 @@ dependencies {
     implementation(projects.feature.editExif)
     implementation(projects.feature.imageCutting)
     implementation(projects.feature.audioCoverExtractor)
+    implementation(projects.feature.libraryDetails)
 }

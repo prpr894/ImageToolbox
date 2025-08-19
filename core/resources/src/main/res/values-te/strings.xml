@@ -1,11 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<!--
+  ~ ImageToolbox is an image editor for android
+  ~ Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  ~ You should have received a copy of the Apache License
+  ~ along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+  --><resources xmlns:tools="http://schemas.android.com/tools">
     <string name="size">పరిమాణం %1$s</string>
     <string name="app_closing">యాప్‌ను మూసివేస్తోంది</string>
     <string name="pick_image_alt">చిత్రాన్ని ఎంచుకోండి</string>
     <string name="reset_image">చిత్రాన్ని రీసెట్ చేయండి</string>
     <string name="height">ఎత్తు %1$s</string>
-    <string name="app_closing_sub">మీరు నిజంగా యాప్‌ను మూసివేయాలనుకుంటున్నారా\?</string>
+    <string name="app_closing_sub">మీరు నిజంగా యాప్‌ను మూసివేయాలనుకుంటున్నారా?</string>
     <string name="pick_image">ప్రారంభించడానికి చిత్రాన్ని ఎంచుకోండి</string>
     <string name="flexible">అనువైన</string>
     <string name="width">వెడల్పు %1$s</string>
@@ -278,8 +293,7 @@
     <string name="compatibility">అనుకూలత</string>
     <string name="implementation_sub">AES-256, GCM మోడ్, పాడింగ్ లేదు, 12 బైట్‌లు యాదృచ్ఛిక IVలు. కీలు SHA-3 హాష్‌లుగా ఉపయోగించబడతాయి (256 బిట్‌లు).</string>
     <string name="file_size">ఫైల్ పరిమాణం</string>
-    <string name="file_size_sub">The maximum file size is restricted by the Android OS and available memory, which is device dependent.
-\nPlease note: memory is not storage.</string>
+    <string name="file_size_sub">The maximum file size is restricted by the Android OS and available memory, which is device dependent. \nPlease note: memory is not storage.</string>
     <string name="compatibility_sub">ఇతర ఫైల్ ఎన్‌క్రిప్షన్ సాఫ్ట్‌వేర్ లేదా సేవలకు అనుకూలత హామీ ఇవ్వబడదని దయచేసి గమనించండి. కొద్దిగా భిన్నమైన కీ చికిత్స లేదా సాంకేతికలిపి కాన్ఫిగరేషన్ అననుకూలతకు కారణం కావచ్చు.</string>
     <string name="invalid_password_or_not_encrypted">చెల్లని పాస్‌వర్డ్ లేదా ఎంచుకున్న ఫైల్ ఎన్‌క్రిప్ట్ చేయబడలేదు</string>
     <string name="image_size_warning">ఇచ్చిన వెడల్పు మరియు ఎత్తుతో చిత్రాన్ని సేవ్ చేయడానికి ప్రయత్నిస్తే OOM లోపం సంభవించవచ్చు. దీన్ని మీ స్వంత పూచీతో చేయండి మరియు నేను మిమ్మల్ని హెచ్చరించలేదని చెప్పకండి!</string>
@@ -336,7 +350,7 @@
     <string name="blur_radius">బ్లర్ వ్యాసార్థం</string>
     <string name="draw_mode">డ్రా మోడ్</string>
     <string name="create_issue">సమస్యను సృష్టించండి</string>
-    <string name="something_went_wrong_emphasis">అయ్యో... ఏదో తప్పు జరిగింది. దిగువ ఎంపికలను ఉపయోగించి మీరు నాకు వ్రాయవచ్చు మరియు నేను పరిష్కారాన్ని కనుగొనడానికి ప్రయత్నిస్తాను</string>
+    <string name="something_went_wrong_emphasis">అయ్యో… ఏదో తప్పు జరిగింది. దిగువ ఎంపికలను ఉపయోగించి మీరు నాకు వ్రాయవచ్చు మరియు నేను పరిష్కారాన్ని కనుగొనడానికి ప్రయత్నిస్తాను</string>
     <string name="resize_and_convert">పరిమాణాన్ని మార్చండి మరియు మార్చండి</string>
     <string name="resize_and_convert_sub">ఇచ్చిన చిత్రాల పరిమాణాన్ని మార్చండి లేదా వాటిని ఇతర ఫార్మాట్‌లకు మార్చండి. ఒకే చిత్రాన్ని ఎంచుకుంటే EXIF మెటాడేటా కూడా ఇక్కడ సవరించబడుతుంది.</string>
     <string name="crashlytics_sub">ఇది క్రాష్ నివేదికలను మాన్యువల్‌గా సేకరించడానికి యాప్‌ని అనుమతిస్తుంది</string>
@@ -726,8 +740,7 @@
     <string name="standard">ప్రామాణికం</string>
     <string name="best">ఉత్తమమైనది</string>
     <string name="no_data">సమాచారం లేదు</string>
-    <string name="download_description">Tesseract OCR యొక్క సరైన పనితీరు కోసం అదనపు శిక్షణ డేటా (%1$s) మీ పరికరానికి డౌన్‌లోడ్ చేయబడాలి.
-\nమీరు %2$s డేటాను డౌన్‌లోడ్ చేయాలనుకుంటున్నారా?</string>
+    <string name="download_description">Tesseract OCR యొక్క సరైన పనితీరు కోసం అదనపు శిక్షణ డేటా (%1$s) మీ పరికరానికి డౌన్‌లోడ్ చేయబడాలి. \nమీరు %2$s డేటాను డౌన్‌లోడ్ చేయాలనుకుంటున్నారా?</string>
     <string name="download">డౌన్‌లోడ్ చేయండి</string>
     <string name="no_connection">కనెక్షన్ లేదు, రైలు నమూనాలను డౌన్‌లోడ్ చేయడానికి దాన్ని తనిఖీ చేసి, మళ్లీ ప్రయత్నించండి</string>
     <string name="downloaded_languages">డౌన్‌లోడ్ చేయబడిన భాషలు</string>

@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<!--
+  ~ ImageToolbox is an image editor for android
+  ~ Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  ~ You should have received a copy of the Apache License
+  ~ along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+  --><resources xmlns:tools="http://schemas.android.com/tools">
     <string name="smth_went_wrong">Algo deu errado: %1$s</string>
     <string name="size">Tamanho %1$s</string>
     <string name="loading">Carregando…</string>
@@ -13,7 +28,7 @@
     <string name="explicit">Explícito</string>
     <string name="flexible">Flexível</string>
     <string name="pick_image_alt">Escolha a imagem</string>
-    <string name="app_closing_sub">Você deseja encerrar o aplicativo?</string>
+    <string name="app_closing_sub">Você tem certeza de que deseja encerrar o aplicativo?</string>
     <string name="app_closing">Fechar aplicativo</string>
     <string name="stay">Ficar</string>
     <string name="close">Fechar</string>
@@ -40,9 +55,9 @@
     <string name="image_not_saved_sub">Todas as alterações não salvas serão perdidas se você sair agora</string>
     <string name="check_source_code">Código fonte</string>
     <string name="check_source_code_sub">Receba as atualizações mais recentes, discuta problemas e muito mais</string>
-    <string name="single_edit">Edição única</string>
-    <string name="single_edit_sub">Alterar especificações de uma única imagem</string>
-    <string name="pick_color">Escolha a cor</string>
+    <string name="single_edit">Edição Única</string>
+    <string name="single_edit_sub">Modificar, redimensionar e editar uma imagem</string>
+    <string name="pick_color">Seletor de Cores</string>
     <string name="pick_color_sub">Escolha a cor da imagem, copie ou compartilhe</string>
     <string name="image">Imagem</string>
     <string name="color">Cor</string>
@@ -54,7 +69,7 @@
     <string name="change_preview">Alterar visualização</string>
     <string name="remove">Remover</string>
     <string name="palette_sub">Gere amostra de paleta de cores a partir de determinada imagem</string>
-    <string name="generate_palette">Gerar paleta</string>
+    <string name="generate_palette">Gerar Paleta</string>
     <string name="palette">Paleta</string>
     <string name="update">Atualizar</string>
     <string name="new_version">Nova versão %1$s</string>
@@ -66,7 +81,7 @@
     <string name="custom">Personalizado</string>
     <string name="unspecified">Não especificado</string>
     <string name="device_storage">Dispositivo de armazenamento</string>
-    <string name="by_bytes_resize">Redimensionar por tamanho</string>
+    <string name="by_bytes_resize">Redimensionar por Tamanho</string>
     <string name="max_bytes">Tamanho máximo em KB</string>
     <string name="by_bytes_resize_sub">Redimensione uma imagem seguindo o tamanho determinado em KB</string>
     <string name="compare">Comparar</string>
@@ -89,9 +104,9 @@
     <string name="color_red">Vermelho</string>
     <string name="color_green">Verde</string>
     <string name="color_blue">Azul</string>
-    <string name="clipboard_paste_invalid_color_code">Cole um código RGB válido.</string>
+    <string name="clipboard_paste_invalid_color_code">Cole um código aRGB válido.</string>
     <string name="clipboard_paste_invalid_empty">Nada para colar</string>
-    <string name="cannot_change_palette_while_dynamic_colors_applied">Não é possível alterar o esquema de cores do aplicativo enquanto as cores dinâmicas estão ativadas</string>
+    <string name="cannot_change_palette_while_dynamic_colors_applied">O esquema de cores do aplicativo não pode ser alterado enquanto as cores dinâmicas estiverem ativadas</string>
     <string name="pick_accent_color">O tema do aplicativo será baseado na cor selecionada</string>
     <string name="about_app">Sobre o aplicativo</string>
     <string name="no_updates">Nenhuma atualização encontrada</string>
@@ -131,7 +146,7 @@
     <string name="add_file_size_sub">Se ativado, adiciona largura e altura da imagem salva ao nome do arquivo de saída</string>
     <string name="delete_exif">Excluir EXIF</string>
     <string name="delete_exif_sub">Exclua metadados EXIF de qualquer conjunto de imagens</string>
-    <string name="image_preview">Pré-visualização de imagem</string>
+    <string name="image_preview">Previa de Imagem</string>
     <string name="image_preview_sub">Visualize qualquer tipo de imagem: GIF, SVG e assim por diante</string>
     <string name="image_source">Origem da imagem</string>
     <string name="photo_picker">Seletor de fotos</string>
@@ -152,22 +167,22 @@
     <string name="replace_sequence_number">Substituir o número de sequência</string>
     <string name="replace_sequence_number_sub">Se ativado, substitui o carimbo de data e hora padrão pelo número de sequência da imagem se você usar o processamento em lote</string>
     <string name="filename_not_work_with_photopicker">Adicionar o nome do arquivo original não funciona se a fonte da imagem do seletor de fotos for selecionada</string>
-    <string name="load_image_from_net">Carregar imagem da Internet</string>
+    <string name="load_image_from_net">Carregamento de Imagens da Web</string>
     <string name="load_image_from_net_sub">Carregue qualquer imagem da internet para visualizar, ampliar, editar e salvar se desejar.</string>
     <string name="no_image">Nenhuma imagem</string>
     <string name="image_link">Link da imagem</string>
     <string name="fill">Preencher</string>
     <string name="fit">Ajustar</string>
     <string name="content_scale">Escala de conteúdo</string>
-    <string name="explicit_description">Força cada imagem a ter as dimensões fornecidas pelos parâmetros Largura e Altura - pode alterar a proporção</string>
-    <string name="flexible_description">Redimensiona imagens para imagens com lado longo fornecido pelo parâmetro Largura ou Altura, todos os cálculos de tamanho serão feitos após salvar - mantém a proporção</string>
+    <string name="explicit_description">Redimensiona as imagens para a altura e a largura fornecidas. A proporção de aspecto das imagens pode mudar.</string>
+    <string name="flexible_description">Redimensiona as imagens com um lado longo para a altura ou a largura fornecida. Todos os cálculos de tamanho serão feitos após o salvamento. A proporção de aspecto das imagens será preservada.</string>
     <string name="brightness">Brilho</string>
     <string name="contrast">Contraste</string>
     <string name="hue">Matiz</string>
     <string name="saturation">Saturação</string>
     <string name="add_filter">Adicionar filtro</string>
     <string name="filter">Filtro</string>
-    <string name="filter_sub">Aplicar um grupo de filtros a determinadas imagens</string>
+    <string name="filter_sub">Aplicar cadeias de filtros às imagens</string>
     <string name="filters">Filtros</string>
     <string name="light_aka_illumination">Iluminação</string>
     <string name="color_filter">Filtro de cor</string>
@@ -220,8 +235,8 @@
     <string name="glass_sphere_refraction">Refração da esfera de vidro</string>
     <string name="color_matrix">Matriz de cores</string>
     <string name="opacity">Opacidade</string>
-    <string name="limits_resize">Redimensionamento de limites</string>
-    <string name="limits_resize_sub">Redimensione as imagens selecionadas para seguir os limites de largura e altura enquanto salva a proporção</string>
+    <string name="limits_resize">Redimensionar por Limites</string>
+    <string name="limits_resize_sub">Redimensionar imagens para a altura e a largura fornecidas, mantendo a proporção de aspecto</string>
     <string name="sketch">Esboço</string>
     <string name="threshold">Limiar</string>
     <string name="quantizationLevels">Níveis de quantização</string>
@@ -269,13 +284,12 @@
     <string name="implementation">Implementação</string>
     <string name="compatibility">Compatibilidade</string>
     <string name="features_sub">Criptografia de arquivos baseada em senha. Os arquivos processados podem ser armazenados no diretório selecionado ou compartilhados. Os arquivos descriptografados também podem ser abertos diretamente.</string>
-    <string name="implementation_sub">AES-256, modo GCM, sem preenchimento, IVs aleatórios de 12 bytes (por padrão, mas você pode selecionar o algoritmo necessário). As chaves são usadas como hashes SHA-3 (256 bits).</string>
+    <string name="implementation_sub">AES-256, modo GCM, sem preenchimento, IVs aleatórios de 12 bytes por padrão. Você pode selecionar o algoritmo necessário. As chaves são usadas como hashes SHA-3 de 256 bits</string>
     <string name="file_size">Tamanho do arquivo</string>
-    <string name="file_size_sub">O tamanho máximo do arquivo é restrito pelo sistema operacional Android e pela memória disponível, que depende do dispositivo.
-\nObserve: memória não é armazenamento.</string>
+    <string name="file_size_sub">O tamanho máximo do arquivo é restrito pelo sistema operacional Android e pela memória disponível, que depende do dispositivo. \nObserve: memória não é armazenamento.</string>
     <string name="compatibility_sub">Observe que a compatibilidade com outros softwares ou serviços de criptografia de arquivos não é garantida. Um tratamento de chave ou configuração de criptografia ligeiramente diferente pode causar incompatibilidade.</string>
     <string name="invalid_password_or_not_encrypted">Senha inválida ou arquivo escolhido não está criptografado</string>
-    <string name="image_size_warning">Tentar salvar a imagem com determinada largura e altura pode causar um erro de OOM. Faça isso por sua conta e risco e não diga que não avisei!</string>
+    <string name="image_size_warning">A tentativa de salvar a imagem com a largura e a altura fornecidas pode causar um erro de falta de memória. Faça isso por sua própria conta e risco.</string>
     <string name="cache">Cache</string>
     <string name="cache_size">Tamanho da memória cache</string>
     <string name="found_s">Encontrado %1$s</string>
@@ -294,13 +308,13 @@
     <string name="copy">Copiar</string>
     <string name="warning_bytes">Salvar no modo %1$s pode ser instável, pois é um formato sem perdas</string>
     <string name="presets_sub" formatted="false">Se você selecionou a predefinição 125, a imagem será salva com tamanho de 125% da imagem original. Se você escolher a predefinição 50, a imagem será salva com 50% tamanho</string>
-    <string name="presets_sub_bytes">A predefinição aqui determina a arquivo de saída, ou seja, se você selecionar a predefinição 50 em uma imagem de 5 MB, você obterá uma imagem de 2,5 MB após salvar</string>
+    <string name="presets_sub_bytes">A predefinição aqui determina a % do arquivo de saída, ou seja, se você selecionar a predefinição 50 em uma imagem de 5 MB, obterá uma imagem de 2,5 MB após salvar</string>
     <string name="randomize_filename">Nome do arquivo aleatório</string>
     <string name="randomize_filename_sub">Se ativado, o nome do arquivo de saída será totalmente aleatório</string>
     <string name="saved_to">Salvo na pasta %1$s com o nome %2$s</string>
     <string name="saved_to_without_filename">Salvo na pasta %1$s</string>
     <string name="tg_chat">Telegram</string>
-    <string name="tg_chat_sub">Discuta o aplicativo e obtenha feedback de outros usuários. Você também pode obter atualizações e insights beta aqui.</string>
+    <string name="tg_chat_sub">Discuta sobre o aplicativo e obtenha feedback de outros usuários. Você também pode obter atualizações beta e insights lá.</string>
     <string name="crop_mask">Máscara de corte</string>
     <string name="aspect_ratio">Proporção da tela</string>
     <string name="image_crop_mask_sub">Use este tipo de máscara para criar uma máscara a partir de uma determinada imagem, observe que DEVE ter canal alfa</string>
@@ -330,7 +344,7 @@
     <string name="enable_emoji">Habilitar emoticons</string>
     <string name="travels_and_places">Viagens e lugares</string>
     <string name="activities">Atividades</string>
-    <string name="background_remover">Removedor de fundo</string>
+    <string name="background_remover">Removedor de Fundo</string>
     <string name="background_remover_sub">Remova o fundo da imagem desenhando ou use a opção \"Auto\"</string>
     <string name="trim_image">Cortar imagem</string>
     <string name="keep_exif_sub">Os metadados da imagem original serão mantidos</string>
@@ -345,10 +359,10 @@
     <string name="draw_mode">Modo de desenho</string>
     <string name="create_issue">Criar problema</string>
     <string name="something_went_wrong_emphasis">Ops… algo deu errado. Você pode escrever para mim usando as opções abaixo e tentarei encontrar uma solução</string>
-    <string name="resize_and_convert">Redimensionar e converter</string>
+    <string name="resize_and_convert">Redimensionar e Converter</string>
     <string name="resize_and_convert_sub">Altere o tamanho de determinadas imagens ou converta-as para outros formatos. Os metadados EXIF também podem ser editados aqui se você escolher uma única imagem.</string>
     <string name="max_colors_count">Contagem máxima de cores</string>
-    <string name="crashlytics_sub">Isso permite que o aplicativo colete relatórios de falhas manualmente</string>
+    <string name="crashlytics_sub">Isso permite que o aplicativo colete relatórios de falhas automaticamente</string>
     <string name="analytics">Analytics</string>
     <string name="analytics_sub">Permitir a coleta de estatísticas anônimas de uso de aplicativos</string>
     <string name="jxl_sub">Formato JXL não suportado oficialmente pelo Android, então algo pode não funcionar. Salvar funcionará apenas se você escolher o diretório de saída personalizado. Esta é uma versão experimental, os bugs aqui não serão corrigidos a menos que o Google adicione suporte JXL. Esta versão pode visualizar imagens JXL</string>
@@ -365,7 +379,7 @@
     <string name="brush_softness">Suavidade do pincel</string>
     <string name="crop_description">As imagens serão cortadas no centro no tamanho inserido. A tela será expandida com determinada cor de fundo se a imagem for menor que as dimensões inseridas.</string>
     <string name="donation">Doação</string>
-    <string name="image_stitching">Junção de imagens</string>
+    <string name="image_stitching">Costura de Imagens</string>
     <string name="image_stitching_sub">Combine as imagens fornecidas para obter uma grande</string>
     <string name="pick_at_least_two_images">Escolha pelo menos 2 imagens</string>
     <string name="output_image_scale">Escala da imagem de saída</string>
@@ -402,7 +416,7 @@
     <string name="vibrant">Vibrante</string>
     <string name="expressive">Expressivo</string>
     <string name="rainbow">Arco-íris</string>
-    <string name="fruit_salad">Salada de frutas</string>
+    <string name="fruit_salad">Salada de Frutas</string>
     <string name="fidelity">Fidelidade</string>
     <string name="content">Contente</string>
     <string name="tonal_spot_sub">Estilo de paleta padrão, permite personalizar todas as quatro cores, outros permitem definir apenas a cor principal</string>
@@ -421,7 +435,7 @@
     <string name="invert_colors_sub">Substitui as cores do tema por cores negativas, se ativado</string>
     <string name="search_option">Procurar</string>
     <string name="search_option_sub">Permite a capacidade de pesquisar por todas as ferramentas disponíveis na tela principal</string>
-    <string name="pdf_tools">Ferramentas PDF</string>
+    <string name="pdf_tools">Ferramentas de PDF</string>
     <string name="pdf_tools_sub">Opere com arquivos PDF: visualize, converta em lote de imagens ou crie um a partir de determinadas imagens</string>
     <string name="preview_pdf">Pré-visualização PDF</string>
     <string name="pdf_to_images">PDF para imagens</string>
@@ -435,13 +449,13 @@
     <string name="add_mask">Adicionar máscara</string>
     <string name="mask_indexed">Máscara %d</string>
     <string name="mask_color">Cor da máscara</string>
-    <string name="mask_preview">Pré-visualização da máscara</string>
+    <string name="mask_preview">Prévia da máscara</string>
     <string name="mask_preview_sub">A máscara de filtro desenhada será renderizada para mostrar o resultado aproximado</string>
     <string name="inverse_fill_type">Tipo de preenchimento inverso</string>
     <string name="inverse_fill_type_sub">Se ativado todas as áreas sem máscara serão filtradas no lugar do comportamento predefinido</string>
     <string name="delete_mask_warn">Você está prestes a excluir a máscara de filtro selecionada. Esta operação não pode ser desfeita</string>
     <string name="delete_mask">Excluir máscara</string>
-    <string name="full_filter">Filtro Completo</string>
+    <string name="full_filter">Filtro Total</string>
     <string name="full_filter_sub">Aplique um conjunto de filtro à determinadas imagens ou à uma única imagem</string>
     <string name="start_position">Início</string>
     <string name="center_position">Centro</string>
@@ -457,17 +471,17 @@
     <string name="privacy_blur_sub">Desfoca a imagem sob o caminho desenhado para proteger tudo o que você deseja ocultar</string>
     <string name="pixelation_sub">Semelhante ao desfoque de privacidade, mas pixeliza em vez de desfocar</string>
     <string name="containers_shadow">Containers</string>
-    <string name="containers_shadow_sub">Permite desenho de sombra atrás de contêineres</string>
+    <string name="containers_shadow_sub">Desenhe uma sombra atrás dos contêineres</string>
     <string name="sliders_shadow">Controles deslizantes</string>
     <string name="switches_shadow">Comuta</string>
     <string name="fabs_shadow">FABs</string>
     <string name="buttons_shadow">Botões</string>
-    <string name="sliders_shadow_sub">Permite desenho de sombra atrás de controles deslizantes</string>
-    <string name="switches_shadow_sub">Permite desenho de sombra atrás de switches</string>
-    <string name="fabs_shadow_sub">Permite desenho de sombra atrás de botões de ação flutuantes</string>
-    <string name="buttons_shadow_sub">Ativa o desenho de sombra atrás dos botões padrão</string>
-    <string name="app_bars_shadow">Barras de aplicativos</string>
-    <string name="app_bars_shadow_sub">Permite desenho de sombra atrás de barras de aplicativos</string>
+    <string name="sliders_shadow_sub">Desenhar uma sombra atrás dos controles deslizantes</string>
+    <string name="switches_shadow_sub">Desenhe uma sombra atrás dos interruptores</string>
+    <string name="fabs_shadow_sub">Desenhar uma sombra atrás dos botões de ação flutuantes</string>
+    <string name="buttons_shadow_sub">Desenhar uma sombra atrás dos botões</string>
+    <string name="app_bars_shadow">Barras do app</string>
+    <string name="app_bars_shadow_sub">Desenhe uma sombra atrás das barras do app</string>
     <string name="value_in_range">Valor no intervalo %1$s - %2$s</string>
     <string name="auto_rotate_limits">Auto rotação</string>
     <string name="auto_rotate_limits_sub">Permite que a caixa limite seja adotada para orientação da imagem</string>
@@ -481,7 +495,7 @@
     <string name="free_drawing_sub">Desenha o caminho como valor de entrada</string>
     <string name="line_sub">Desenha o caminho do ponto inicial ao ponto final como uma linha</string>
     <string name="line_arrow_sub">Desenha uma seta apontando do ponto inicial ao ponto final como uma linha</string>
-    <string name="arrow_sub">Desenha uma seta apontando de um determinado caminho</string>
+    <string name="arrow_sub">Desenha uma seta apontando a partir de um determinado caminho</string>
     <string name="double_line_arrow_sub">Desenha uma seta dupla apontando do ponto inicial ao ponto final como uma linha</string>
     <string name="double_arrow_sub">Desenha uma seta dupla apontando de um determinado caminho</string>
     <string name="outlined_oval">Oval delineado</string>
@@ -496,7 +510,7 @@
     <string name="lasso_sub">Desenha um caminho preenchido fechado por um determinado caminho</string>
     <string name="free">Livre</string>
     <string name="horizontal_grid">Grade horizontal</string>
-    <string name="vertical_grid">Grade vertical</string>
+    <string name="vertical_grid">Grade Vertical</string>
     <string name="stitch_mode">Modo de costura</string>
     <string name="rows_count">Contagem de linhas</string>
     <string name="columns_count">Contagem de colunas</string>
@@ -532,11 +546,11 @@
     <string name="hermite_sub">Técnica de interpolação matemática que utiliza os valores e derivadas nas extremidades de um segmento de curva para gerar uma curva suave e contínua</string>
     <string name="lanczos_sub">Método de reamostragem que mantém interpolação de alta qualidade aplicando uma função sinc ponderada aos valores de pixel</string>
     <string name="mitchell_sub">Método de resampling que usa um filtro de convolução com parâmetros ajustáveis para alcançar um equilíbrio entre nitidez e suavização na imagem dimensionada</string>
-    <string name="spline_sub">Utiliza funções polinomiais definidas por partes para interpolar e aproximar suavemente uma curva ou superfície, representação de forma flexível e contínua</string>
+    <string name="spline_sub">Usa funções polinomiais definidas por partes para interpolar e aproximar suavemente uma curva ou superfície, proporcionando uma representação flexível e contínua da forma</string>
     <string name="only_clip">Apenas clipe</string>
     <string name="only_clip_sub">O salvamento no armazenamento não será executado e a imagem será tentada apenas para ser colocada na área de transferência</string>
     <string name="restore_background_sub">O pincel irá restaurar o fundo em vez de apagar</string>
-    <string name="recognize_text">OCR (Reconhecer texto)</string>
+    <string name="recognize_text">OCR (reconhecer texto)</string>
     <string name="recognize_text_sub">Reconhecer texto de determinada imagem, mais de 120 idiomas suportados</string>
     <string name="picture_has_no_text">A imagem não tem texto ou o app não a encontrou</string>
     <string name="accuracy">Precisão: %1$d</string>
@@ -552,7 +566,7 @@
     <string name="available_languages">idiomas disponíveis</string>
     <string name="segmentation_mode">Modo de segmentação</string>
     <string name="use_pixel_switch">Use a troca de pixels</string>
-    <string name="use_pixel_switch_sub">A opção semelhante a pixel será usada em vez do material do Google que você baseou</string>
+    <string name="use_pixel_switch_sub">Usa um interruptor semelhante ao do Google Pixel</string>
     <string name="saved_to_original">Arquivo sobrescrito com nome %s no destino original</string>
     <string name="magnifier">Lupa</string>
     <string name="magnifier_sub">Ativa a lupa na parte superior do dedo nos modos de desenho para melhor acessibilidade</string>
@@ -561,7 +575,7 @@
     <string name="allow_multiple_languages">Permitir vários idiomas</string>
     <string name="slide">Deslizar</string>
     <string name="side_by_side">Lado a lado</string>
-    <string name="toggle_tap">Alternar toque</string>
+    <string name="toggle_tap">Alternar Toque</string>
     <string name="transparency">Transparência</string>
     <string name="rate_app">Avaliar aplicativo</string>
     <string name="rate">Avaliar</string>
@@ -583,7 +597,7 @@
     <string name="delete_language_sub">Deseja excluir os dados de treinamento de OCR do idioma \"%1$s\" para todos os tipos de reconhecimento ou apenas para um selecionado (%2$s)?</string>
     <string name="current">Atual</string>
     <string name="all">Todos</string>
-    <string name="gradient_maker">Criador de gradiente</string>
+    <string name="gradient_maker">Criador de Gradiente</string>
     <string name="gradient_maker_sub">Crie gradiente de determinado tamanho de saída com cores e tipo de aparência personalizados</string>
     <string name="gradient_type_linear">Linear</string>
     <string name="gradient_type_radial">Radial</string>
@@ -599,13 +613,13 @@
     <string name="color_stops">Paradas de cores</string>
     <string name="add_color">Adicionar cor</string>
     <string name="properties">Propriedades</string>
-    <string name="brightness_enforcement">Aplicação de brilho</string>
+    <string name="brightness_enforcement">Aplicação de Brilho</string>
     <string name="screen">Tela</string>
     <string name="gradient_maker_type_image">Sobreposição de Gradiente</string>
     <string name="gradient_maker_type_image_sub">Componha qualquer gradiente por cima de determinadas imagens</string>
     <string name="transformations">Transformações</string>
     <string name="camera">Câmera</string>
-    <string name="camera_sub">Usa a câmera para tirar fotos, observe que é possível obter apenas uma imagem desta fonte de imagem</string>
+    <string name="camera_sub">Tirar uma foto com uma câmera. Observe que é possível obter apenas uma imagem dessa fonte de imagem</string>
     <string name="watermarking">Marca d\'água</string>
     <string name="watermarking_sub">Cubra as fotos com marcas d’água de texto/imagem personalizáveis</string>
     <string name="repeat_watermark">Repetir marca d\'água</string>
@@ -634,8 +648,8 @@
     <string name="original_image_preview_alpha">Pré-visualização da imagem original alfa</string>
     <string name="confetti">Confete</string>
     <string name="confetti_sub">Confetti será mostrado ao salvar, compartilhar e outras ações primárias</string>
-    <string name="secure_mode">Modo de segurança</string>
-    <string name="secure_mode_sub">Oculta o conteúdo ao sair, e a tela também não pode ser capturada ou gravada</string>
+    <string name="secure_mode">Modo Seguro</string>
+    <string name="secure_mode_sub">Oculta o conteúdo do aplicativo em aplicativos recentes. Ele não pode ser capturado ou gravado.</string>
     <string name="exit">Sair</string>
     <string name="preview_closing">Se você sair da visualização agora, será necessário adicionar as imagens novamente</string>
     <string name="dithering">Pontilhamento</string>
@@ -652,7 +666,7 @@
     <string name="sierra_lite_dithering">Pontilhamento Sierra Lite</string>
     <string name="atkinson_dithering">Atkinson hesitante</string>
     <string name="stucki_dithering">Stucki hesitante</string>
-    <string name="burkes_dithering">Burkes hesitando</string>
+    <string name="burkes_dithering">Ruído Burkes</string>
     <string name="false_floyd_steinberg_dithering">Falsa hesitação de Floyd Steinberg</string>
     <string name="left_to_right_dithering">Pontilhamento da esquerda para a direita</string>
     <string name="random_dithering">Pontilhamento aleatório</string>
@@ -708,7 +722,7 @@
     <string name="perlin_distortion">Distorção Perlin</string>
     <string name="aces_hill_tone_mapping">Mapeamento de tons de colina ACES</string>
     <string name="hable_filmic_tone_mapping">Mapeamento de tons fílmicos Hable</string>
-    <string name="heji_burgess_tone_mapping">Mapeamento de tons de Hejl Burgess</string>
+    <string name="heji_burgess_tone_mapping">Mapeamento de Tons de Hejl Burgess</string>
     <string name="speed">Velocidade</string>
     <string name="dehaze">Desembaçar</string>
     <string name="omega">Ómega</string>
@@ -726,7 +740,7 @@
     <string name="warm">Esquentar</string>
     <string name="cool">Legal</string>
     <string name="tritanopia">Tritanopia</string>
-    <string name="deutaronotopia">Deuteranotopia</string>
+    <string name="deutaronotopia">Deutaronotopia</string>
     <string name="protanopia">Protanopia</string>
     <string name="achromatomaly">Acromatomia</string>
     <string name="achromatopsia">Acromatopsia</string>
@@ -747,7 +761,7 @@
     <string name="lemonade_light">Limonada Light</string>
     <string name="spectral_fire">Fogo Espectral</string>
     <string name="night_magic">Magia Noturna</string>
-    <string name="fantasy_landscape">Paisagem de fantasia</string>
+    <string name="fantasy_landscape">Paisagem Fantástica</string>
     <string name="color_explosion">Explosão de cores</string>
     <string name="electric_gradient">Gradiente Elétrico</string>
     <string name="caramel_darkness">Escuridão Caramelo</string>
@@ -759,17 +773,17 @@
     <string name="red_swirl">Redemoinho Vermelho</string>
     <string name="digital_code">Código digital</string>
     <string name="bokeh">Bokeh</string>
-    <string name="random_emojis_sub">O emoji da barra de aplicativos será continuamente alterado aleatoriamente em vez de usar o selecionado</string>
-    <string name="random_emojis">Emojis aleatórios</string>
-    <string name="random_emojis_error">Não é possível usar a seleção aleatória de emojis enquanto os emojis estão desativados</string>
-    <string name="emoji_selection_error">Não é possível selecionar um emoji ao escolher um aleatório ativado</string>
+    <string name="random_emojis_sub">O emoji da barra do aplicativo irá mudar aleatoriamente</string>
+    <string name="random_emojis">Emojis Aleatórios</string>
+    <string name="random_emojis_error">Não é possível usar emojis aleatórios enquanto os emojis estiverem desativados</string>
+    <string name="emoji_selection_error">Não é possível selecionar um emoji enquanto os emojis aleatórios estiverem ativados</string>
     <string name="old_tv">TV Antiga</string>
     <string name="shuffle_blur">Desfoque aleatório</string>
     <string name="favorite">Favorito</string>
     <string name="no_favorite_filters">Nenhum filtro favorito adicionado</string>
     <string name="image_format">Formato de imagem</string>
-    <string name="icon_shape_sub">Adiciona contêiner com formato selecionado sob os ícones principais dos cartões</string>
-    <string name="icon_shape">Formato do ícone</string>
+    <string name="icon_shape_sub">Adiciona um contêiner com a forma selecionada sob os ícones</string>
+    <string name="icon_shape">Formato dos Ícones</string>
     <string name="drago">Drago</string>
     <string name="aldridge">Aldridge</string>
     <string name="cutoff">Cortar</string>
@@ -789,8 +803,8 @@
     <string name="ring_blur">Desfoque Anel</string>
     <string name="cross_blur">Desfoque Cruz</string>
     <string name="star_blur">Desfoque Estrela</string>
-    <string name="linear_tilt_shift">Mudança Linear de Inclinação</string>
-    <string name="circle_blur">Desfoque Círculo</string>
+    <string name="linear_tilt_shift">Mudança de Inclinação Linear</string>
+    <string name="circle_blur">Desfoque Circular</string>
     <string name="tags_to_remove">Tags a remover</string>
     <string name="apng_type_to_image">APNG para imagens</string>
     <string name="select_apng_image_to_start">Escolher imagem APNG para iniciar</string>
@@ -805,7 +819,7 @@
     <string name="drag_handle_width">Largura da alça de arrastar</string>
     <string name="confetti_type">Tipo de Confete</string>
     <string name="festive">Festivo</string>
-    <string name="explode">Explodir</string>
+    <string name="explode">Explosão</string>
     <string name="rain">Chuva</string>
     <string name="jxl_type_to_jpeg">JXL para JPEG</string>
     <string name="jxl_tools">Ferramentas JXL</string>
@@ -818,8 +832,8 @@
     <string name="fast_gaussian_blur_3d">Desfoque rápido Gaussiano 3D</string>
     <string name="fast_gaussian_blur_4d">Desfoque rápido Gaussiano 4D</string>
     <string name="auto_paste_sub">Permite que o aplicativo cole automaticamente os dados da área de transferência, para que apareçam na tela principal e você possa processá-los</string>
-    <string name="harmonization_color">Cor de harmonização</string>
-    <string name="harmonization_level">Nível de harmonização</string>
+    <string name="harmonization_color">Cor de Harmonização</string>
+    <string name="harmonization_level">Nível de Harmonização</string>
     <string name="corners">Cantos</string>
     <string name="auto_paste">Colar automaticamente</string>
     <string name="lanczos_bessel">Lanczos Bessel</string>
@@ -835,16 +849,16 @@
     <string name="skip_file_picking">Pular seleção de arquivos</string>
     <string name="skip_file_picking_sub">O seletor de arquivos será mostrado imediatamente se for possível na tela escolhida</string>
     <string name="generate_previews">Gerar visualizações</string>
-    <string name="lossy_compression">Compressão com perda</string>
+    <string name="lossy_compression">Compressão com Perdas</string>
     <string name="lanczos_bessel_sub">Método de reamostragem que mantém interpolação de alta qualidade aplicando uma função Bessel (jinc) aos valores de pixel</string>
     <string name="lossy_compression_sub">Usa compactação \"com perdas\" para reduzir o tamanho do arquivo em vez de \"sem perdas\"</string>
     <string name="generate_previews_sub">Ativa a geração de visualização, o que pode ajudar a evitar travamentos em alguns dispositivos e também desativa algumas funcionalidades de edição na opção de edição única</string>
     <string name="compression_type">Tipo de compressão</string>
     <string name="speed_sub">Controla a velocidade de decodificação da imagem resultante, o que deve ajudar a abrir a imagem resultante mais rapidamente, o valor de %1$d significa a decodificação mais lenta, enquanto %2$d - a mais rápida, essa configuração pode aumentar o tamanho da imagem de saída</string>
-    <string name="sort_by_date">Classificar por data</string>
-    <string name="sort_by_date_reversed">Classificar por data (invertido)</string>
-    <string name="sort_by_name">Classificar por nome</string>
-    <string name="sort_by_name_reversed">Classificar por nome (invertido)</string>
+    <string name="sort_by_date">Data</string>
+    <string name="sort_by_date_reversed">Data (Inversa)</string>
+    <string name="sort_by_name">Nome</string>
+    <string name="sort_by_name_reversed">Nome (Inverso)</string>
     <string name="sorting">Ordenação</string>
     <string name="channels_configuration">Configuração de canais</string>
     <string name="header_yesterday">Ontem</string>
@@ -852,7 +866,7 @@
     <string name="pick">Escolha</string>
     <string name="pick_multiple_media">Escolha várias mídias</string>
     <string name="pick_single_media">Escolha uma mídia única</string>
-    <string name="embedded_picker_sub">Usa o próprio seletor de imagens do \"Image Toolbox\" em vez dos predefinidos pelo sistema</string>
+    <string name="embedded_picker_sub">Seletor de imagens do nativo do Image Toolbox</string>
     <string name="no_permissions">Nenhuma permissão</string>
     <string name="request">Solicitação</string>
     <string name="header_today">Hoje</string>
@@ -861,17 +875,17 @@
     <string name="show_settings_in_landscape_sub">Se estiver desativado, as configurações do modo paisagem serão abertas no botão da barra superior do aplicativo, como sempre, em vez da opção visível permanente</string>
     <string name="fullscreen_settings">Configurações de tela cheia</string>
     <string name="compose">Compor</string>
-    <string name="switch_type">Tipo de interruptor</string>
+    <string name="switch_type">Tipo de Interruptor</string>
     <string name="fullscreen_settings_sub">Ative-o e a página de configurações será sempre aberta em tela cheia, em vez da folha de gaveta deslizante</string>
-    <string name="material_you_switch_sub">Usa material baseado em visualização que você alterna, este parece melhor que os outros e tem ótimas animações</string>
-    <string name="compose_switch_sub">Usa o material \"Jetpack Compose\" que você alterna, não é tão bonito quanto baseado em visualização</string>
+    <string name="material_you_switch_sub">Um interruptor Material You</string>
+    <string name="compose_switch_sub">Um interruptor Jetpack Material You</string>
     <string name="max">Máx</string>
     <string name="cupertino_switch">Cupertino</string>
     <string name="resize_anchor">Redimensionar âncora</string>
     <string name="pixel_switch">Pixel</string>
     <string name="fluent_switch">Fluent</string>
-    <string name="fluent_switch_sub">Usa o interruptor estilo \"Windows 11\" baseado no sistema de design \"Fluent\"</string>
-    <string name="cupertino_switch_sub">Usa o \"iOS\" como um interruptor baseado no sistema de design \"Cupertino\"</string>
+    <string name="fluent_switch_sub">Um interruptor baseado no sistema de design \"Fluent\"</string>
+    <string name="cupertino_switch_sub">Um interruptor baseado no sistema de design \"Cupertino\"</string>
     <string name="images_to_svg">Imagens para SVG</string>
     <string name="images_to_svg_sub">Rastrear imagens fornecidas em imagens SVG</string>
     <string name="use_sampled_palette">Usar paleta de amostra</string>
@@ -915,7 +929,7 @@
     <string name="tag_y_resolution">Resolução (vertical)</string>
     <string name="tag_resolution_unit">Unidade de Resolução</string>
     <string name="tag_strip_byte_counts">Tirar contagens de bytes</string>
-    <string name="tag_datetime">Data</string>
+    <string name="tag_datetime">Data Hora</string>
     <string name="tag_image_description">Descrição da imagem</string>
     <string name="tag_make">Criar</string>
     <string name="tag_model">Modelo</string>
@@ -1044,7 +1058,7 @@
     <string name="star">Estrela</string>
     <string name="outlined_star">Estrela delineada</string>
     <string name="outlined_star_sub">Desenha uma estrela delineada do ponto inicial ao ponto final</string>
-    <string name="inner_radius_ratio">Proporção do raio interno</string>
+    <string name="inner_radius_ratio">Proporção do Raio Interno</string>
     <string name="draw_regular_star">Desenhar estrela regular</string>
     <string name="draw_regular_star_sub">Desenhe uma estrela que será regular em vez de uma forma livre</string>
     <string name="antialias_sub">Ativa o antialiasing para evitar bordas afiadas</string>
@@ -1060,7 +1074,7 @@
     <string name="tag_reference_black_white">Referência Preto Branco</string>
     <string name="polygon_sub">Desenha o polígono do ponto inicial ao ponto final</string>
     <string name="outlined_polygon_sub">Desenha um polígono delineado do ponto inicial ao ponto final</string>
-    <string name="document_scanner">Digitalizar Documento</string>
+    <string name="document_scanner">Digitalizador de Documentos</string>
     <string name="click_to_start_scanning">Clique para iniciar a digitalização</string>
     <string name="start_scanning">Comece a digitalizar</string>
     <string name="save_as_pdf">Salvar como PDF</string>
@@ -1083,12 +1097,12 @@
     <string name="grid_size_x">Tamanho da grade (horizontal)</string>
     <string name="grid_size_y">Tamanho da grade (vertical)</string>
     <string name="equalize_histogram_adaptive_lab">Equalizar Histograma Adaptive LAB</string>
-    <string name="clahe_lab">Clahe LAB</string>
-    <string name="clahe_luv">Clahe LUV</string>
+    <string name="clahe_lab">CLAHE LAB</string>
+    <string name="clahe_luv">CLAHE LUV</string>
     <string name="equalize_histogram_adaptive">Equalizar histograma adaptativo</string>
-    <string name="clahe">Clahe</string>
+    <string name="clahe">CLAHE</string>
     <string name="equalize_histogram_adaptive_luv">Equalizar histograma LUV adaptativo</string>
-    <string name="crop_to_content">Cortar para o conteúdo</string>
+    <string name="crop_to_content">Cortar para o Conteúdo</string>
     <string name="color_to_ignore">Cor a ser ignorada</string>
     <string name="frame_color">Cor da moldura</string>
     <string name="template">Modelo</string>
@@ -1109,10 +1123,10 @@
     <string name="delete_template_warn">Você está prestes a excluir o filtro de modelo selecionado. Essa operação não pode ser desfeita</string>
     <string name="added_filter_template">Modelo de filtro adicionado com o nome \"%1$s\" (%2$d)</string>
     <string name="filter_preview">Pré-visualização do filtro</string>
-    <string name="qr_code">Código QR</string>
+    <string name="qr_code">QR &amp; Barcode</string>
     <string name="qr_code_sub">Digitalize um código QR e obtenha seu conteúdo ou cole seu texto para gerar um código</string>
     <string name="code_content">Conteúdo do código</string>
-    <string name="scan_qr_code_to_replace_content">Digitalize o código QR para substituir o conteúdo no campo ou digite algo para gerar um novo código QR</string>
+    <string name="scan_qr_code_to_replace_content">Digitalize qualquer código de barras para substituir o conteúdo do campo ou digite algo para gerar um novo código de barras com o tipo selecionado</string>
     <string name="qr_description">Descrição do código QR</string>
     <string name="min">Min</string>
     <string name="grant_camera_permission_to_scan_qr_code">Conceder permissão à câmara nas definições para digitalizar o código QR</string>
@@ -1192,8 +1206,8 @@
     <string name="ewa_lanczos_4_sharpest_sub">Variante da média ponderada elíptica (EWA) do filtro Lanczos 4 Sharpest para reamostragem de imagens extremamente nítidas</string>
     <string name="format_conversion_sub">Converta lotes de imagens de um formato para outro</string>
     <string name="dismiss_forever">Dispensar definitivamente</string>
-    <string name="format_conversion">Conversão de formato</string>
-    <string name="image_stacking">Empilhamento de imagens</string>
+    <string name="format_conversion">Conversão de Formato</string>
+    <string name="image_stacking">Empilhamento de Imagens</string>
     <string name="image_stacking_sub">Empilhe imagens umas sobre as outras com os modos de mesclagem escolhidos</string>
     <string name="add_image">Adicionar imagem</string>
     <string name="clahe_hsv">Clahe HSV</string>
@@ -1203,13 +1217,13 @@
     <string name="clahe_hsl">Clahe HSL</string>
     <string name="wrap">Envolver</string>
     <string name="clip">Cortar</string>
-    <string name="edge_mode">Modo de borda</string>
-    <string name="color_blind_scheme">Esquema para daltônicos</string>
+    <string name="edge_mode">Modo de Borda</string>
+    <string name="color_blind_scheme">Correção de Cores</string>
     <string name="protanopia_sub">Incapacidade de perceber tons de vermelho</string>
     <string name="deuteranopia_sub">Incapacidade de perceber tons de verde</string>
     <string name="tritanopia_sub">Incapacidade de perceber tons de azul</string>
     <string name="achromatomaly_sub">Sensibilidade reduzida a todas as cores</string>
-    <string name="color_blind_scheme_sub">Selecione o modo para adaptar as cores do tema para uma determinada variante de daltonismo</string>
+    <string name="color_blind_scheme_sub">Selecione o modo para adaptar as cores do tema para a variante de daltonismo selecionada</string>
     <string name="protanomaly_sub">Dificuldade em distinguir entre tons de vermelho e verde</string>
     <string name="not_use_color_blind_scheme_sub">As cores serão exatamente como definidas no tema</string>
     <string name="deuteranomaly_sub">Dificuldade em distinguir entre tons de verde e vermelho</string>
@@ -1225,7 +1239,7 @@
     <string name="lanczos_6_jinc">Lanczos 6 Jinc</string>
     <string name="lagrange_3_sub">Um filtro de interpolação Lagrange de ordem 3, que oferece melhor precisão e resultados mais suaves para o dimensionamento de imagens</string>
     <string name="lanczos_6_sub">Um filtro de reamostragem Lanczos com uma ordem superior a 6, proporcionando uma escala de imagem mais nítida e precisa</string>
-    <string name="linear_box_blur">Desfoque de caixa linear</string>
+    <string name="linear_box_blur">Desfoque de Caixa Linear</string>
     <string name="soft_glow">Brilho Suave</string>
     <string name="color_poster">Poster Colorido</string>
     <string name="polka_dot">Ponto Polka</string>
@@ -1266,9 +1280,9 @@
     <string name="linear_gaussian_blur">Desfoque Gaussiano Linear</string>
     <string name="gaussian_box_blur">Desfoque Gaussiano em Caixa</string>
     <string name="languages_imported">Idiomas importados com sucesso</string>
-    <string name="clear_selection">Limpar Seleção</string>
-    <string name="imported_fonts">Fontes Importadas</string>
-    <string name="export_fonts">Fontes Exportadas</string>
+    <string name="clear_selection">Limpar seleção</string>
+    <string name="imported_fonts">Fontes importadas</string>
+    <string name="export_fonts">Exportar fontes</string>
     <string name="calculate">Calcular</string>
     <string name="checksum">Checksum</string>
     <string name="text_hash">Hash</string>
@@ -1278,7 +1292,7 @@
     <string name="difference">Diferença</string>
     <string name="collection_mesh_gradients_sub">Veja a coleção on-line de Malhas de Gradientes</string>
     <string name="mesh_gradients">Malha de Gradientes</string>
-    <string name="tiff_compression_scheme">Esquema de Compactação TIFF</string>
+    <string name="tiff_compression_scheme">Esquema de compactação TIFF</string>
     <string name="checksum_tools">Ferramentas de Checksum</string>
     <string name="algorithms">Algoritmo</string>
     <string name="free_software_partner_sub">Mais software útil no canal parceiro de aplicativos Android</string>
@@ -1305,7 +1319,7 @@
     <string name="linear_fast_gaussian_blur_next">Desfoque Gaussiano Rápido Próximo Linear</string>
     <string name="linear_fast_gaussian_blur">Desfoque Gaussiano Rápido Linear</string>
     <string name="draw_filter_sub">Escolha um filtro para usá-lo como pintura</string>
-    <string name="low_poly">Low Poly</string>
+    <string name="low_poly">Poucos Polígonos</string>
     <string name="sand_painting">Pintura em Areia</string>
     <string name="fit_to_bounds">Ajustar aos Limites</string>
     <string name="import_word">Importar</string>
@@ -1360,31 +1374,31 @@
     <string name="fit_to_bounds_sub">Combine o modo de redimensionamento de corte com esse parâmetro para obter o comportamento desejado (Cortar/Ajustar à proporção)</string>
     <string name="no_favorite_options_selected">Não há opções favoritas selecionadas, adicione-as na página de ferramentas</string>
     <string name="pick_file_to_checksum">Escolha um arquivo para calcular sua soma de verificação com base no algoritmo selecionado</string>
-    <string name="import_font">Importar Fonte (TTF/OTF)</string>
-    <string name="wrong_font">Somente fontes TTF podem ser importadas</string>
+    <string name="import_font">Importar fonte (TTF/OTF)</string>
+    <string name="wrong_font">Somente fontes TTF e OTF podem ser importadas</string>
     <string name="options">Opções</string>
-    <string name="bleach_bypass">Bleach Bypass</string>
+    <string name="bleach_bypass">Bypass de Branqueamento</string>
     <string name="webp_tools_sub">Converta imagens em imagens animadas WEBP ou extraia quadros de uma animação WEBP</string>
     <string name="match_sub">Os checksums são iguais, é seguro</string>
     <string name="checksum_to_compare">Checksum para Comparação</string>
     <string name="enter_text_to_checksum">Insira um texto para calcular sua soma de verificação com base no algoritmo selecionado</string>
-    <string name="checksum_tools_sub">Compare checksums, calcule hashes, crie cadeias hexadecimais de arquivos usando diferentes algoritmos de hashing</string>
+    <string name="checksum_tools_sub">Compare checksums, calcule hashes ou crie cadeias hexadecimais de arquivos usando diferentes algoritmos de hashing</string>
     <string name="default_draw_path_mode">Modo de Desenho de Caminho Padrão</string>
     <string name="ci_channel_sub">Receba notificações sobre novas versões do aplicativo e leia os anúncios</string>
     <string name="default_draw_color">Cor de Desenho Padrão</string>
-    <string name="collage_maker_sub">Faça várias colagens com 2..10 imagens</string>
+    <string name="collage_maker_sub">Faça colagens com até 10 imagens</string>
     <string name="formatted_timestamp">Data e Hora Formatados</string>
     <string name="histogram">Histograma</string>
-    <string name="image_toolbox_in_telegram_sub">Participe do nosso bate-papo, onde você pode discutir o que quiser, e também dê uma olhada no Canal CI, onde eu publico betas e anúncios</string>
+    <string name="image_toolbox_in_telegram_sub">Participe do nosso bate-papo, onde você pode discutir o que quiser, e também dê uma olhada no Canal CI, onde eu público betas e anúncios</string>
     <string name="pick_up_to_ten_images">Selecione até 10 imagens</string>
     <string name="tesseract_options">Opções do Tesseract</string>
-    <string name="image_toolbox_in_telegram">ImageToolbox no Telegram 🎉</string>
+    <string name="image_toolbox_in_telegram">Image Toolbox no Telegram 🎉</string>
     <string name="save_empty_lut_sub">Primeiro, use seu aplicativo de edição de fotos favorito para aplicar um filtro à LUT neutra que pode ser obtida aqui. Para que isso funcione corretamente, cada cor de pixel não deve depender de outros pixels (por exemplo, o desfoque não funcionará). Quando estiver pronta, use sua nova imagem LUT como entrada para o filtro LUT de 512*512</string>
-    <string name="ico_size_warning">Os arquivos ICO só podem ser salvos no tamanho máximo de 256*256; valores maiores serão ignorados na imagem resultante</string>
+    <string name="ico_size_warning">Os arquivos ICO só podem ser salvos no tamanho máximo de 256x256</string>
     <string name="webp_type_to_webp">Imagens para WEBP</string>
     <string name="select_webp_image_to_start">Escolha a imagem WEBP para iniciar</string>
     <string name="manage_storage_extra_types">Sem acesso total aos arquivos</string>
-    <string name="manage_storage_extra_types_sub">Permita o acesso a todos os arquivos para ver JXL, QOI e outras imagens que não são reconhecidas no Android como arquivos de imagem; sem dar permissão, você não conseguirá ver essas imagens aqui</string>
+    <string name="manage_storage_extra_types_sub">Permitir o acesso de todos os arquivos para ver JXL, QOI e outras imagens que não são reconhecidas como imagens no Android. Sem a permissão, o Image Toolbox não poderá exibir essas imagens</string>
     <string name="add_timestamp">Adicionar Data e Hora</string>
     <string name="recently_used">Usados Recentemente</string>
     <string name="ci_channel">Canal CI</string>
@@ -1399,7 +1413,7 @@
     <string name="weighted_strength">Força Ponderada</string>
     <string name="ping_pong_strength">Força Ping Pong</string>
     <string name="distance_function">Função Distância</string>
-    <string name="return_type">Tipo Retorno</string>
+    <string name="return_type">Tipo de Retorno</string>
     <string name="custom_filename">Nome Personalizado</string>
     <string name="custom_filename_sub">Selecione o local e o nome do arquivo que serão usados para salvar a imagem atual</string>
     <string name="saved_to_custom">Salvo em uma pasta com nome personalizado</string>
@@ -1453,7 +1467,7 @@
     <string name="auto_crop">Cortar Automaticamente</string>
     <string name="free_corners">Cantos Livres</string>
     <string name="coerce_points_to_image_bounds">Limitação de Pontos para os Limites das Imagens</string>
-    <string name="spot_heal">Correção de Área</string>
+    <string name="spot_heal">Correção de Manchas</string>
     <string name="use_circle_kernel">Usar Kernel Circle</string>
     <string name="closing">Fechando</string>
     <string name="morphological_gradient">Gradiente Morfológica</string>
@@ -1493,15 +1507,15 @@
     <string name="lut_library_sub">Baixe a coleção de LUTs, que você pode aplicar posteriormente</string>
     <string name="opening">Abrindo</string>
     <string name="filename_is_not_set">O nome do arquivo não está definido</string>
-    <string name="material_you_slider_sub">Controle deslizante Material You, futurista, novo, acessível</string>
-    <string name="fast_settings_side_sub">Adicione uma faixa flutuante na lateral escolhida durante a edição de imagens, que abrirá configurações rápidas se for clicada</string>
+    <string name="material_you_slider_sub">Um controle deslizante Material You</string>
+    <string name="fast_settings_side_sub">Adicione uma listra flutuante na lateral selecionada durante a edição de imagens, que abrirá configurações rápidas quando clicada</string>
     <string name="settings_group_visibility_visible">O grupo de configurações \"%s\" será expandido por padrão</string>
     <string name="error_while_saving">Erro ao tentar salvar, experimente alterar a pasta de saída</string>
     <string name="apply">Aplicar</string>
     <string name="filter_preview_image_sub">Alterar a imagem de visualização padrão para filtros</string>
     <string name="filter_preview_image">Prévia de Imagem</string>
     <string name="base_64_actions">Ações com Base64</string>
-    <string name="layers_on_image_sub">Use a imagem como plano de fundo e adicione diferentes camadas sobre ela</string>
+    <string name="layers_on_image_sub">Use uma imagem como plano de fundo e adicione diferentes camadas sobre ela</string>
     <string name="copy_base_64">Copiar Base64</string>
     <string name="area">Área</string>
     <string name="area_sub">Reamostragem usando a relação de área do pixel. Esse pode ser o método preferido para a decimação de imagens, pois oferece resultados sem moiré. Mas quando a imagem é ampliada, ela é semelhante ao método \"Mais Próximo\".</string>
@@ -1512,8 +1526,8 @@
     <string name="slider_type">Tipo de Slider</string>
     <string name="fancy">Extravagante</string>
     <string name="material_2">Material 2</string>
-    <string name="fancy_sub">Controle deslizante personalizado de aparência sofisticada com animações, que é o padrão para este aplicativo</string>
-    <string name="material_2_sub">Controle deslizante baseado no Material 2, não moderno, mas simples e direto</string>
+    <string name="fancy_sub">Um controle deslizante de aparência sofisticada. Essa é a opção padrão</string>
+    <string name="material_2_sub">Um controle deslizante Material 2</string>
     <string name="center_align_dialog_buttons">Botões de Diálogo Centralizados</string>
     <string name="open_source_licenses">Licenças de Código Aberto</string>
     <string name="open_source_licenses_sub">Veja as licenças das bibliotecas de código aberto usadas neste aplicativo</string>
@@ -1533,7 +1547,7 @@
     <string name="share_base_64">Compartilhar Base64</string>
     <string name="import_base_64">Importar Base64</string>
     <string name="add_outline_sub">Adicionar contorno ao redor do texto com cor e largura especificadas</string>
-    <string name="checksum_as_filename">Checksum como nome de arquivo</string>
+    <string name="checksum_as_filename">Checksum como Nome de Arquivo</string>
     <string name="checksum_as_filename_sub">As imagens de saída terão o nome correspondente à soma de verificação de seus dados</string>
     <string name="center_align_dialog_buttons_sub">Os botões das caixas de diálogo serão posicionados no centro em vez de no lado esquerdo, se possível</string>
     <string name="none">Nenhum</string>
@@ -1575,22 +1589,22 @@
     <string name="pixel_by_pixel">Pixel Por Pixel</string>
     <string name="highlight_color">Destacar Cor</string>
     <string name="pixel_comparison_type">Tipo de Comparação de Pixels</string>
-    <string name="scan_barcode">Escanear Código de Barras</string>
+    <string name="scan_barcode">Escanear código de barras</string>
     <string name="height_ratio">Proporção de Altura</string>
     <string name="barcode_type">Tipo de Código de Barras</string>
     <string name="enforce_bw">Forçar P/B</string>
     <string name="enforce_bw_sub">A imagem do código de barras será totalmente em preto e branco e não será colorida pelo tema do aplicativo</string>
-    <string name="barcodes_sub">Escaneie qualquer código de barras (QR, EAN, AZTEC, ...) e obtenha seu conteúdo ou cole seu texto para gerar um código</string>
+    <string name="barcodes_sub">Escaneie qualquer código de barras (QR, EAN, AZTEC, …) e obtenha seu conteúdo ou cole seu texto para gerar um código</string>
     <string name="no_barcode_found">Nenhum Código Encontrado</string>
     <string name="generated_barcode_will_be_here">O código de Barras Gerado Estará Aqui</string>
-    <string name="audio_cover_extractor">Extrator de Capa de Álbum</string>
+    <string name="audio_cover_extractor">Capas de Álbum</string>
     <string name="audio_cover_extractor_sub">Extraia imagens de capas de álbuns de arquivos de áudio, com suporte aos formatos mais comuns</string>
     <string name="pick_audio_to_start">Escolha um áudio para iniciar</string>
     <string name="pick_audio">Selecionar Áudio</string>
     <string name="no_covers_found">Nenhuma Capa Encontrada</string>
     <string name="send_logs">Enviar Registros</string>
     <string name="send_logs_sub">Clique para compartilhar o arquivo de registros do aplicativo, isso pode me ajudar a identificar e corrigir o problema</string>
-    <string name="crash_title">Ops... Algo deu errado</string>
+    <string name="crash_title">Ops… Algo deu errado</string>
     <string name="crash_subtitle">Você pode entrar em contato comigo usando as opções abaixo e tentarei encontrar uma solução\n(Não se esqueça de anexar os registros).</string>
     <string name="ocr_write_to_metadata_sub">Extraia o texto de cada imagem e coloque-o nas informações EXIF das respectivas fotos</string>
     <string name="ocr_write_to_file">Gravar em Arquivo</string>
@@ -1601,4 +1615,27 @@
     <string name="use_lsb">Usar LSB</string>
     <string name="invisible_mode_sub">Usar esteganografia para criar marcas d\'água invisíveis aos olhos dentro de bytes de suas imagens</string>
     <string name="invisible_mode">Modo Invisível</string>
+    <string name="password">Senha</string>
+    <string name="unlock">Desbloquear</string>
+    <string name="pdf_is_protected">O PDF está protegido</string>
+    <string name="sort_by_date_modified">Data de Modificação</string>
+    <string name="sort_by_size">Tamanho</string>
+    <string name="sort_by_mime_type_reversed">Tipo MIME (Inverso)</string>
+    <string name="sort_by_extension">Extensão</string>
+    <string name="sort_by_extension_reversed">Extensão (Inversa)</string>
+    <string name="sort_by_date_added_reversed">Data de Adição (Inversa)</string>
+    <string name="sort_by_date_modified_reversed">Data de Modificação (Inversa)</string>
+    <string name="sort_by_size_reversed">Tamanho (Inverso)</string>
+    <string name="operation_almost_complete">Operação quase concluída. Cancelar agora exigirá a reinicialização da operação</string>
+    <string name="sort_by_mime_type">Tipo MIME</string>
+    <string name="sort_by_date_added">Data de Adição</string>
+    <string name="left_to_right">Esquerda para a Direita</string>
+    <string name="right_to_left">Direita para a Esquerda</string>
+    <string name="bottom_to_top">De Baixo para Cima</string>
+    <string name="top_to_bottom">De Cima para Baixo</string>
+    <string name="liquid_glass">Vidro Líquido</string>
+    <string name="pick_image_or_base64">Escolha a imagem ou cole/importe os dados Base64 abaixo</string>
+    <string name="type_image_link">Digite o link da imagem para iniciar</string>
+    <string name="paste_link">Colar link</string>
+    <string name="liquid_glass_sub">Um switch baseado no recém-anunciado IOS 26 e em seu sistema de design de vidro líquido</string>
 </resources>

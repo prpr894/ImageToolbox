@@ -22,9 +22,4 @@ plugins {
     alias(libs.plugins.image.toolbox.compose)
 }
 
-android.namespace = "ru.tech.imageresizershrinker.feature.audio_cover_extractor"
-
-dependencies {
-    implementation(libs.ffmpeg.metadata.retriever.core)
-    implementation(libs.ffmpeg.metadata.retriever.native)
-}
+android.namespace = "com.t8rin.imagetoolbox.feature.audio_cover_extractor"

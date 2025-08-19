@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<!--
+  ~ ImageToolbox is an image editor for android
+  ~ Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  ~ You should have received a copy of the Apache License
+  ~ along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+  --><resources xmlns:tools="http://schemas.android.com/tools">
     <string name="smth_went_wrong">Đã xảy ra lỗi: %1$s</string>
     <string name="size">Kích thước %1$s</string>
     <string name="loading">Đang tải…</string>
@@ -13,7 +28,7 @@
     <string name="explicit">Minh bạch</string>
     <string name="flexible">Linh hoạt</string>
     <string name="pick_image_alt">Chọn hình ảnh</string>
-    <string name="app_closing_sub">Bạn có thực sự muốn đóng ứng dụng\?</string>
+    <string name="app_closing_sub">Bạn có thực sự muốn đóng ứng dụng?</string>
     <string name="app_closing">Ứng dụng đang đóng</string>
     <string name="stay">Ở lại</string>
     <string name="close">Đóng</string>
@@ -271,8 +286,7 @@
     <string name="features_sub">Mã hóa tập tin dựa trên mật khẩu. Các tập tin đã xử lý có thể được lưu trữ trong thư mục đã chọn hoặc được chia sẻ. Các tập tin được giải mã cũng có thể được mở trực tiếp.</string>
     <string name="implementation_sub">AES-256, chế độ GCM, không có phần đệm, IV ngẫu nhiên 12 byte. Các khóa được sử dụng làm hàm băm SHA-3 (256 bit).</string>
     <string name="file_size">Kích thước tệp</string>
-    <string name="file_size_sub">Kích thước tệp tối đa bị giới hạn bởi hệ điều hành Android và bộ nhớ khả dụng, tùy thuộc vào thiết bị.
-\nXin lưu ý: bộ nhớ không phải là nơi lưu trữ.</string>
+    <string name="file_size_sub">Kích thước tệp tối đa bị giới hạn bởi hệ điều hành Android và bộ nhớ khả dụng, tùy thuộc vào thiết bị. \nXin lưu ý: bộ nhớ không phải là nơi lưu trữ.</string>
     <string name="compatibility_sub">Xin lưu ý rằng khả năng tương thích với các phần mềm hoặc dịch vụ mã hóa tệp khác không được đảm bảo. Cách xử lý khóa hoặc cấu hình mật mã hơi khác một chút có thể gây ra sự không tương thích.</string>
     <string name="invalid_password_or_not_encrypted">Mật khẩu không hợp lệ hoặc tập tin đã chọn không được mã hóa</string>
     <string name="image_size_warning">Cố gắng lưu hình ảnh với chiều rộng và chiều cao nhất định có thể gây ra lỗi OOM. Bạn phải tự chịu rủi ro khi làm điều này và đừng nói rằng tôi chưa từng</string>
@@ -539,7 +553,7 @@
     <string name="recognize_text">OCR (Nhận dạng văn bản)</string>
     <string name="recognize_text_sub">Nhận dạng văn bản từ hình ảnh nhất định, hỗ trợ hơn 120 ngôn ngữ</string>
     <string name="picture_has_no_text">Ảnh không có văn bản hoặc ứng dụng không tìm thấy nó</string>
-    <string name="accuracy">"Độ chính xác: %1$d"</string>
+    <string name="accuracy">Độ chính xác: %1$d</string>
     <string name="recognition_type">Loại nhận dạng</string>
     <string name="fast">Nhanh</string>
     <string name="standard">Tiêu chuẩn</string>

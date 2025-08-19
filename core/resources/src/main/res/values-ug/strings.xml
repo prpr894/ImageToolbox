@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<!--
+  ~ ImageToolbox is an image editor for android
+  ~ Copyright (c) 2025 T8RIN (Malik Mukhametzyanov)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  ~ You should have received a copy of the Apache License
+  ~ along with this program.  If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+  --><resources xmlns:tools="http://schemas.android.com/tools">
     <string name="image_too_large_preview">سۈرەت بەك چوڭ، ئالدىن كۆرگىلى بولمايدۇ، لېكىن يەنىلا ساقلاشنى سىناپ باقىمىز</string>
     <string name="pick_image">رەسىمنى تاللاپ باشلاڭ</string>
     <string name="height">ئېگىزلىك %1$s</string>
@@ -254,8 +269,7 @@
     <string name="features_sub">ھۆججەتلەرنى مەخپىي شىفىرلاش. ئىشلەنگەن ھۆججەتلەرنى تاللانغان مۇندەرىجىدە ساقلىغىلى ياكى ئورتاقلىشقىلى بولىدۇ. شىفىرلانغان ھۆججەتلەرنىمۇ بىۋاسىتە ئاچقىلى بولىدۇ.</string>
     <string name="implementation_sub">AES-256 ، GCM ھالىتى ، تاختا يوق ، 12 بايىت ئىختىيارى IV. ئاچقۇچ SHA-3 hashes (256 bit) سۈپىتىدە ئىشلىتىلىدۇ.</string>
     <string name="file_size">ھۆججەت چوڭلۇقى</string>
-    <string name="file_size_sub">The maximum file size is restricted by the Android OS and available memory, which is device dependent.
-\nPlease note: memory is not storage.</string>
+    <string name="file_size_sub">The maximum file size is restricted by the Android OS and available memory, which is device dependent. \nPlease note: memory is not storage.</string>
     <string name="compatibility_sub">شۇنىڭغا دىققەت قىلىڭكى ، باشقا ھۆججەت مەخپىيلەشتۈرۈش يۇمشاق دېتالى ياكى مۇلازىمىتىگە ماسلىشىشچانلىقى كاپالەتكە ئىگە ئەمەس. سەل ئوخشىمايدىغان ئاچقۇچلۇق داۋالاش ياكى سىفىرلىق سەپلىمە ماسلاشماسلىقنى كەلتۈرۈپ چىقىرىشى مۇمكىن.</string>
     <string name="invalid_password_or_not_encrypted">ئىناۋەتسىز مەخپىي نومۇر ياكى تاللانغان ھۆججەت شىفىرلانمايدۇ</string>
     <string name="image_size_warning">بېرىلگەن كەڭلىك ۋە ئېگىزلىكتىكى رەسىمنى ساقلىماقچى بولسىڭىز OOM خاتالىقىنى كەلتۈرۈپ چىقىرىشى مۇمكىن. بۇنى ئۆزىڭىزنىڭ خەتىرىگە ئاساسەن قىلىڭ ، مەن سىزنى ئاگاھلاندۇرمىدىم دېمەڭ!</string>
@@ -528,8 +542,7 @@
     <string name="standard">ئۆلچەملىك</string>
     <string name="best">ئەڭ ياخشى</string>
     <string name="no_data">سانلىق مەلۇمات يوق</string>
-    <string name="download_description">من أجل التشغيل السليم لـ Tesseract OCR، يجب تنزيل بيانات التدريب الإضافية (%1$s) على جهازك.
-\nهل تريد تنزيل بيانات %2$s؟</string>
+    <string name="download_description">من أجل التشغيل السليم لـ Tesseract OCR، يجب تنزيل بيانات التدريب الإضافية (%1$s) على جهازك. \nهل تريد تنزيل بيانات %2$s؟</string>
     <string name="download">چۈشۈرۈش</string>
     <string name="no_connection">ئۇلىنىش يوق ، ئۇنى تەكشۈرۈپ پويىز مودېللىرىنى چۈشۈرۈش ئۈچۈن قايتا سىناڭ</string>
     <string name="downloaded_languages">چۈشۈرۈلگەن تىللار</string>

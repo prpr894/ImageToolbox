@@ -27,11 +27,11 @@ plugins {
 }
 
 android {
-    namespace = "ru.tech.imageresizershrinker.benchmark"
+    namespace = "com.t8rin.imagetoolbox.benchmark"
     compileSdk = libs.versions.androidCompileSdk.get().toIntOrNull()
 
     defaultConfig {
-        minSdk = libs.versions.androidMinSdk.get().toIntOrNull()
+        minSdk = 23
         targetSdk = libs.versions.androidTargetSdk.get().toIntOrNull()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
